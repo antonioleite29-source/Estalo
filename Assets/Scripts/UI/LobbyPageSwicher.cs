@@ -9,7 +9,8 @@ public class LobbyPageSwitcher : MonoBehaviour
         Profile,
         Learning,
         Lobby,
-        More
+        More,
+        Connect
     }
 
     [Header("--- START GAME ---")]
@@ -54,14 +55,32 @@ public class LobbyPageSwitcher : MonoBehaviour
     [Tooltip("The GameObject for the More / Settings page. Drag it here.")]
     public GameObject morePage;
 
+    [Tooltip("The GameObject for the Connect page (Host / Join by address). Drag it here.")]
+    public GameObject connectPage;
+
     [Space(5)]
     [Tooltip("Which page shows up first when the lobby opens.")]
     public LobbyPage defaultPage = LobbyPage.Lobby;
 
+    [Tooltip("In a build, open the Connect page first regardless of Default Page — no mode can start " +
+             "without a session. The Editor keeps using Default Page, since it auto-connects on Play.")]
+    public bool forceConnectPageInBuild = true;
+
     private void Start()
     {
-        ShowDefaultPage();
+        ShowStartupPage();
         RefreshModeHighlight();
+    }
+
+    private void ShowStartupPage()
+    {
+        if (forceConnectPageInBuild && !Application.isEditor && connectPage != null)
+        {
+            ShowConnectPage();
+            return;
+        }
+
+        ShowDefaultPage();
     }
 
     // ---------------------------------------------------------------
@@ -74,12 +93,19 @@ public class LobbyPageSwitcher : MonoBehaviour
         SetPageActive(learningPage, false);
         SetPageActive(lobbyPage,    false);
         SetPageActive(morePage,     false);
+        SetPageActive(connectPage,  false);
 
         // Push the host's mode choice to the network before readying up, so all clients agree.
         // No-ops on non-host clients (SetSelectedMode early-returns unless called on the server).
         TriviaNetworkSync.Instance?.SetSelectedMode(selectedMode);
 
-        if (selectedMode == MatchMode.TeamFour)
+        // Then ready up for whatever the SERVER says the mode is, not this device's own toggle.
+        // Each client keeps its own selectedMode field, so without this a client whose toggle
+        // still said 1v1 would ready up for 1v1 while the host readied for 2v2 — and the ready
+        // gate treats a mode change as a reset, so the two kept wiping each other out.
+        MatchMode modeToStart = ResolveAuthoritativeMode();
+
+        if (modeToStart == MatchMode.TeamFour)
         {
             if (teamManager != null)
                 teamManager.StartTeamTriviaFromLobby();
@@ -98,12 +124,37 @@ public class LobbyPageSwitcher : MonoBehaviour
     // ---------------------------------------------------------------
     // Mode selection — wire these to the 1v1 / 2v2 toggle buttons in the Inspector
     // ---------------------------------------------------------------
-    public void SelectOneVsOneMode() { selectedMode = MatchMode.OneVsOne; RefreshModeHighlight(); }
-    public void SelectTeamFourMode() { selectedMode = MatchMode.TeamFour; RefreshModeHighlight(); }
+    public void SelectOneVsOneMode() { SelectMode(MatchMode.OneVsOne); }
+    public void SelectTeamFourMode() { SelectMode(MatchMode.TeamFour); }
+
+    private void SelectMode(MatchMode mode)
+    {
+        selectedMode = mode;
+
+        // The host owns the choice for the whole room; pushing it here (rather than only when
+        // Start is pressed) lets every client's highlight update as soon as the host picks.
+        TriviaNetworkSync.Instance?.SetSelectedMode(mode);
+
+        RefreshModeHighlight();
+    }
+
+    // The server's NetSelectedMode is the single source of truth once a session exists. Falls back
+    // to this device's own toggle for local/offline play, where there is no server to ask.
+    private MatchMode ResolveAuthoritativeMode()
+    {
+        TriviaNetworkSync sync = TriviaNetworkSync.Instance;
+
+        if (sync != null && sync.IsSpawned)
+            return (MatchMode)sync.NetSelectedMode.Value;
+
+        return selectedMode;
+    }
 
     private void RefreshModeHighlight()
     {
-        bool isOneVsOne = selectedMode == MatchMode.OneVsOne;
+        // Show the room's actual mode, not this device's toggle — otherwise a client can sit
+        // looking at a highlighted "1v1" while the host has already put everyone into 2v2.
+        bool isOneVsOne = ResolveAuthoritativeMode() == MatchMode.OneVsOne;
 
         if (oneVsOneHighlight != null)
             oneVsOneHighlight.SetActive(isOneVsOne);
@@ -126,6 +177,7 @@ public class LobbyPageSwitcher : MonoBehaviour
     public void ShowLearningPage() { ShowPage(LobbyPage.Learning); }
     public void ShowLobbyPage()    { ShowPage(LobbyPage.Lobby); }
     public void ShowMorePage()     { ShowPage(LobbyPage.More); }
+    public void ShowConnectPage()  { ShowPage(LobbyPage.Connect); }
     public void ShowMainPage()     { ShowLobbyPage(); }
     public void ShowTriviaPage()   { ShowLobbyPage(); }
 
@@ -135,6 +187,7 @@ public class LobbyPageSwitcher : MonoBehaviour
         SetPageActive(learningPage, page == LobbyPage.Learning);
         SetPageActive(lobbyPage,    page == LobbyPage.Lobby);
         SetPageActive(morePage,     page == LobbyPage.More);
+        SetPageActive(connectPage,  page == LobbyPage.Connect);
     }
 
     private void SetPageActive(GameObject page, bool isActive)

@@ -143,6 +143,10 @@ public class PlayerSideIdentity : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartTriviaServerRpc(ServerRpcParams rpcParams = default)
     {
+        // TEMP DIAGNOSTIC — remove once 1v1 start is confirmed working.
+        Debug.Log("[START] Server received ready request from client " + rpcParams.Receive.SenderClientId +
+                  " (sync present: " + (TriviaNetworkSync.Instance != null) + ")");
+
         TriviaNetworkSync.Instance?.MarkClientReady(rpcParams.Receive.SenderClientId);
     }
 

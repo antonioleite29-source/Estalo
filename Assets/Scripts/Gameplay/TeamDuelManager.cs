@@ -622,6 +622,31 @@ public class TeamDuelManager : MonoBehaviour
             answerButtonVisuals[answerIndex].SetPressedWrongState();
     }
 
+    public bool IsMatchRunning => triviaRunning;
+
+    // Server-side counterpart to TriviaDuelManager.AbortMatchForDisconnect. Losing any one of the
+    // four players strands the match the same way: the active slot for that player never answers.
+    public void AbortMatchForDisconnect(string message)
+    {
+        if (!triviaRunning)
+            return;
+
+        EndMatch(message, false, 0);
+        TriviaNetworkSync.Instance?.BroadcastTeamMatchAborted(message);
+
+        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
+            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
+    }
+
+    public void ApplyNetworkedMatchAborted(string message)
+    {
+        if (questionText != null)
+            questionText.text = message;
+
+        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
+            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
+    }
+
     private void EndMatch(string message, bool hasWinner, int winningTeam)
     {
         StopGameplayCoroutines(false);

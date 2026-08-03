@@ -348,6 +348,18 @@ public class TriviaDuelManager : MonoBehaviour
             return false;
         }
 
+        // With showLobbyOnStart on and no lobby wired up, PrepareForLobby() hides the gameplay UI
+        // and then has nothing to show in its place — leaving the player on a blank screen with no
+        // Start button, so the match can never begin. This used to fail completely silently.
+        if (showLobbyOnStart && lobbyRootObject == null && lobbyPageSwitcher == null)
+        {
+            Debug.LogError(
+                "Show Lobby On Start is enabled but neither 'Lobby Root Object' nor 'Lobby Page Switcher' " +
+                "is assigned on " + name + ". There will be no lobby and no Start button, so no match can " +
+                "ever start. Assign them in the Inspector.", this);
+            return false;
+        }
+
         return true;
     }
 
@@ -416,10 +428,17 @@ public class TriviaDuelManager : MonoBehaviour
 
         if (IsNetworkedSession)
         {
-            GetLocalPlayerIdentity()?.RequestStartTrivia();
+            PlayerSideIdentity identity = GetLocalPlayerIdentity();
+
+            // TEMP DIAGNOSTIC — remove once 1v1 start is confirmed working.
+            Debug.Log("[START] StartTriviaFromLobby: networked=true, localIdentity=" +
+                      (identity == null ? "NULL (cannot ready up!)" : "ok, clientId=" + identity.OwnerClientId));
+
+            identity?.RequestStartTrivia();
             return;
         }
 
+        Debug.Log("[START] StartTriviaFromLobby: not a networked session — starting locally.");
         BeginMatchAuthoritative();
     }
 
@@ -1270,6 +1289,40 @@ public class TriviaDuelManager : MonoBehaviour
 
         donut.color = isMySolo ? mySoloDonutColor : otherSoloDonutColor;
         donut.fillAmount = fillAmount;
+    }
+
+    public bool IsMatchRunning => triviaRunning;
+
+    // Called on the server when a player drops mid-match. The match cannot continue: a missing
+    // side can never answer its solo turn, so the state machine would sit in SoloLeft/SoloRight
+    // forever with the remaining player locked out and no way back to the lobby.
+    public void AbortMatchForDisconnect(string message)
+    {
+        if (!triviaRunning)
+            return;
+
+        EndMatch(message, false);
+        TriviaNetworkSync.Instance?.BroadcastMatchAborted(message);
+
+        // EndMatch only schedules the lobby return when there was a winner, but an abandoned
+        // match needs it just as much — otherwise the survivor is stranded on the game screen.
+        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
+            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
+    }
+
+    public void ApplyNetworkedMatchAborted(string message)
+    {
+        if (questionText != null)
+            questionText.text = message;
+
+        if (leftPlayerNameText != null)
+            leftPlayerNameText.text = string.Empty;
+
+        if (rightPlayerNameText != null)
+            rightPlayerNameText.text = string.Empty;
+
+        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
+            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
     }
 
     private void EndMatch(string message, bool hasWinner, int winnerSide = 0)

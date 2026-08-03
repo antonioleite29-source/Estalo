@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Unity.Netcode;
+using UnityEngine;
 
 public class TriviaNetworkSync : NetworkBehaviour
 {
@@ -7,6 +8,11 @@ public class TriviaNetworkSync : NetworkBehaviour
 
     private readonly HashSet<ulong> readyClientIds = new HashSet<ulong>();
     private MatchMode pendingMode = MatchMode.OneVsOne;
+
+    // Server-only. NetworkManager.ConnectedClientsIds is not guaranteed to stay in arrival order
+    // once anyone disconnects and reconnects, so team slots derived from its iteration order can
+    // silently form the wrong pairs. This list is appended and removed explicitly instead.
+    private readonly List<ulong> joinOrder = new List<ulong>();
 
     public NetworkVariable<int> NetSelectedMode = new NetworkVariable<int>((int)MatchMode.OneVsOne, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -38,7 +44,18 @@ public class TriviaNetworkSync : NetworkBehaviour
         Instance = this;
 
         if (IsServer)
+        {
+            // The host and any clients that beat this object to the spawn are already connected,
+            // so seed from the current list before switching to event-driven tracking.
+            joinOrder.Clear();
+
+            foreach (ulong existingId in NetworkManager.ConnectedClientsIds)
+                joinOrder.Add(existingId);
+
+            NetworkManager.OnClientConnectedCallback += HandleServerClientConnected;
+            NetworkManager.OnClientDisconnectCallback += HandleServerClientDisconnected;
             return;
+        }
 
         NetRoundState.OnValueChanged += (_, newValue) => TriviaDuelManager.Instance?.ApplyNetworkedRoundState(newValue);
         NetCurrentQuestionIndex.OnValueChanged += (_, newValue) => TriviaDuelManager.Instance?.ApplyNetworkedQuestion(NetCurrentDifficultyLevel.Value, newValue);
@@ -67,6 +84,38 @@ public class TriviaNetworkSync : NetworkBehaviour
         TeamDuelManager.Instance?.ApplyNetworkedActiveSlots(NetActiveSlotA.Value, NetActiveSlotB.Value);
         TeamDuelManager.Instance?.ApplyNetworkedQuestion(NetTeamDifficultyLevel.Value, NetTeamQuestionIndex.Value);
         TeamDuelManager.Instance?.ApplyNetworkedScore(NetTeamScoreA.Value, NetTeamScoreB.Value);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (!IsServer || NetworkManager == null)
+            return;
+
+        NetworkManager.OnClientConnectedCallback -= HandleServerClientConnected;
+        NetworkManager.OnClientDisconnectCallback -= HandleServerClientDisconnected;
+    }
+
+    private void HandleServerClientConnected(ulong clientId)
+    {
+        if (!joinOrder.Contains(clientId))
+            joinOrder.Add(clientId);
+    }
+
+    private void HandleServerClientDisconnected(ulong clientId)
+    {
+        joinOrder.Remove(clientId);
+
+        // A departed client must not still count toward the ready gate below, or a match can
+        // start with fewer players than the mode needs — and then wait forever on the missing one.
+        readyClientIds.Remove(clientId);
+
+        if (clientId == NetworkManager.ServerClientId)
+            return;
+
+        if (TeamDuelManager.Instance != null && TeamDuelManager.Instance.IsMatchRunning)
+            TeamDuelManager.Instance.AbortMatchForDisconnect("A player disconnected.");
+        else if (TriviaDuelManager.Instance != null && TriviaDuelManager.Instance.IsMatchRunning)
+            TriviaDuelManager.Instance.AbortMatchForDisconnect("Your opponent disconnected.");
     }
 
     public void PublishState(int roundState, int difficultyLevel, int questionIndex, int duelIndex, int team1Score, int team2Score)
@@ -182,6 +231,18 @@ public class TriviaNetworkSync : NetworkBehaviour
             TeamMatchStartedClientRpc();
     }
 
+    public void BroadcastMatchAborted(string message)
+    {
+        if (IsServer)
+            NotifyMatchAbortedClientRpc(message);
+    }
+
+    public void BroadcastTeamMatchAborted(string message)
+    {
+        if (IsServer)
+            NotifyTeamMatchAbortedClientRpc(message);
+    }
+
     public void SetSelectedMode(MatchMode mode)
     {
         if (!IsServer)
@@ -212,7 +273,23 @@ public class TriviaNetworkSync : NetworkBehaviour
         int requiredCount = requestedMode == MatchMode.TeamFour ? 4 : 2;
         int connectedCount = NetworkManager.ConnectedClientsIds.Count;
 
-        if (connectedCount >= requiredCount && readyClientIds.Count >= requiredCount)
+        // Exact, not "at least": a 1v1 with 4 people connected is ambiguous, because
+        // PlayerSideIdentity gives side 1 to the host and side 2 to *everyone* else — so players
+        // 3 and 4 would share side 2 and could both answer for it. Requiring an exact count makes
+        // the room unambiguously a 1v1 room or a 2v2 room.
+        bool enoughConnected = connectedCount == requiredCount;
+        bool everyoneReady = readyClientIds.Count >= requiredCount;
+
+        Debug.Log("[START] Ready gate: client " + clientId + " readied for " + requestedMode +
+                  ". ready=" + readyClientIds.Count + "/" + requiredCount +
+                  ", connected=" + connectedCount + "/" + requiredCount +
+                  " => " + (enoughConnected && everyoneReady ? "STARTING MATCH"
+                            : !enoughConnected
+                              ? "BLOCKED: " + requestedMode + " needs exactly " + requiredCount +
+                                " players in the room, but " + connectedCount + " are connected."
+                              : "waiting for " + (requiredCount - readyClientIds.Count) + " more to press Start"));
+
+        if (enoughConnected && everyoneReady)
         {
             readyClientIds.Clear();
 
@@ -232,9 +309,13 @@ public class TriviaNetworkSync : NetworkBehaviour
     {
         int joinIndex = 0;
 
-        foreach (ulong clientId in NetworkManager.ConnectedClientsIds)
+        for (int i = 0; i < joinOrder.Count; i++)
         {
-            NetworkClient client = NetworkManager.ConnectedClients[clientId];
+            ulong clientId = joinOrder[i];
+
+            if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
+                continue;
+
             PlayerSideIdentity identity = client.PlayerObject != null ? client.PlayerObject.GetComponent<PlayerSideIdentity>() : null;
 
             if (identity != null)
@@ -296,6 +377,24 @@ public class TriviaNetworkSync : NetworkBehaviour
             return;
 
         TriviaDuelManager.Instance?.ApplyNetworkedMatchEnd(message, hasWinner, winnerSide);
+    }
+
+    [ClientRpc]
+    private void NotifyMatchAbortedClientRpc(string message)
+    {
+        if (IsServer)
+            return;
+
+        TriviaDuelManager.Instance?.ApplyNetworkedMatchAborted(message);
+    }
+
+    [ClientRpc]
+    private void NotifyTeamMatchAbortedClientRpc(string message)
+    {
+        if (IsServer)
+            return;
+
+        TeamDuelManager.Instance?.ApplyNetworkedMatchAborted(message);
     }
 
     [ClientRpc]
