@@ -20,6 +20,10 @@ public class LobbyPageSwitcher : MonoBehaviour
     [Tooltip("Drag the TeamDuelManager GameObject here. Lets the Start Game button launch the 2v2 team mode when selected.")]
     public TeamDuelManager teamManager;
 
+    [Tooltip("Optional but recommended: the waiting/queue screen shown between pressing Start and " +
+             "the match actually forming. Without it, a queued player sees a blank screen.")]
+    public WaitingScreenController waitingScreen;
+
     private MatchMode selectedMode = MatchMode.OneVsOne;
 
     [Tooltip("Optional: a highlight/checkmark object shown only while 1v1 is selected.")]
@@ -104,6 +108,11 @@ public class LobbyPageSwitcher : MonoBehaviour
         // still said 1v1 would ready up for 1v1 while the host readied for 2v2 — and the ready
         // gate treats a mode change as a reset, so the two kept wiping each other out.
         MatchMode modeToStart = ResolveAuthoritativeMode();
+
+        // Pressing Start now joins a queue rather than starting a match outright, so show the
+        // waiting screen immediately. The match may need to wait for a suitable opponent.
+        if (waitingScreen != null)
+            waitingScreen.ShowWaiting();
 
         if (modeToStart == MatchMode.TeamFour)
         {

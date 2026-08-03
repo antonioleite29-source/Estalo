@@ -159,9 +159,8 @@ public class NetworkBootstrap : MonoBehaviour
     // Connection approval — capacity gate
     // ---------------------------------------------------------------
 
-    // Without this, nothing caps the room. A third phone joining a 1v1 is accepted and
-    // PlayerSideIdentity hands it AssignedSide = 2 (side 1 goes to the server, side 2 to everyone
-    // else), so two players end up sharing one side and either can answer for it.
+    // Without this, nothing caps the room and the host has no way to turn away a phone that
+    // arrives once every seat is taken or a match is already under way.
     private void EnableConnectionApproval()
     {
         if (NetworkManager.Singleton == null)

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class TriviaNetworkSync : NetworkBehaviour
+public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 {
     public static TriviaNetworkSync Instance { get; private set; }
 
@@ -95,27 +95,371 @@ public class TriviaNetworkSync : NetworkBehaviour
         NetworkManager.OnClientDisconnectCallback -= HandleServerClientDisconnected;
     }
 
+    // ---------------------------------------------------------------
+    // Concurrent matches: queue, live sessions, and per-match routing
+    // ---------------------------------------------------------------
+
+    private readonly Matchmaker matchmaker = new Matchmaker();
+    private readonly List<MatchSession> liveMatches = new List<MatchSession>();
+    private MatchMode queuedMode = MatchMode.OneVsOne;
+
+    // Broadcast to everyone so a waiting player can see the queue filling up in real time.
+    public NetworkVariable<int> NetQueuedPlayers = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> NetPlayersNeeded = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> NetLiveMatches = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    // Group size for the mode currently being queued (2 for 1v1, 4 for 2v2), so the waiting screen
+    // can show "3 / 4" without having to know the rules itself.
+    public NetworkVariable<int> NetRequiredPlayers = new NetworkVariable<int>(2, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    private void Update()
+    {
+        if (!IsServer || liveMatches.Count == 0)
+            return;
+
+        float deltaTime = Time.deltaTime;
+
+        for (int i = liveMatches.Count - 1; i >= 0; i--)
+        {
+            liveMatches[i].Tick(deltaTime);
+
+            if (liveMatches[i].IsFinished)
+                liveMatches.RemoveAt(i);
+        }
+
+        NetLiveMatches.Value = liveMatches.Count;
+    }
+
+    // Called instead of the old single-match ready gate. Queues the player, then drains the queue
+    // into as many complete matches as it can fill.
+    public void EnqueueForMatch(ulong clientId, MatchMode requestedMode, int difficultyLevel)
+    {
+        if (!IsServer)
+            return;
+
+        // A mode change invalidates anyone queued for the old mode — they were waiting for a
+        // different group size, so re-queue everything under the new mode rather than mixing.
+        if (requestedMode != queuedMode)
+        {
+            queuedMode = requestedMode;
+            matchmaker.Clear();
+        }
+
+        matchmaker.Enqueue(clientId, difficultyLevel);
+        DrainQueue();
+        PublishQueueStatus();
+    }
+
+    public void LeaveQueue(ulong clientId)
+    {
+        if (!IsServer)
+            return;
+
+        matchmaker.Remove(clientId);
+        PublishQueueStatus();
+    }
+
+    private void DrainQueue()
+    {
+        List<List<ulong>> groups = matchmaker.FormMatches(queuedMode);
+
+        for (int g = 0; g < groups.Count; g++)
+        {
+            List<ulong> group = groups[g];
+            int difficulty = AverageDifficultyOf(group);
+
+            MatchSession match = new MatchSession(
+                matchmaker.TakeNextMatchId(), queuedMode, group, difficulty,
+                this, ResolveQuestionSource(), CurrentRules(queuedMode));
+
+            AssignSeatsForMatch(match);
+            liveMatches.Add(match);
+            match.Begin();
+        }
+
+        if (groups.Count > 0)
+            NetLiveMatches.Value = liveMatches.Count;
+    }
+
+    // Each participant's PlayerSideIdentity carries the seat, so the existing per-client UI
+    // (which side am I, which slot am I) keeps working unchanged.
+    private void AssignSeatsForMatch(MatchSession match)
+    {
+        foreach (ulong clientId in match.Participants)
+        {
+            PlayerSideIdentity identity = FindIdentity(clientId);
+
+            if (identity == null)
+                continue;
+
+            int seat = match.GetSeat(clientId);
+
+            // Tag first: MatchId is what tells each client whose name belongs on its screen, and
+            // seat numbers restart per match, so an untagged seat change would show the wrong name.
+            identity.MatchId.Value = match.MatchId;
+
+            if (match.Mode == MatchMode.TeamFour)
+                identity.AssignedSlot.Value = seat;
+            else
+                identity.AssignedSide.Value = seat;
+        }
+    }
+
+    // Untag everyone when a match ends, so their identities go back to being lobby-visible
+    // instead of staying bound to a match that no longer exists.
+    private void ClearMatchTags(MatchSession match)
+    {
+        foreach (ulong clientId in match.Participants)
+        {
+            PlayerSideIdentity identity = FindIdentity(clientId);
+
+            if (identity == null)
+                continue;
+
+            // Seats must clear too, not just the tag. A leftover seat is what let a player from a
+            // previous match push its name into a slot of the next one before its real seat landed.
+            identity.MatchId.Value = 0;
+            identity.AssignedSide.Value = 0;
+            identity.AssignedSlot.Value = 0;
+        }
+    }
+
+    private int AverageDifficultyOf(IReadOnlyList<ulong> group)
+    {
+        int total = 0;
+        int counted = 0;
+
+        foreach (ulong clientId in group)
+        {
+            PlayerSideIdentity identity = FindIdentity(clientId);
+
+            if (identity == null)
+                continue;
+
+            total += identity.DifficultyLevel.Value;
+            counted++;
+        }
+
+        return counted == 0 ? 1 : Mathf.Clamp(Mathf.RoundToInt((float)total / counted), 1, 7);
+    }
+
+    private PlayerSideIdentity FindIdentity(ulong clientId)
+    {
+        if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
+            return null;
+
+        return client.PlayerObject != null ? client.PlayerObject.GetComponent<PlayerSideIdentity>() : null;
+    }
+
+    private IQuestionSource ResolveQuestionSource() => TriviaDuelManager.Instance;
+
+    // Each mode has its own tunables in the Inspector — notably pointsToWin, which is 7 for 1v1
+    // and 9 for 2v2. Reading both from TriviaDuelManager would have made every team match end two
+    // points early.
+    private MatchRules CurrentRules(MatchMode mode)
+    {
+        if (mode == MatchMode.TeamFour)
+        {
+            TeamDuelManager team = TeamDuelManager.Instance;
+
+            if (team == null)
+                return MatchRules.Default;
+
+            return new MatchRules
+            {
+                pointsToWin = team.pointsToWin,
+                soloTimeSeconds = team.soloTimeSeconds,
+                wrongFlashSeconds = team.wrongFlashSeconds,
+                correctResolveSeconds = team.correctResolveSeconds,
+                nextRoundDelaySeconds = team.nextRoundDelaySeconds,
+                inactivityEndSeconds = team.inactivityEndSeconds
+            };
+        }
+
+        TriviaDuelManager manager = TriviaDuelManager.Instance;
+
+        if (manager == null)
+            return MatchRules.Default;
+
+        return new MatchRules
+        {
+            pointsToWin = manager.pointsToWin,
+            soloTimeSeconds = manager.soloTimeSeconds,
+            wrongFlashSeconds = manager.wrongFlashSeconds,
+            correctResolveSeconds = manager.correctResolveSeconds,
+            nextRoundDelaySeconds = manager.nextRoundDelaySeconds,
+            inactivityEndSeconds = manager.inactivityEndSeconds
+        };
+    }
+
+    private void PublishQueueStatus()
+    {
+        if (!IsServer)
+            return;
+
+        NetQueuedPlayers.Value = matchmaker.QueuedCount;
+        NetPlayersNeeded.Value = matchmaker.PlayersStillNeeded(queuedMode);
+        NetLiveMatches.Value = liveMatches.Count;
+        NetRequiredPlayers.Value = Matchmaker.RequiredPlayersFor(queuedMode);
+    }
+
+    public MatchSession FindMatchFor(ulong clientId)
+    {
+        for (int i = 0; i < liveMatches.Count; i++)
+            if (liveMatches[i].Contains(clientId))
+                return liveMatches[i];
+
+        return null;
+    }
+
+    private ClientRpcParams OnlyFor(MatchSession match)
+    {
+        return new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new List<ulong>(match.Participants).ToArray()
+            }
+        };
+    }
+
+    // --- IMatchRouter: every message goes only to the match's own participants ---
+    // These deliberately do NOT skip the server. The host is usually a player too, and under the
+    // old single-match design its manager was the authority AND the view; now MatchSession is the
+    // sole authority and every client, host included, is purely a view that renders what arrives.
+
+    public void MatchStarted(MatchSession match) =>
+        MatchStartedTargetedClientRpc((int)match.Mode, OnlyFor(match));
+
+    public void PublishState(MatchSession match) =>
+        MatchStateTargetedClientRpc((int)match.Mode, match.RoundStateValue, match.DifficultyLevel,
+            match.QuestionIndex, match.TeamAScore, match.TeamBScore,
+            match.ActiveSlotA, match.ActiveSlotB, OnlyFor(match));
+
+    public void PublishSoloTimer(MatchSession match, float remaining) =>
+        MatchSoloTimerTargetedClientRpc((int)match.Mode, remaining, OnlyFor(match));
+
+    public void ButtonsAvailable(MatchSession match) =>
+        MatchButtonsAvailableTargetedClientRpc((int)match.Mode, OnlyFor(match));
+
+    public void LockAllButtons(MatchSession match) =>
+        MatchLockButtonsTargetedClientRpc((int)match.Mode, OnlyFor(match));
+
+    public void AnswerMarked(MatchSession match, int answerIndex, bool wasCorrect, int answeringSeat) =>
+        MatchAnswerMarkedTargetedClientRpc((int)match.Mode, answerIndex, wasCorrect, answeringSeat, OnlyFor(match));
+
+    public void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam) =>
+        MatchEndedTargetedClientRpc((int)match.Mode, message, hasWinner, winningTeam, OnlyFor(match));
+
+    [ClientRpc]
+    private void MatchStartedTargetedClientRpc(int mode, ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+            TeamDuelManager.Instance?.ApplyNetworkedMatchStarted();
+        else
+            TriviaDuelManager.Instance?.ApplyNetworkedMatchStarted();
+    }
+
+    [ClientRpc]
+    private void MatchStateTargetedClientRpc(int mode, int roundState, int difficulty, int questionIndex,
+        int teamAScore, int teamBScore, int activeSlotA, int activeSlotB, ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+        {
+            TeamDuelManager.Instance?.ApplyNetworkedRoundState(roundState);
+            TeamDuelManager.Instance?.ApplyNetworkedActiveSlots(activeSlotA, activeSlotB);
+            TeamDuelManager.Instance?.ApplyNetworkedQuestion(difficulty, questionIndex);
+            TeamDuelManager.Instance?.ApplyNetworkedScore(teamAScore, teamBScore);
+            return;
+        }
+
+        TriviaDuelManager.Instance?.ApplyNetworkedRoundState(roundState);
+        TriviaDuelManager.Instance?.ApplyNetworkedQuestion(difficulty, questionIndex);
+        TriviaDuelManager.Instance?.ApplyNetworkedScore(teamAScore, teamBScore);
+    }
+
+    [ClientRpc]
+    private void MatchSoloTimerTargetedClientRpc(int mode, float remaining, ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+            TeamDuelManager.Instance?.ApplySoloTimerVisual(remaining);
+        else
+            TriviaDuelManager.Instance?.ApplySoloTimerVisual(remaining);
+    }
+
+    [ClientRpc]
+    private void MatchButtonsAvailableTargetedClientRpc(int mode, ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+            TeamDuelManager.Instance?.SetButtonsAvailableNormal();
+        else
+            TriviaDuelManager.Instance?.SetButtonsAvailableNormal();
+    }
+
+    [ClientRpc]
+    private void MatchLockButtonsTargetedClientRpc(int mode, ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+            TeamDuelManager.Instance?.LockAllButtons();
+        else
+            TriviaDuelManager.Instance?.LockAllButtons();
+    }
+
+    [ClientRpc]
+    private void MatchAnswerMarkedTargetedClientRpc(int mode, int answerIndex, bool wasCorrect,
+        int answeringSeat, ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+        {
+            if (wasCorrect) TeamDuelManager.Instance?.MarkAnswerRight(answerIndex);
+            else TeamDuelManager.Instance?.MarkAnswerWrong(answerIndex);
+            return;
+        }
+
+        if (wasCorrect) TriviaDuelManager.Instance?.MarkAnswerRight(answerIndex);
+        else TriviaDuelManager.Instance?.MarkAnswerWrong(answerIndex);
+    }
+
+    [ClientRpc]
+    private void MatchEndedTargetedClientRpc(int mode, string message, bool hasWinner, int winningTeam,
+        ClientRpcParams _ = default)
+    {
+        if ((MatchMode)mode == MatchMode.TeamFour)
+            TeamDuelManager.Instance?.ApplyNetworkedMatchEnd(message, hasWinner, winningTeam);
+        else
+            TriviaDuelManager.Instance?.ApplyNetworkedMatchEnd(message, hasWinner, winningTeam);
+    }
+
     private void HandleServerClientConnected(ulong clientId)
     {
         if (!joinOrder.Contains(clientId))
             joinOrder.Add(clientId);
     }
 
+    // Routed per match, so an answer only ever affects the match its sender is actually in.
+    public void SubmitAnswerFromClient(ulong clientId, int answerIndex)
+    {
+        if (!IsServer)
+            return;
+
+        FindMatchFor(clientId)?.SubmitAnswer(clientId, answerIndex);
+    }
+
     private void HandleServerClientDisconnected(ulong clientId)
     {
         joinOrder.Remove(clientId);
+        matchmaker.Remove(clientId);
 
-        // A departed client must not still count toward the ready gate below, or a match can
-        // start with fewer players than the mode needs — and then wait forever on the missing one.
-        readyClientIds.Remove(clientId);
+        MatchSession match = FindMatchFor(clientId);
 
-        if (clientId == NetworkManager.ServerClientId)
-            return;
+        if (match != null)
+        {
+            ClearMatchTags(match);
+            match.AbortForDisconnect(clientId);
+            liveMatches.Remove(match);
+        }
 
-        if (TeamDuelManager.Instance != null && TeamDuelManager.Instance.IsMatchRunning)
-            TeamDuelManager.Instance.AbortMatchForDisconnect("A player disconnected.");
-        else if (TriviaDuelManager.Instance != null && TriviaDuelManager.Instance.IsMatchRunning)
-            TriviaDuelManager.Instance.AbortMatchForDisconnect("Your opponent disconnected.");
+        PublishQueueStatus();
     }
 
     public void PublishState(int roundState, int difficultyLevel, int questionIndex, int duelIndex, int team1Score, int team2Score)
@@ -256,73 +600,24 @@ public class TriviaNetworkSync : NetworkBehaviour
         MarkClientReadyForMode(clientId, MatchMode.OneVsOne);
     }
 
+    // Pressing Start no longer starts "the" match — it joins the queue. The matchmaker then forms
+    // as many concurrent matches as the queue can fill, grouping players by difficulty level.
     public void MarkClientReadyForMode(ulong clientId, MatchMode requestedMode)
     {
         if (!IsServer)
             return;
 
-        // A stale ready-up for a different mode than what's currently being gated must not
-        // accidentally complete this gate — reset and start tracking the new mode instead.
-        if (requestedMode != pendingMode)
-        {
-            pendingMode = requestedMode;
-            readyClientIds.Clear();
-        }
+        PlayerSideIdentity identity = FindIdentity(clientId);
+        int difficultyLevel = identity != null ? identity.DifficultyLevel.Value : 1;
 
-        readyClientIds.Add(clientId);
-        int requiredCount = requestedMode == MatchMode.TeamFour ? 4 : 2;
-        int connectedCount = NetworkManager.ConnectedClientsIds.Count;
+        EnqueueForMatch(clientId, requestedMode, difficultyLevel);
 
-        // Exact, not "at least": a 1v1 with 4 people connected is ambiguous, because
-        // PlayerSideIdentity gives side 1 to the host and side 2 to *everyone* else — so players
-        // 3 and 4 would share side 2 and could both answer for it. Requiring an exact count makes
-        // the room unambiguously a 1v1 room or a 2v2 room.
-        bool enoughConnected = connectedCount == requiredCount;
-        bool everyoneReady = readyClientIds.Count >= requiredCount;
-
-        Debug.Log("[START] Ready gate: client " + clientId + " readied for " + requestedMode +
-                  ". ready=" + readyClientIds.Count + "/" + requiredCount +
-                  ", connected=" + connectedCount + "/" + requiredCount +
-                  " => " + (enoughConnected && everyoneReady ? "STARTING MATCH"
-                            : !enoughConnected
-                              ? "BLOCKED: " + requestedMode + " needs exactly " + requiredCount +
-                                " players in the room, but " + connectedCount + " are connected."
-                              : "waiting for " + (requiredCount - readyClientIds.Count) + " more to press Start"));
-
-        if (enoughConnected && everyoneReady)
-        {
-            readyClientIds.Clear();
-
-            if (requestedMode == MatchMode.TeamFour)
-            {
-                AssignTeamSlotsInJoinOrder();
-                TeamDuelManager.Instance?.BeginMatchAuthoritative();
-            }
-            else
-            {
-                TriviaDuelManager.Instance?.BeginMatchAuthoritative();
-            }
-        }
-    }
-
-    private void AssignTeamSlotsInJoinOrder()
-    {
-        int joinIndex = 0;
-
-        for (int i = 0; i < joinOrder.Count; i++)
-        {
-            ulong clientId = joinOrder[i];
-
-            if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client))
-                continue;
-
-            PlayerSideIdentity identity = client.PlayerObject != null ? client.PlayerObject.GetComponent<PlayerSideIdentity>() : null;
-
-            if (identity != null)
-                identity.AssignedSlot.Value = PlayerSideIdentity.SlotForJoinIndex(joinIndex);
-
-            joinIndex++;
-        }
+        // Kept (not a temp diagnostic): on a phone this one line via `adb logcat -s Unity` is the
+        // only way to see why a match did or didn't form.
+        Debug.Log("Matchmaking: client " + clientId + " joined the " + requestedMode + " queue at level " +
+                  difficultyLevel + ". queued=" + matchmaker.QueuedCount +
+                  ", needs " + matchmaker.PlayersStillNeeded(requestedMode) + " more, live matches=" +
+                  liveMatches.Count);
     }
 
     [ClientRpc]

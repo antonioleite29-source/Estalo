@@ -179,6 +179,11 @@ public class TeamDuelManager : MonoBehaviour
 
     public void ApplyNetworkedMatchStarted()
     {
+
+        // Match has formed — take down the queue/waiting screen before showing the gameplay UI.
+        if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
+            lobbyPageSwitcher.waitingScreen.HideWaiting();
+
         BindAnswerButtons();
 
         if (lobbyRootObject != null)
