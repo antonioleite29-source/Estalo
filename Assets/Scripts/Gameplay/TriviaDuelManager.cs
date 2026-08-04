@@ -16,6 +16,11 @@ public class TriviaQuestion
 
     [Range(0, 3)]
     public int correctAnswerIndex;
+
+    // What skill this question tests: adicao, divisao, sequencias, logica and so on. Mistakes can
+    // only be counted without it; with it they can be explained, which is what makes the practice
+    // set personal rather than just "questions you got wrong".
+    public string topic;
 }
 
 [System.Serializable]
@@ -1144,6 +1149,33 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         return pool[questionIndex];
     }
 
+    // Every question at every level, for the Learning tab to build practice sets from. Practice is
+    // not limited to the player's current difficulty: the point is the topics they get wrong, and a
+    // question they missed at level 5 is still the one worth revisiting.
+    public List<TriviaQuestion> GetAllQuestions()
+    {
+        List<TriviaQuestion> all = new List<TriviaQuestion>();
+
+        if (questionsByDifficulty == null)
+            return all;
+
+        for (int level = 0; level < questionsByDifficulty.Length; level++)
+        {
+            List<TriviaQuestion> pool = questionsByDifficulty[level];
+
+            if (pool != null)
+                all.AddRange(pool);
+        }
+
+        return all;
+    }
+
+    public List<TriviaQuestion> GetQuestionsForLevel(int difficultyLevel)
+    {
+        List<TriviaQuestion> pool = GetQuestionPool(difficultyLevel);
+        return pool != null ? new List<TriviaQuestion>(pool) : new List<TriviaQuestion>();
+    }
+
     internal void ApplyQuestionVisualsTo(TMP_Text targetQuestionText, AnswerButtonVisual[] targetVisuals, TriviaQuestion questionData)
     {
         if (targetQuestionText != null && questionData != null)
@@ -1870,20 +1902,33 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
             string[] columns = line.Split('\t');
 
-            if (columns.Length < 7)
+            // 8 columns since the topic was added: difficulty, topic, question, 4 answers, index.
+            // Files still in the old 7-column shape are read too, so an older TSV does not silently
+            // load zero questions.
+            bool hasTopicColumn = columns.Length >= 8;
+            int expectedColumns = hasTopicColumn ? 8 : 7;
+
+            if (columns.Length < expectedColumns)
                 continue;
 
             if (!int.TryParse(columns[0], out int difficulty))
                 continue;
 
-            if (!int.TryParse(columns[6], out int correctAnswerIndex))
+            int topicOffset = hasTopicColumn ? 1 : 0;
+
+            if (!int.TryParse(columns[6 + topicOffset], out int correctAnswerIndex))
                 continue;
 
             TriviaQuestion questionData = new TriviaQuestion
             {
-                question = columns[1],
-                answers = new[] { columns[2], columns[3], columns[4], columns[5] },
-                correctAnswerIndex = Mathf.Clamp(correctAnswerIndex, 0, 3)
+                question = columns[1 + topicOffset],
+                answers = new[]
+                {
+                    columns[2 + topicOffset], columns[3 + topicOffset],
+                    columns[4 + topicOffset], columns[5 + topicOffset]
+                },
+                correctAnswerIndex = Mathf.Clamp(correctAnswerIndex, 0, 3),
+                topic = hasTopicColumn ? columns[1] : "geral"
             };
 
             if (!IsValidQuestion(questionData))

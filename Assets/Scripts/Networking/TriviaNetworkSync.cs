@@ -365,6 +365,34 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     public void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam) =>
         MatchEndedTargetedClientRpc((int)match.Mode, message, hasWinner, winningTeam, OnlyFor(match));
 
+    // Targeted at the single client who answered, not the whole match: each device logs only its
+    // own mistakes.
+    public void RecordOwnAnswer(MatchSession match, ulong clientId, int questionIndex, bool wasCorrect)
+    {
+        if (!CanSendRpc)
+            return;
+
+        ClientRpcParams onlySender = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } }
+        };
+
+        RecordOwnAnswerTargetedClientRpc(match.DifficultyLevel, questionIndex, wasCorrect, onlySender);
+    }
+
+    [ClientRpc]
+    private void RecordOwnAnswerTargetedClientRpc(int difficultyLevel, int questionIndex,
+        bool wasCorrect, ClientRpcParams _ = default)
+    {
+        if (MistakeLogManager.Instance == null || TriviaDuelManager.Instance == null)
+            return;
+
+        TriviaQuestion question = TriviaDuelManager.Instance.GetQuestionAt(difficultyLevel, questionIndex);
+
+        if (question != null)
+            MistakeLogManager.Instance.RecordAnswer(question, difficultyLevel, wasCorrect);
+    }
+
     [ClientRpc]
     private void MatchStartedTargetedClientRpc(int mode, ClientRpcParams _ = default)
     {

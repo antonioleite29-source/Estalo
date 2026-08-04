@@ -160,6 +160,8 @@ public class MatchSession
 
         inactivityTimer = rules.inactivityEndSeconds;
 
+        router.RecordOwnAnswer(this, clientId, currentQuestionIndex, answerIndex == correctAnswerIndex);
+
         bool wasInSolo = roundState == RoundState.SoloLeft || roundState == RoundState.SoloRight;
 
         inputEnabled = false;
@@ -351,6 +353,11 @@ public interface IMatchRouter
     void ButtonsAvailable(MatchSession match);
     void LockAllButtons(MatchSession match);
     void AnswerMarked(MatchSession match, int answerIndex, bool wasCorrect, int answeringSeat);
+
+    // Sent to the ONE client who answered, so that device can log its own mistakes. Scoring happens
+    // here on the server, so without this a player's own errors are never visible on their phone —
+    // and a practice set built from someone else's mistakes is not personal at all.
+    void RecordOwnAnswer(MatchSession match, ulong clientId, int questionIndex, bool wasCorrect);
     void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam);
 }
 
