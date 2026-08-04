@@ -99,8 +99,50 @@ public class PracticeQuizController : MonoBehaviour
         if (doneButton != null)
             doneButton.onClick.AddListener(Hide);
 
+        // Done here rather than left to the Inspector so it holds for whatever objects are dragged
+        // into these slots, including ones built by hand.
+        FitToItsBox(questionText, 0.35f);
+
+        for (int i = 0; i < answerLabels.Length; i++)
+            FitToItsBox(answerLabels[i], 0.4f);
+
         SetActive(quizRoot, false);
         SetActive(resultsRoot, false);
+    }
+
+    // Long questions must shrink to stay inside their box instead of running off the screen, which
+    // is how the duel screen's question already behaves.
+    private static void FitToItsBox(TMP_Text label, float minimumSizeRatio)
+    {
+        if (label == null)
+            return;
+
+        label.textWrappingMode = TextWrappingModes.Normal;
+        label.overflowMode = TextOverflowModes.Truncate;
+
+        // Whatever size the object was authored at becomes the ceiling; auto-sizing only ever
+        // shrinks from there, so nothing suddenly renders bigger than it was designed to be.
+        if (!label.enableAutoSizing)
+        {
+            label.fontSizeMax = label.fontSize;
+            label.enableAutoSizing = true;
+        }
+
+        label.fontSizeMin = Mathf.Max(8f, label.fontSizeMax * minimumSizeRatio);
+    }
+
+    // A TMP object that was activated in this same frame has not run its own initialisation yet, so
+    // the text it is handed never reaches the mesh and the label draws blank. Tapping a button
+    // happened to force a rebuild, which is why the answers only appeared once you touched one.
+    private static void SetText(TMP_Text label, string value)
+    {
+        if (label == null)
+            return;
+
+        label.text = value;
+
+        if (label.gameObject.activeInHierarchy)
+            label.ForceMeshUpdate();
     }
 
     // Wire this to the "practice my mistakes" button at the bottom of the Learning page.
@@ -176,16 +218,13 @@ public class PracticeQuizController : MonoBehaviour
         TriviaQuestion question = set[index];
         answering = true;
 
-        if (questionText != null)
-            questionText.text = question.question;
-
-        if (progressText != null)
-            progressText.text = (index + 1) + " / " + set.Count;
+        SetText(questionText, question.question);
+        SetText(progressText, (index + 1) + " / " + set.Count);
 
         for (int i = 0; i < answerButtons.Length; i++)
         {
-            if (answerLabels.Length > i && answerLabels[i] != null)
-                answerLabels[i].text = i < question.answers.Length ? question.answers[i] : string.Empty;
+            if (answerLabels.Length > i)
+                SetText(answerLabels[i], i < question.answers.Length ? question.answers[i] : string.Empty);
 
             if (answerButtons[i] == null)
                 continue;
@@ -256,14 +295,9 @@ public class PracticeQuizController : MonoBehaviour
         SetActive(quizRoot, false);
         SetActive(resultsRoot, true);
 
-        if (scoreText != null)
-            scoreText.text = score + " / " + set.Count;
-
-        if (weakestTopicText != null)
-            weakestTopicText.text = BuildWeakestLine();
-
-        if (breakdownText != null)
-            breakdownText.text = BuildBreakdown();
+        SetText(scoreText, score + " / " + set.Count);
+        SetText(weakestTopicText, BuildWeakestLine());
+        SetText(breakdownText, BuildBreakdown());
     }
 
     private string BuildWeakestLine()

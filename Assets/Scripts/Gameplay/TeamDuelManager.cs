@@ -265,6 +265,14 @@ public class TeamDuelManager : MonoBehaviour
     public void ApplyNetworkedRoundState(int newRoundState)
     {
         roundState = (RoundState)newRoundState;
+
+        // The donuts are only redrawn while a solo is ticking, so leaving a solo used to leave the
+        // last frame of the ring frozen on screen into the next round. Nothing else ever cleared it:
+        // the server stops sending timer updates the moment the solo ends.
+        if (roundState != RoundState.SoloActiveA && roundState != RoundState.SoloActiveB)
+            soloTimer = 0f;
+
+        UpdateSoloDonuts();
     }
 
     public void ApplyNetworkedActiveSlots(int newActiveSlotA, int newActiveSlotB)

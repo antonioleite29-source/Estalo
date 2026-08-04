@@ -28,6 +28,7 @@ public class ProfilePageController : MonoBehaviour
 
     private void Start()
     {
+        MobileInputField.MakeSafeForPhones(nameInputField);
         BindAvatarButtons();
         BindPreviewButton();
     }

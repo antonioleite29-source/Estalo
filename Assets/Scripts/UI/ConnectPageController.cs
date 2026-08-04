@@ -42,6 +42,7 @@ public class ConnectPageController : MonoBehaviour
 
     private void Awake()
     {
+        MobileInputField.MakeSafeForPhones(addressInput);
         BindButtons();
 
         // Subscribe here rather than in OnEnable: this page is deactivated the moment we connect

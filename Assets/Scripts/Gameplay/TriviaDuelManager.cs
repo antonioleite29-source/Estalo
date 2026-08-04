@@ -56,8 +56,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         None,
         Fade,
         Pop,
-        SlideFromLeft,
-        SlideFromRight
+        WipeFromLeft,
+        WipeFromRight
     }
 
     public enum BackgroundLoopAnimation
@@ -130,10 +130,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     };
 
     [Tooltip("Background shown when it is YOUR solo turn (the other player answered wrong and now you have a timer to answer).")]
-    public StateBackgroundVisual yourSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.SlideFromLeft };
+    public StateBackgroundVisual yourSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.WipeFromLeft };
 
     [Tooltip("Background shown when it is the OTHER PLAYER's solo turn.")]
-    public StateBackgroundVisual otherPlayerSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.SlideFromRight };
+    public StateBackgroundVisual otherPlayerSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.WipeFromRight };
 
     [Tooltip("Background shown when the match ends (someone wins or time runs out).")]
     public StateBackgroundVisual matchEndedBackground = new StateBackgroundVisual { animation = BackgroundAnimation.Fade };
@@ -271,6 +271,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     private Coroutine backgroundLoopCoroutine;
     private Coroutine returnToLobbyCoroutine;
 
+    private Image backgroundUnderlay;
     private Image scrollingBackgroundA;
     private Image scrollingBackgroundB;
     private Image scrollingBackgroundC;
@@ -633,6 +634,14 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         roundState = (RoundState)newRoundState;
         RefreshBackgroundForCurrentState();
+
+        // The donut is only redrawn while a solo is ticking, so leaving a solo used to leave the last
+        // frame of the ring frozen on screen into the next round. Nothing else ever cleared it: the
+        // server stops sending timer updates the moment the solo ends.
+        if (roundState != RoundState.SoloLeft && roundState != RoundState.SoloRight)
+            soloTimer = 0f;
+
+        UpdateSoloDonut();
     }
 
     public void ApplyNetworkedQuestion(int difficultyLevel, int questionIndex)
@@ -1508,6 +1517,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     private IEnumerator AnimateStaticBackground(StateBackgroundVisual visual)
     {
+        // The outgoing sprite stays on screen underneath for the length of the transition. The new
+        // one fades in from alpha 0, and with nothing behind it that used to mean fading up from
+        // whatever the camera clears to — a black flash on every state change.
+        ShowBackgroundUnderlay(gameBackground.sprite);
+
         gameBackground.enabled = true;
         gameBackground.sprite = visual.backgroundSprite;
         gameBackground.type = Image.Type.Simple;
@@ -1515,20 +1529,28 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         StretchImageToFill(gameBackground.rectTransform);
 
         float duration = Mathf.Max(0.01f, visual.animationSeconds);
-        Vector2 startOffset = Vector2.zero;
         float startScale = 1f;
 
-        switch (visual.animation)
+        bool isWipe = visual.animation == BackgroundAnimation.WipeFromLeft
+                   || visual.animation == BackgroundAnimation.WipeFromRight;
+
+        if (visual.animation == BackgroundAnimation.Pop)
+            startScale = 0.94f;
+
+        if (isWipe)
         {
-            case BackgroundAnimation.Pop:
-                startScale = 0.94f;
-                break;
-            case BackgroundAnimation.SlideFromLeft:
-                startOffset = new Vector2(-80f, 0f);
-                break;
-            case BackgroundAnimation.SlideFromRight:
-                startOffset = new Vector2(80f, 0f);
-                break;
+            // A wipe uncovers the new background across the screen with a hard edge, so it stays
+            // fully opaque throughout — fading it as well would turn the edge into a soft smear.
+            gameBackground.type = Image.Type.Filled;
+            gameBackground.fillMethod = Image.FillMethod.Horizontal;
+            gameBackground.fillOrigin = visual.animation == BackgroundAnimation.WipeFromLeft
+                ? (int)Image.OriginHorizontal.Left
+                : (int)Image.OriginHorizontal.Right;
+            gameBackground.fillAmount = 0f;
+
+            // No explicit flip for player 2. The fill runs in the image's own space, which
+            // GetMirroredScale has already mirrored, so a wipe authored as "from the right"
+            // arrives from the left on their screen on its own.
         }
 
         RectTransform rect = gameBackground.rectTransform;
@@ -1540,27 +1562,63 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             float t = Mathf.Clamp01(elapsed / duration);
             float eased = 1f - Mathf.Pow(1f - t, 3f);
 
-            if (visual.animation == BackgroundAnimation.Fade || visual.animation == BackgroundAnimation.Pop || visual.animation == BackgroundAnimation.SlideFromLeft || visual.animation == BackgroundAnimation.SlideFromRight)
+            if (isWipe)
             {
-                gameBackground.color = new Color(1f, 1f, 1f, eased);
-                rect.anchoredPosition = Vector2.Lerp(startOffset, Vector2.zero, eased);
-                rect.localScale = GetMirroredScale(Vector3.one * Mathf.Lerp(startScale, 1f, eased));
+                gameBackground.color = Color.white;
+                gameBackground.fillAmount = eased;
+                rect.localScale = GetMirroredScale(Vector3.one);
             }
             else
             {
-                gameBackground.color = Color.white;
-                rect.anchoredPosition = Vector2.zero;
-                rect.localScale = GetMirroredScale(Vector3.one);
+                gameBackground.color = new Color(1f, 1f, 1f, eased);
+                rect.localScale = GetMirroredScale(Vector3.one * Mathf.Lerp(startScale, 1f, eased));
             }
+
+            rect.anchoredPosition = Vector2.zero;
 
             yield return null;
         }
 
         gameBackground.color = Color.white;
+        // Back to Simple so the looping animations, which assume a plain stretched image, are not
+        // left drawing through a fill mask.
+        gameBackground.type = Image.Type.Simple;
+        gameBackground.fillAmount = 1f;
         rect.anchoredPosition = Vector2.zero;
         rect.localScale = GetMirroredScale(Vector3.one);
+        HideBackgroundUnderlay();
         StartBackgroundLoop(visual);
         backgroundTransitionCoroutine = null;
+    }
+
+    // Sits directly behind gameBackground holding the sprite being replaced, so a fade or a slide
+    // always has the old background underneath it rather than empty screen.
+    private void ShowBackgroundUnderlay(Sprite outgoingSprite)
+    {
+        if (gameBackground == null || outgoingSprite == null)
+            return;
+
+        if (backgroundUnderlay == null)
+        {
+            backgroundUnderlay = CreateScrollingImage("BackgroundUnderlay",
+                gameBackground.rectTransform.parent, gameBackground.rectTransform.GetSiblingIndex());
+        }
+
+        // Re-seated every time: the scrolling backgrounds are inserted and removed around it, so a
+        // sibling index chosen once will not stay directly behind gameBackground.
+        backgroundUnderlay.rectTransform.SetSiblingIndex(gameBackground.rectTransform.GetSiblingIndex());
+        backgroundUnderlay.sprite = outgoingSprite;
+        backgroundUnderlay.color = Color.white;
+        backgroundUnderlay.enabled = true;
+        StretchImageToFill(backgroundUnderlay.rectTransform);
+        backgroundUnderlay.rectTransform.localScale = GetMirroredScale(Vector3.one);
+        backgroundUnderlay.rectTransform.anchoredPosition = Vector2.zero;
+    }
+
+    private void HideBackgroundUnderlay()
+    {
+        if (backgroundUnderlay != null)
+            backgroundUnderlay.enabled = false;
     }
 
     private void SetSolidBackground(Color color)
@@ -1755,6 +1813,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             gameBackground.rectTransform.localScale = GetMirroredScale(Vector3.one);
             gameBackground.rectTransform.anchoredPosition = Vector2.zero;
         }
+
+        // A transition cut short leaves the outgoing sprite behind the new one; without this it
+        // would stay there for the rest of the match.
+        HideBackgroundUnderlay();
     }
 
     private void DisableScrollingBackground()
