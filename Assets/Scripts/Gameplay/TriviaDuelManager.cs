@@ -414,7 +414,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (LobbyScreenController.Instance != null)
             LobbyScreenController.Instance.ShowLobby();
 
-        foreach (IQBarController bar in FindObjectsByType<IQBarController>(FindObjectsSortMode.None))
+        foreach (IQBarController bar in FindObjectsByType<IQBarController>())
             bar.RefreshFromManager();
     }
 

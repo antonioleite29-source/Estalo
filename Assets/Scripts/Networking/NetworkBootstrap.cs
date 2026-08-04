@@ -77,6 +77,68 @@ public class NetworkBootstrap : MonoBehaviour
             Instance = null;
 
         UnsubscribeFromNetworkManager();
+        ReleaseTransport();
+    }
+
+    private void OnApplicationQuit()
+    {
+        ReleaseTransport();
+        Discovery.StopAll();
+    }
+
+    // Android does not really quit an app when you swipe it away — the process is often kept
+    // alive, so OnApplicationQuit never runs and the next launch inherits a NetworkManager that
+    // still thinks it is connected and sockets that are still bound. That is why the app had to be
+    // opened twice: the first launch failed on the leftovers, and only the second, after Android
+    // had finally killed the process, started clean. Releasing on pause makes the first launch work.
+    private void OnApplicationPause(bool isPaused)
+    {
+        if (!isPaused)
+            return;
+
+        ReleaseTransport();
+        Discovery.StopAll();
+    }
+
+    // Leaving Play mode does not reliably close the UDP socket on its own: NetworkManager reports
+    // IsListening == false while the transport still holds port 7777, so the next Play session
+    // fails to bind with "address is already in use" and the only cure is restarting the Editor.
+    // Shutting down explicitly on teardown closes it.
+    private void ReleaseTransport()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        if (NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsClient)
+            NetworkManager.Singleton.Shutdown();
+    }
+
+    // ---------------------------------------------------------------
+    // LAN discovery
+    // ---------------------------------------------------------------
+
+    private LanDiscovery discovery;
+
+    // Created on demand on this same GameObject rather than needing its own slot in the scene —
+    // one less thing to wire, and it cannot end up on the wrong object.
+    public LanDiscovery Discovery
+    {
+        get
+        {
+            if (discovery == null)
+                discovery = gameObject.AddComponent<LanDiscovery>();
+
+            return discovery;
+        }
+    }
+
+    private string HostAdvertisedName()
+    {
+        string playerName = PlayerProfileManager.Instance != null
+            ? PlayerProfileManager.Instance.GetLocalName()
+            : null;
+
+        return string.IsNullOrEmpty(playerName) ? "Trivia Duel" : "Sala de " + playerName;
     }
 
     // ---------------------------------------------------------------
@@ -103,6 +165,11 @@ public class NetworkBootstrap : MonoBehaviour
         {
             IsConnecting = false;
             ReportStatus("Hosting on " + GetLocalIPv4() + ":" + connectPort);
+
+            // Announce on the Wi-Fi so phones can find this game without anyone reading an IP
+            // address aloud and typing it in.
+            Discovery.StartAdvertising(connectPort, HostAdvertisedName());
+
             SessionStarted?.Invoke();
         }
         else
@@ -151,6 +218,11 @@ public class NetworkBootstrap : MonoBehaviour
 
         NetworkManager.Singleton.Shutdown();
         IsConnecting = false;
+
+        // Stop shouting: a host that has shut down but is still advertising leaves phones showing
+        // a game they cannot join.
+        Discovery.StopAll();
+
         ReportStatus("Disconnected.");
         SessionEnded?.Invoke(string.Empty);
     }
@@ -346,6 +418,11 @@ public class NetworkBootstrap : MonoBehaviour
     private void ReportStatus(string message)
     {
         StatusChanged?.Invoke(message);
+
+        // Also to the console. The status label lives on the Connect page, which the Editor does
+        // not open by default and a phone hides the moment it connects — so without this the one
+        // message that says whether the session actually came up is invisible in both places.
+        Debug.Log("Network: " + message);
     }
 
     // ---------------------------------------------------------------

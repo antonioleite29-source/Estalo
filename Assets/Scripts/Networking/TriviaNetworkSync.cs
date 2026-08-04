@@ -7,7 +7,6 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     public static TriviaNetworkSync Instance { get; private set; }
 
     private readonly HashSet<ulong> readyClientIds = new HashSet<ulong>();
-    private MatchMode pendingMode = MatchMode.OneVsOne;
 
     // Server-only. NetworkManager.ConnectedClientsIds is not guaranteed to stay in arrival order
     // once anyone disconnects and reconnects, so team slots derived from its iteration order can
@@ -38,6 +37,14 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     {
         Instance = this;
     }
+
+    // IsServer alone is not enough to decide whether an RPC can be sent. It stays true for a moment
+    // after a shutdown, while IsListening has already gone false — so a match started locally right
+    // after disconnecting would still try to broadcast and log "Rpc methods can only be invoked
+    // after starting the NetworkManager!" for every message it sent.
+    private bool CanSendRpc =>
+        IsServer && IsSpawned &&
+        NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
 
     public override void OnNetworkSpawn()
     {
@@ -518,25 +525,25 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     public void BroadcastButtonsAvailable()
     {
-        if (IsServer)
+        if (CanSendRpc)
             SetButtonsAvailableClientRpc();
     }
 
     public void BroadcastLockAllButtons()
     {
-        if (IsServer)
+        if (CanSendRpc)
             LockAllButtonsClientRpc();
     }
 
     public void BroadcastMatchEnded(string message, bool hasWinner, int winnerSide)
     {
-        if (IsServer)
+        if (CanSendRpc)
             NotifyMatchEndedClientRpc(message, hasWinner, winnerSide);
     }
 
     public void BroadcastMatchStarted()
     {
-        if (IsServer)
+        if (CanSendRpc)
             MatchStartedClientRpc();
     }
 
@@ -553,37 +560,37 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     public void BroadcastTeamButtonsAvailable()
     {
-        if (IsServer)
+        if (CanSendRpc)
             SetTeamButtonsAvailableClientRpc();
     }
 
     public void BroadcastTeamLockAllButtons()
     {
-        if (IsServer)
+        if (CanSendRpc)
             LockTeamButtonsClientRpc();
     }
 
     public void BroadcastTeamMatchEnded(string message, bool hasWinner, int winningTeam)
     {
-        if (IsServer)
+        if (CanSendRpc)
             NotifyTeamMatchEndedClientRpc(message, hasWinner, winningTeam);
     }
 
     public void BroadcastTeamMatchStarted()
     {
-        if (IsServer)
+        if (CanSendRpc)
             TeamMatchStartedClientRpc();
     }
 
     public void BroadcastMatchAborted(string message)
     {
-        if (IsServer)
+        if (CanSendRpc)
             NotifyMatchAbortedClientRpc(message);
     }
 
     public void BroadcastTeamMatchAborted(string message)
     {
-        if (IsServer)
+        if (CanSendRpc)
             NotifyTeamMatchAbortedClientRpc(message);
     }
 

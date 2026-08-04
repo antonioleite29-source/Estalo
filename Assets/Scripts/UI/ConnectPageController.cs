@@ -55,11 +55,80 @@ public class ConnectPageController : MonoBehaviour
         RefreshMyAddress();
         RestoreLastAddress();
         SetInteractable(true);
+        BeginSearchingForGames();
+    }
+
+    private void OnDisable()
+    {
+        StopSearchingForGames();
     }
 
     private void OnDestroy()
     {
         Unsubscribe();
+        StopSearchingForGames();
+    }
+
+    // ---------------------------------------------------------------
+    // Finding games on the Wi-Fi
+    // ---------------------------------------------------------------
+
+    [Header("--- WI-FI DISCOVERY ---")]
+    [Tooltip("Join automatically as soon as a game is found on this Wi-Fi, without the player " +
+             "having to type or tap anything. Untick to make them press Join.")]
+    public bool autoJoinFirstHostFound = true;
+
+    private bool searching;
+
+    // Searching starts the moment this page appears, so by the time a tester has read the screen
+    // the game has usually already been found. Nobody has to know what an IP address is.
+    private void BeginSearchingForGames()
+    {
+        if (searching || Bootstrap == null)
+            return;
+
+        // A host has nothing to look for and would only find itself.
+        if (Bootstrap.IsInSession)
+            return;
+
+        searching = true;
+        Bootstrap.Discovery.HostFound += HandleHostFound;
+        Bootstrap.Discovery.StartSearching();
+
+        SetStatus("Procurando jogos no Wi-Fi...");
+    }
+
+    private void StopSearchingForGames()
+    {
+        if (!searching || Bootstrap == null)
+            return;
+
+        searching = false;
+        Bootstrap.Discovery.HostFound -= HandleHostFound;
+        Bootstrap.Discovery.StopAll();
+    }
+
+    private void HandleHostFound(LanDiscovery.FoundHost host)
+    {
+        // Ignore ourselves. This page starts searching before NetworkBootstrap has had its Start
+        // call, so on the machine that ends up hosting, the search is already running when the
+        // host's own broadcasts begin — and without this check it would try to join itself.
+        if (Bootstrap == null || Bootstrap.IsInSession || host.Address == NetworkBootstrap.GetLocalIPv4())
+        {
+            StopSearchingForGames();
+            return;
+        }
+
+        if (addressInput != null)
+            addressInput.text = host.Address;
+
+        SetStatus($"Encontrado: {host.Name}");
+
+        if (!autoJoinFirstHostFound)
+            return;
+
+        StopSearchingForGames();
+        Bootstrap.StartClientAt(host.Address);
     }
 
     private void BindButtons()

@@ -100,7 +100,7 @@ public class PlayerSideIdentity : NetworkBehaviour
 
     private static void RefreshAllIdentities()
     {
-        PlayerSideIdentity[] all = FindObjectsByType<PlayerSideIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        PlayerSideIdentity[] all = FindObjectsByType<PlayerSideIdentity>(FindObjectsInactive.Include);
 
         for (int i = 0; i < all.Length; i++)
         {
@@ -206,6 +206,11 @@ public class PlayerSideIdentity : NetworkBehaviour
         RequestStartTriviaServerRpc();
     }
 
+    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
+    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
+    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
+    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
+    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartTriviaServerRpc(ServerRpcParams rpcParams = default)
     {
@@ -217,6 +222,11 @@ public class PlayerSideIdentity : NetworkBehaviour
         LeaveQueueServerRpc();
     }
 
+    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
+    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
+    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
+    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
+    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
     [ServerRpc(RequireOwnership = false)]
     private void LeaveQueueServerRpc(ServerRpcParams rpcParams = default)
     {
@@ -239,6 +249,11 @@ public class PlayerSideIdentity : NetworkBehaviour
         RequestStartTeamTriviaServerRpc();
     }
 
+    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
+    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
+    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
+    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
+    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartTeamTriviaServerRpc(ServerRpcParams rpcParams = default)
     {

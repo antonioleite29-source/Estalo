@@ -66,8 +66,9 @@ public class LobbyPageSwitcher : MonoBehaviour
     [Tooltip("Which page shows up first when the lobby opens.")]
     public LobbyPage defaultPage = LobbyPage.Lobby;
 
-    [Tooltip("In a build, open the Connect page first regardless of Default Page — no mode can start " +
-             "without a session. The Editor keeps using Default Page, since it auto-connects on Play.")]
+    [Tooltip("Always open on the Connect page, in the Editor as well as in a build. No mode can " +
+             "start without a session, so this is the only page that is useful first. Untick to " +
+             "fall back to Default Page.")]
     public bool forceConnectPageInBuild = true;
 
     private void Start()
@@ -78,7 +79,9 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     private void ShowStartupPage()
     {
-        if (forceConnectPageInBuild && !Application.isEditor && connectPage != null)
+        // No longer build-only. Keeping the Editor on Default Page meant the one screen that has to
+        // be tested — the one every real player sees first — was the one never seen while working.
+        if (forceConnectPageInBuild && connectPage != null)
         {
             ShowConnectPage();
             return;
@@ -192,11 +195,30 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     public void ShowPage(LobbyPage page)
     {
-        SetPageActive(profilePage,  page == LobbyPage.Profile);
-        SetPageActive(learningPage, page == LobbyPage.Learning);
-        SetPageActive(lobbyPage,    page == LobbyPage.Lobby);
-        SetPageActive(morePage,     page == LobbyPage.More);
-        SetPageActive(connectPage,  page == LobbyPage.Connect);
+        // Hide everything first, then show the one we want. Written this way rather than as one
+        // SetActive per page with a == test, because two fields are allowed to point at the SAME
+        // object — Connect and More share a page so the Connect UI inherits More's background.
+        // With per-field tests, whichever line came last would win and switch it straight back off.
+        SetPageActive(profilePage,  false);
+        SetPageActive(learningPage, false);
+        SetPageActive(lobbyPage,    false);
+        SetPageActive(morePage,     false);
+        SetPageActive(connectPage,  false);
+
+        SetPageActive(PageObject(page), true);
+    }
+
+    private GameObject PageObject(LobbyPage page)
+    {
+        switch (page)
+        {
+            case LobbyPage.Profile:  return profilePage;
+            case LobbyPage.Learning: return learningPage;
+            case LobbyPage.Lobby:    return lobbyPage;
+            case LobbyPage.More:     return morePage;
+            case LobbyPage.Connect:  return connectPage;
+            default:                 return null;
+        }
     }
 
     private void SetPageActive(GameObject page, bool isActive)

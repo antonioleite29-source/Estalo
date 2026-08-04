@@ -23,27 +23,52 @@ public static class ConnectPageBuilder
             return;
         }
 
-        if (switcher.lobbyPage == null)
+        if (switcher.morePage == null)
         {
-            Debug.LogError("LobbyPageSwitcher.lobbyPage is empty — it is used as the template for " +
-                           "where the Connect page goes and how big it is. Assign it first.");
+            Debug.LogError("LobbyPageSwitcher.morePage is empty. The Connect UI is built inside the " +
+                           "More page so it inherits that page's background. Assign it first.");
             return;
         }
 
-        Transform parent = switcher.lobbyPage.transform.parent;
+        // Built as a child of the More page rather than as a page of its own, so it sits on More's
+        // background and the existing More nav button reaches it. Without that button there was no
+        // way back to Connect after joining — a player who disconnected had to force-quit the app.
+        Transform parent = switcher.morePage.transform;
 
-        // Re-runnable: drop the previously generated page instead of stacking a second one.
-        Transform existing = parent.Find(PageName);
+        // Re-runnable: drop every page a previous run left behind, wherever it put it. Searching by
+        // component rather than only under the current parent, because earlier versions built this
+        // as a standalone page under PageArea — looking only in the new location would leave that
+        // one orphaned in the scene with a second ConnectPageController still on it.
+        ConnectPageController[] previous = Object.FindObjectsByType<ConnectPageController>(
+            FindObjectsInactive.Include);
 
-        if (existing != null)
-            Undo.DestroyObjectImmediate(existing.gameObject);
+        foreach (ConnectPageController old in previous)
+        {
+            if (old == null)
+                continue;
+
+            // Deselect first. If the old page (or one of its children) is what the Inspector is
+            // showing, destroying it leaves the Inspector holding a dead object and it throws
+            // SerializedObjectNotCreatableException.
+            if (Selection.activeGameObject != null &&
+                Selection.activeGameObject.transform.IsChildOf(old.transform))
+            {
+                Selection.activeGameObject = null;
+            }
+
+            Debug.Log($"Removing previous Connect page at '{PathOf(old.transform)}'.");
+            Undo.DestroyObjectImmediate(old.gameObject);
+        }
 
         // Match the other pages exactly rather than guessing a size — whatever PageArea does to
         // them (stretch, offsets, scale) it will do to this one too.
         GameObject page = new GameObject(PageName, typeof(RectTransform));
         Undo.RegisterCreatedObjectUndo(page, "Build Connect Page");
         page.transform.SetParent(parent, false);
-        CopyRect(switcher.lobbyPage.GetComponent<RectTransform>(), page.GetComponent<RectTransform>());
+
+        // Fills the More page it lives inside, so it lines up with that page's background whatever
+        // size the screen is.
+        Stretch(page.GetComponent<RectTransform>());
 
         GameObject content = MakeChild(page.transform, "Content");
         RectTransform contentRect = content.GetComponent<RectTransform>();
@@ -85,26 +110,35 @@ public static class ConnectPageBuilder
         controller.lobbyPageSwitcher = switcher;
 
         Undo.RecordObject(switcher, "Wire Connect Page");
-        switcher.connectPage = page;
+
+        // Connect and More are now the same page. ShowPage hides every page before showing one, so
+        // pointing two fields at one object is safe and means the More nav button opens Connect.
+        switcher.connectPage = switcher.morePage;
         EditorUtility.SetDirty(switcher);
 
-        page.SetActive(false);
+        // Stays on, unlike a standalone page: it is part of More's content now, and More itself is
+        // what gets shown and hidden.
+        page.SetActive(true);
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(page.scene);
         Selection.activeGameObject = page;
 
-        Debug.Log("Connect page built and wired to LobbyPageSwitcher.connectPage. " +
-                  "Save the scene (Cmd+S) to keep it.", page);
+        Debug.Log($"Connect UI built inside '{switcher.morePage.name}'. The More page is now the " +
+                  "Connect page — the More nav button opens it. Save the scene (Cmd+S) to keep it.", page);
     }
 
-    private static void CopyRect(RectTransform from, RectTransform to)
+
+    private static string PathOf(Transform transform)
     {
-        to.anchorMin = from.anchorMin;
-        to.anchorMax = from.anchorMax;
-        to.pivot = from.pivot;
-        to.anchoredPosition = from.anchoredPosition;
-        to.sizeDelta = from.sizeDelta;
-        to.localScale = from.localScale;
+        string path = transform.name;
+
+        while (transform.parent != null)
+        {
+            transform = transform.parent;
+            path = transform.name + " > " + path;
+        }
+
+        return path;
     }
 
     private static void Stretch(RectTransform rect)
@@ -209,12 +243,18 @@ public static class ConnectPageBuilder
         input.placeholder = placeholderText;
         input.targetGraphic = background;
 
-        // A phone keyboard that offers letters for an IP address is a guaranteed typo. Decimal
-        // gives the numeric pad, and the content type still permits the dots.
-        input.contentType = TMP_InputField.ContentType.DecimalNumber;
+        // Custom, not DecimalNumber: DecimalNumber means a number like 3.14 and so permits exactly
+        // one dot, which makes an IP address impossible to type. Custom leaves validation off and
+        // lets the keyboard type below do the real work of keeping letters out of the way.
+        //
+        // Set contentType first — its setter overwrites inputType, keyboardType and
+        // characterValidation, so assigning those before it would silently undo them.
+        input.contentType = TMP_InputField.ContentType.Custom;
+        input.lineType = TMP_InputField.LineType.SingleLine;
+        input.inputType = TMP_InputField.InputType.Standard;
+        input.characterValidation = TMP_InputField.CharacterValidation.None;
         input.keyboardType = TouchScreenKeyboardType.NumbersAndPunctuation;
         input.characterLimit = 15;
-        input.lineType = TMP_InputField.LineType.SingleLine;
 
         go.AddComponent<LayoutElement>().preferredHeight = height;
         return input;

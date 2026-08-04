@@ -117,7 +117,7 @@ public static class BuildSetup
     public static void FixCanvasScalers()
     {
         CanvasScaler[] scalers = Object.FindObjectsByType<CanvasScaler>(
-            FindObjectsInactive.Include, FindObjectsSortMode.None);
+            FindObjectsInactive.Include);
 
         if (scalers.Length == 0)
         {
@@ -163,7 +163,7 @@ public static class BuildSetup
     public static void StretchUiToFillScreen()
     {
         Canvas[] canvases = Object.FindObjectsByType<Canvas>(
-            FindObjectsInactive.Include, FindObjectsSortMode.None);
+            FindObjectsInactive.Include);
 
         if (canvases.Length == 0)
         {
