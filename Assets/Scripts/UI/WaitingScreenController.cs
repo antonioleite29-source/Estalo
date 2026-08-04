@@ -85,10 +85,20 @@ public class WaitingScreenController : MonoBehaviour
 
         if (playersText != null)
         {
+            // The queue for the mode THIS player picked. There is one queue per mode, so a player
+            // waiting for 2v2 must not be shown how many people are lined up for 1v1.
+            MatchMode mode = lobbyPageSwitcher != null
+                ? lobbyPageSwitcher.SelectedMode
+                : MatchMode.OneVsOne;
+
+            int queued = mode == MatchMode.TeamFour
+                ? sync.NetQueuedTeamFour.Value
+                : sync.NetQueuedOneVsOne.Value;
+
             playersText.text = playersPrefix
-                             + sync.NetQueuedPlayers.Value
+                             + queued
                              + playersSeparator
-                             + sync.NetRequiredPlayers.Value;
+                             + Matchmaker.RequiredPlayersFor(mode);
         }
 
         if (liveGamesText != null)

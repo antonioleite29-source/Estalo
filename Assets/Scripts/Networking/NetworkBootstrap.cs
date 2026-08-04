@@ -36,11 +36,15 @@ public class NetworkBootstrap : MonoBehaviour
 
     public bool IsInSession => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
 
-    // The largest room any mode needs. Capacity deliberately does NOT follow the selected mode:
-    // players connect as soon as the app opens, long before anyone picks 1v1 or 2v2, so a
-    // mode-based cap would reject players 3 and 4 before 2v2 could ever be chosen. The exact
-    // per-mode player count is enforced later, at TriviaNetworkSync's ready gate.
-    public const int MaxRoomPlayers = 4;
+    // Capacity deliberately does NOT follow the selected mode: players connect as soon as the app
+    // opens, long before anyone picks 1v1 or 2v2, so a mode-based cap would reject players 3 and 4
+    // before 2v2 could ever be chosen. The exact per-mode player count is enforced later, at the
+    // matchmaker, which forms as many matches as there are players for.
+    //
+    // 8 rather than 4 because matches now run concurrently: 8 players is two 2v2s or four 1v1s at
+    // once. At 4 the room filled up before a second match could ever form, and a host plus four
+    // test devices was already one over.
+    public const int MaxRoomPlayers = 8;
 
     public int RoomCapacity => MaxRoomPlayers;
 

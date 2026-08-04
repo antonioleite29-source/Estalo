@@ -108,9 +108,13 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     private readonly Matchmaker matchmaker = new Matchmaker();
     private readonly List<MatchSession> liveMatches = new List<MatchSession>();
-    private MatchMode queuedMode = MatchMode.OneVsOne;
 
-    // Broadcast to everyone so a waiting player can see the queue filling up in real time.
+    // Broadcast to everyone so a waiting player can see the queue filling up in real time. One
+    // count per mode, because each player queues for the mode they chose on their own device —
+    // someone waiting for 2v2 should not see the 1v1 queue's numbers.
+    public NetworkVariable<int> NetQueuedOneVsOne = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> NetQueuedTeamFour = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<int> NetQueuedPlayers = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> NetPlayersNeeded = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> NetLiveMatches = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -144,15 +148,10 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         if (!IsServer)
             return;
 
-        // A mode change invalidates anyone queued for the old mode — they were waiting for a
-        // different group size, so re-queue everything under the new mode rather than mixing.
-        if (requestedMode != queuedMode)
-        {
-            queuedMode = requestedMode;
-            matchmaker.Clear();
-        }
-
-        matchmaker.Enqueue(clientId, difficultyLevel);
+        // No queue-wiping on a mode change any more. The queue used to be single-mode, so one
+        // player picking 2v2 emptied it and threw everyone already waiting back out. Modes are now
+        // tracked per player, and both are drained below.
+        matchmaker.Enqueue(clientId, difficultyLevel, requestedMode);
         DrainQueue();
         PublishQueueStatus();
     }
@@ -166,9 +165,16 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         PublishQueueStatus();
     }
 
+    // Drains both modes: a 1v1 and a 2v2 can be forming at the same time from different players.
     private void DrainQueue()
     {
-        List<List<ulong>> groups = matchmaker.FormMatches(queuedMode);
+        DrainQueueFor(MatchMode.OneVsOne);
+        DrainQueueFor(MatchMode.TeamFour);
+    }
+
+    private void DrainQueueFor(MatchMode mode)
+    {
+        List<List<ulong>> groups = matchmaker.FormMatches(mode);
 
         for (int g = 0; g < groups.Count; g++)
         {
@@ -176,8 +182,8 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
             int difficulty = AverageDifficultyOf(group);
 
             MatchSession match = new MatchSession(
-                matchmaker.TakeNextMatchId(), queuedMode, group, difficulty,
-                this, ResolveQuestionSource(), CurrentRules(queuedMode));
+                matchmaker.TakeNextMatchId(), mode, group, difficulty,
+                this, ResolveQuestionSource(), CurrentRules(mode));
 
             AssignSeatsForMatch(match);
             liveMatches.Add(match);
@@ -304,10 +310,11 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         if (!IsServer)
             return;
 
+        NetQueuedOneVsOne.Value = matchmaker.QueuedCountFor(MatchMode.OneVsOne);
+        NetQueuedTeamFour.Value = matchmaker.QueuedCountFor(MatchMode.TeamFour);
+
         NetQueuedPlayers.Value = matchmaker.QueuedCount;
-        NetPlayersNeeded.Value = matchmaker.PlayersStillNeeded(queuedMode);
         NetLiveMatches.Value = liveMatches.Count;
-        NetRequiredPlayers.Value = Matchmaker.RequiredPlayersFor(queuedMode);
     }
 
     public MatchSession FindMatchFor(ulong clientId)
@@ -600,6 +607,26 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
             return;
 
         NetSelectedMode.Value = (int)mode;
+    }
+
+    // Any player may pick the mode, not just the host. NetSelectedMode is server-write, so a client
+    // tapping 2v2 used to set only its own local field — ResolveAuthoritativeMode then read the
+    // server's unchanged value and the highlight snapped back, making the button look broken.
+    public void RequestSelectedMode(MatchMode mode)
+    {
+        if (IsServer)
+        {
+            NetSelectedMode.Value = (int)mode;
+            return;
+        }
+
+        RequestSelectedModeServerRpc((int)mode);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestSelectedModeServerRpc(int mode)
+    {
+        NetSelectedMode.Value = mode;
     }
 
     public void MarkClientReady(ulong clientId)

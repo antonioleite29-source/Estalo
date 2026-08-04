@@ -102,15 +102,10 @@ public class LobbyPageSwitcher : MonoBehaviour
         SetPageActive(morePage,     false);
         SetPageActive(connectPage,  false);
 
-        // Push the host's mode choice to the network before readying up, so all clients agree.
-        // No-ops on non-host clients (SetSelectedMode early-returns unless called on the server).
-        TriviaNetworkSync.Instance?.SetSelectedMode(selectedMode);
-
-        // Then ready up for whatever the SERVER says the mode is, not this device's own toggle.
-        // Each client keeps its own selectedMode field, so without this a client whose toggle
-        // still said 1v1 would ready up for 1v1 while the host readied for 2v2 — and the ready
-        // gate treats a mode change as a reset, so the two kept wiping each other out.
-        MatchMode modeToStart = ResolveAuthoritativeMode();
+        // This device's own choice, and only this device's. The mode was briefly server-wide so
+        // that clients could change it at all — but that made one phone tapping 2v2 switch every
+        // other phone too, as though they were one device. Players queue independently now.
+        MatchMode modeToStart = selectedMode;
 
         // Pressing Start now joins a queue rather than starting a match outright, so show the
         // waiting screen immediately. The match may need to wait for a suitable opponent.
@@ -142,31 +137,15 @@ public class LobbyPageSwitcher : MonoBehaviour
     private void SelectMode(MatchMode mode)
     {
         selectedMode = mode;
-
-        // The host owns the choice for the whole room; pushing it here (rather than only when
-        // Start is pressed) lets every client's highlight update as soon as the host picks.
-        TriviaNetworkSync.Instance?.SetSelectedMode(mode);
-
         RefreshModeHighlight();
     }
 
-    // The server's NetSelectedMode is the single source of truth once a session exists. Falls back
-    // to this device's own toggle for local/offline play, where there is no server to ask.
-    private MatchMode ResolveAuthoritativeMode()
-    {
-        TriviaNetworkSync sync = TriviaNetworkSync.Instance;
-
-        if (sync != null && sync.IsSpawned)
-            return (MatchMode)sync.NetSelectedMode.Value;
-
-        return selectedMode;
-    }
+    // What this player is playing, and what the waiting screen should show a queue for.
+    public MatchMode SelectedMode => selectedMode;
 
     private void RefreshModeHighlight()
     {
-        // Show the room's actual mode, not this device's toggle — otherwise a client can sit
-        // looking at a highlighted "1v1" while the host has already put everyone into 2v2.
-        bool isOneVsOne = ResolveAuthoritativeMode() == MatchMode.OneVsOne;
+        bool isOneVsOne = selectedMode == MatchMode.OneVsOne;
 
         if (oneVsOneHighlight != null)
             oneVsOneHighlight.SetActive(isOneVsOne);
