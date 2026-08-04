@@ -204,10 +204,21 @@ public class LobbyLearningScroller : MonoBehaviour
 
     private void EnsureMask()
     {
-        if (GetComponent<Image>() == null)
+        // Whether the Image was already here decides whether the mask may hide it. A Mask draws
+        // nothing when showMaskGraphic is false — and on this object the masking graphic is the
+        // Learning page's own background art, so hiding it switched the page's artwork off the
+        // moment the player opened the tab.
+        bool hadOwnGraphic = GetComponent<Image>() != null;
+
+        if (!hadOwnGraphic)
             gameObject.AddComponent<Image>().color = Color.black;
+
         if (GetComponent<Mask>() == null)
-            gameObject.AddComponent<Mask>().showMaskGraphic = false;
+        {
+            // Keep showing a background that belongs to the page; hide one we invented purely to
+            // give the mask a shape to clip against.
+            gameObject.AddComponent<Mask>().showMaskGraphic = hadOwnGraphic;
+        }
     }
 
     private void OnRectTransformDimensionsChange()
