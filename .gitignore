@@ -64,6 +64,10 @@ Thumbs.db
 *.unitypackage
 *.app
 
+# Whole build output folder, and the IL2CPP toolchain scratch dir it drops beside the project.
+/Builds/
+/.utmp/
+
 # Crash reports
 sysinfo.txt
 crashlytics-build.properties

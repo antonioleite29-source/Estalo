@@ -36,11 +36,15 @@ public class NetworkBootstrap : MonoBehaviour
 
     public bool IsInSession => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
 
-    // The largest room any mode needs. Capacity deliberately does NOT follow the selected mode:
-    // players connect as soon as the app opens, long before anyone picks 1v1 or 2v2, so a
-    // mode-based cap would reject players 3 and 4 before 2v2 could ever be chosen. The exact
-    // per-mode player count is enforced later, at TriviaNetworkSync's ready gate.
-    public const int MaxRoomPlayers = 4;
+    // Capacity deliberately does NOT follow the selected mode: players connect as soon as the app
+    // opens, long before anyone picks 1v1 or 2v2, so a mode-based cap would reject players 3 and 4
+    // before 2v2 could ever be chosen. The exact per-mode player count is enforced later, at the
+    // matchmaker, which forms as many matches as there are players for.
+    //
+    // 8 rather than 4 because matches now run concurrently: 8 players is two 2v2s or four 1v1s at
+    // once. At 4 the room filled up before a second match could ever form, and a host plus four
+    // test devices was already one over.
+    public const int MaxRoomPlayers = 8;
 
     public int RoomCapacity => MaxRoomPlayers;
 
@@ -77,6 +81,68 @@ public class NetworkBootstrap : MonoBehaviour
             Instance = null;
 
         UnsubscribeFromNetworkManager();
+        ReleaseTransport();
+    }
+
+    private void OnApplicationQuit()
+    {
+        ReleaseTransport();
+        Discovery.StopAll();
+    }
+
+    // Android does not really quit an app when you swipe it away — the process is often kept
+    // alive, so OnApplicationQuit never runs and the next launch inherits a NetworkManager that
+    // still thinks it is connected and sockets that are still bound. That is why the app had to be
+    // opened twice: the first launch failed on the leftovers, and only the second, after Android
+    // had finally killed the process, started clean. Releasing on pause makes the first launch work.
+    private void OnApplicationPause(bool isPaused)
+    {
+        if (!isPaused)
+            return;
+
+        ReleaseTransport();
+        Discovery.StopAll();
+    }
+
+    // Leaving Play mode does not reliably close the UDP socket on its own: NetworkManager reports
+    // IsListening == false while the transport still holds port 7777, so the next Play session
+    // fails to bind with "address is already in use" and the only cure is restarting the Editor.
+    // Shutting down explicitly on teardown closes it.
+    private void ReleaseTransport()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        if (NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsClient)
+            NetworkManager.Singleton.Shutdown();
+    }
+
+    // ---------------------------------------------------------------
+    // LAN discovery
+    // ---------------------------------------------------------------
+
+    private LanDiscovery discovery;
+
+    // Created on demand on this same GameObject rather than needing its own slot in the scene —
+    // one less thing to wire, and it cannot end up on the wrong object.
+    public LanDiscovery Discovery
+    {
+        get
+        {
+            if (discovery == null)
+                discovery = gameObject.AddComponent<LanDiscovery>();
+
+            return discovery;
+        }
+    }
+
+    private string HostAdvertisedName()
+    {
+        string playerName = PlayerProfileManager.Instance != null
+            ? PlayerProfileManager.Instance.GetLocalName()
+            : null;
+
+        return string.IsNullOrEmpty(playerName) ? "Trivia Duel" : "Sala de " + playerName;
     }
 
     // ---------------------------------------------------------------
@@ -103,6 +169,11 @@ public class NetworkBootstrap : MonoBehaviour
         {
             IsConnecting = false;
             ReportStatus("Hosting on " + GetLocalIPv4() + ":" + connectPort);
+
+            // Announce on the Wi-Fi so phones can find this game without anyone reading an IP
+            // address aloud and typing it in.
+            Discovery.StartAdvertising(connectPort, HostAdvertisedName());
+
             SessionStarted?.Invoke();
         }
         else
@@ -151,6 +222,11 @@ public class NetworkBootstrap : MonoBehaviour
 
         NetworkManager.Singleton.Shutdown();
         IsConnecting = false;
+
+        // Stop shouting: a host that has shut down but is still advertising leaves phones showing
+        // a game they cannot join.
+        Discovery.StopAll();
+
         ReportStatus("Disconnected.");
         SessionEnded?.Invoke(string.Empty);
     }
@@ -159,9 +235,8 @@ public class NetworkBootstrap : MonoBehaviour
     // Connection approval — capacity gate
     // ---------------------------------------------------------------
 
-    // Without this, nothing caps the room. A third phone joining a 1v1 is accepted and
-    // PlayerSideIdentity hands it AssignedSide = 2 (side 1 goes to the server, side 2 to everyone
-    // else), so two players end up sharing one side and either can answer for it.
+    // Without this, nothing caps the room and the host has no way to turn away a phone that
+    // arrives once every seat is taken or a match is already under way.
     private void EnableConnectionApproval()
     {
         if (NetworkManager.Singleton == null)
@@ -347,6 +422,11 @@ public class NetworkBootstrap : MonoBehaviour
     private void ReportStatus(string message)
     {
         StatusChanged?.Invoke(message);
+
+        // Also to the console. The status label lives on the Connect page, which the Editor does
+        // not open by default and a phone hides the moment it connects — so without this the one
+        // message that says whether the session actually came up is invisible in both places.
+        Debug.Log("Network: " + message);
     }
 
     // ---------------------------------------------------------------

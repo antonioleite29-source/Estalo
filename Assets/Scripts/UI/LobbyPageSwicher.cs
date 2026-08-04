@@ -20,6 +20,10 @@ public class LobbyPageSwitcher : MonoBehaviour
     [Tooltip("Drag the TeamDuelManager GameObject here. Lets the Start Game button launch the 2v2 team mode when selected.")]
     public TeamDuelManager teamManager;
 
+    [Tooltip("Optional but recommended: the waiting/queue screen shown between pressing Start and " +
+             "the match actually forming. Without it, a queued player sees a blank screen.")]
+    public WaitingScreenController waitingScreen;
+
     private MatchMode selectedMode = MatchMode.OneVsOne;
 
     [Tooltip("Optional: a highlight/checkmark object shown only while 1v1 is selected.")]
@@ -62,8 +66,9 @@ public class LobbyPageSwitcher : MonoBehaviour
     [Tooltip("Which page shows up first when the lobby opens.")]
     public LobbyPage defaultPage = LobbyPage.Lobby;
 
-    [Tooltip("In a build, open the Connect page first regardless of Default Page — no mode can start " +
-             "without a session. The Editor keeps using Default Page, since it auto-connects on Play.")]
+    [Tooltip("Always open on the Connect page, in the Editor as well as in a build. No mode can " +
+             "start without a session, so this is the only page that is useful first. Untick to " +
+             "fall back to Default Page.")]
     public bool forceConnectPageInBuild = true;
 
     private void Start()
@@ -74,7 +79,9 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     private void ShowStartupPage()
     {
-        if (forceConnectPageInBuild && !Application.isEditor && connectPage != null)
+        // No longer build-only. Keeping the Editor on Default Page meant the one screen that has to
+        // be tested — the one every real player sees first — was the one never seen while working.
+        if (forceConnectPageInBuild && connectPage != null)
         {
             ShowConnectPage();
             return;
@@ -95,15 +102,15 @@ public class LobbyPageSwitcher : MonoBehaviour
         SetPageActive(morePage,     false);
         SetPageActive(connectPage,  false);
 
-        // Push the host's mode choice to the network before readying up, so all clients agree.
-        // No-ops on non-host clients (SetSelectedMode early-returns unless called on the server).
-        TriviaNetworkSync.Instance?.SetSelectedMode(selectedMode);
+        // This device's own choice, and only this device's. The mode was briefly server-wide so
+        // that clients could change it at all — but that made one phone tapping 2v2 switch every
+        // other phone too, as though they were one device. Players queue independently now.
+        MatchMode modeToStart = selectedMode;
 
-        // Then ready up for whatever the SERVER says the mode is, not this device's own toggle.
-        // Each client keeps its own selectedMode field, so without this a client whose toggle
-        // still said 1v1 would ready up for 1v1 while the host readied for 2v2 — and the ready
-        // gate treats a mode change as a reset, so the two kept wiping each other out.
-        MatchMode modeToStart = ResolveAuthoritativeMode();
+        // Pressing Start now joins a queue rather than starting a match outright, so show the
+        // waiting screen immediately. The match may need to wait for a suitable opponent.
+        if (waitingScreen != null)
+            waitingScreen.ShowWaiting();
 
         if (modeToStart == MatchMode.TeamFour)
         {
@@ -130,31 +137,15 @@ public class LobbyPageSwitcher : MonoBehaviour
     private void SelectMode(MatchMode mode)
     {
         selectedMode = mode;
-
-        // The host owns the choice for the whole room; pushing it here (rather than only when
-        // Start is pressed) lets every client's highlight update as soon as the host picks.
-        TriviaNetworkSync.Instance?.SetSelectedMode(mode);
-
         RefreshModeHighlight();
     }
 
-    // The server's NetSelectedMode is the single source of truth once a session exists. Falls back
-    // to this device's own toggle for local/offline play, where there is no server to ask.
-    private MatchMode ResolveAuthoritativeMode()
-    {
-        TriviaNetworkSync sync = TriviaNetworkSync.Instance;
-
-        if (sync != null && sync.IsSpawned)
-            return (MatchMode)sync.NetSelectedMode.Value;
-
-        return selectedMode;
-    }
+    // What this player is playing, and what the waiting screen should show a queue for.
+    public MatchMode SelectedMode => selectedMode;
 
     private void RefreshModeHighlight()
     {
-        // Show the room's actual mode, not this device's toggle — otherwise a client can sit
-        // looking at a highlighted "1v1" while the host has already put everyone into 2v2.
-        bool isOneVsOne = ResolveAuthoritativeMode() == MatchMode.OneVsOne;
+        bool isOneVsOne = selectedMode == MatchMode.OneVsOne;
 
         if (oneVsOneHighlight != null)
             oneVsOneHighlight.SetActive(isOneVsOne);
@@ -183,11 +174,30 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     public void ShowPage(LobbyPage page)
     {
-        SetPageActive(profilePage,  page == LobbyPage.Profile);
-        SetPageActive(learningPage, page == LobbyPage.Learning);
-        SetPageActive(lobbyPage,    page == LobbyPage.Lobby);
-        SetPageActive(morePage,     page == LobbyPage.More);
-        SetPageActive(connectPage,  page == LobbyPage.Connect);
+        // Hide everything first, then show the one we want. Written this way rather than as one
+        // SetActive per page with a == test, because two fields are allowed to point at the SAME
+        // object — Connect and More share a page so the Connect UI inherits More's background.
+        // With per-field tests, whichever line came last would win and switch it straight back off.
+        SetPageActive(profilePage,  false);
+        SetPageActive(learningPage, false);
+        SetPageActive(lobbyPage,    false);
+        SetPageActive(morePage,     false);
+        SetPageActive(connectPage,  false);
+
+        SetPageActive(PageObject(page), true);
+    }
+
+    private GameObject PageObject(LobbyPage page)
+    {
+        switch (page)
+        {
+            case LobbyPage.Profile:  return profilePage;
+            case LobbyPage.Learning: return learningPage;
+            case LobbyPage.Lobby:    return lobbyPage;
+            case LobbyPage.More:     return morePage;
+            case LobbyPage.Connect:  return connectPage;
+            default:                 return null;
+        }
     }
 
     private void SetPageActive(GameObject page, bool isActive)

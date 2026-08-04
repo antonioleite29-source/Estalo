@@ -35,7 +35,7 @@ public class DuelPair
     public DuelPlayer rightPlayer;
 }
 
-public class TriviaDuelManager : MonoBehaviour
+public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 {
     internal enum RoundState
     {
@@ -414,7 +414,7 @@ public class TriviaDuelManager : MonoBehaviour
         if (LobbyScreenController.Instance != null)
             LobbyScreenController.Instance.ShowLobby();
 
-        foreach (IQBarController bar in FindObjectsByType<IQBarController>(FindObjectsSortMode.None))
+        foreach (IQBarController bar in FindObjectsByType<IQBarController>())
             bar.RefreshFromManager();
     }
 
@@ -430,15 +430,17 @@ public class TriviaDuelManager : MonoBehaviour
         {
             PlayerSideIdentity identity = GetLocalPlayerIdentity();
 
-            // TEMP DIAGNOSTIC — remove once 1v1 start is confirmed working.
-            Debug.Log("[START] StartTriviaFromLobby: networked=true, localIdentity=" +
-                      (identity == null ? "NULL (cannot ready up!)" : "ok, clientId=" + identity.OwnerClientId));
+            if (identity == null)
+            {
+                Debug.LogError("StartTriviaFromLobby: no local PlayerSideIdentity, so this device " +
+                               "cannot ready up. The player prefab is missing the component or has not spawned yet.");
+                return;
+            }
 
-            identity?.RequestStartTrivia();
+            identity.RequestStartTrivia();
             return;
         }
 
-        Debug.Log("[START] StartTriviaFromLobby: not a networked session — starting locally.");
         BeginMatchAuthoritative();
     }
 
@@ -493,6 +495,11 @@ public class TriviaDuelManager : MonoBehaviour
     public void ApplyNetworkedMatchStarted()
     {
         BindAnswerButtons();
+
+        // The player has been sitting on the waiting screen since they pressed Start; their match
+        // has now formed, so take it down before revealing the gameplay UI underneath.
+        if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
+            lobbyPageSwitcher.waitingScreen.HideWaiting();
 
         if (lobbyRootObject != null)
             lobbyRootObject.SetActive(false);
@@ -1884,6 +1891,24 @@ public class TriviaDuelManager : MonoBehaviour
 
             questionsByDifficulty[Mathf.Clamp(difficulty, 1, 7) - 1].Add(questionData);
         }
+    }
+
+    // --- IQuestionSource, so a server-side MatchSession can pick questions without touching UI ---
+
+    public int GetPoolSize(int difficultyLevel)
+    {
+        List<TriviaQuestion> pool = GetQuestionPool(difficultyLevel);
+        return pool != null ? pool.Count : 0;
+    }
+
+    public int GetCorrectAnswerIndex(int difficultyLevel, int questionIndex)
+    {
+        List<TriviaQuestion> pool = GetQuestionPool(difficultyLevel);
+
+        if (pool == null || questionIndex < 0 || questionIndex >= pool.Count)
+            return -1;
+
+        return pool[questionIndex].correctAnswerIndex;
     }
 
     private TriviaQuestion GetNextQuestionForCurrentDifficulty()

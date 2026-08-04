@@ -19,6 +19,23 @@ public class PlayerSideIdentity : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Owner);
 
+    // This device's own difficulty level (1-7, from PlayerIQManager). Owner-written so the server
+    // can group players of similar skill — previously the server used its OWN local IQ for
+    // everyone, so the host's level silently decided the difficulty for the whole match.
+    public NetworkVariable<int> DifficultyLevel = new NetworkVariable<int>(
+        1,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Owner);
+
+    // Which match this player belongs to, 0 when not in one. Needed because every client holds a
+    // PlayerSideIdentity for *every* connected player, and side/slot numbers restart per match —
+    // match 1 and match 2 both have a "side 1". Without this tag, all of them push their name into
+    // the same two UI slots and the last one to arrive wins.
+    public NetworkVariable<int> MatchId = new NetworkVariable<int>(
+        0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
+
     // 1-4, used only by the 4-player team mode. Separate from AssignedSide (1-2, used only by 1v1) —
     // assigned by TriviaNetworkSync once 4 players are ready for team mode, not here at spawn time,
     // since we don't know yet whether this session intends 1v1 or team mode.
@@ -35,20 +52,29 @@ public class PlayerSideIdentity : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
-            AssignedSide.Value = OwnerClientId == NetworkManager.ServerClientId ? 1 : 2;
-
+        // Deliberately no side at spawn. Under the old single-match design the host took side 1 and
+        // everyone else side 2, which is wrong the moment two matches run at once: a match made of
+        // two non-host players would have both of them carrying a stale side 2, and whichever
+        // pushed last owned both name slots. Seats now come only from AssignSeatsForMatch, and 0
+        // means "not seated yet" — TryPushIdentity refuses to push until a real seat arrives.
         AssignedSide.OnValueChanged += (_, _) => TryPushIdentity();
         PlayerName.OnValueChanged += (_, _) => { TryPushIdentity(); TryPushTeamIdentity(); };
         AvatarIndex.OnValueChanged += (_, _) => { TryPushIdentity(); TryPushTeamIdentity(); };
         AssignedSlot.OnValueChanged += (_, _) => TryPushTeamIdentity();
 
+        // MatchId decides whether *any* identity belongs on this screen, and the local player's own
+        // MatchId may arrive after or before everyone else's. Rather than depend on arrival order,
+        // re-evaluate every identity on this client whenever any of them changes match.
+        MatchId.OnValueChanged += (_, _) => RefreshAllIdentities();
+
         if (IsOwner)
         {
+            // Stays subscribed for the whole session: seats reset to 0 between matches, so the
+            // owner has to re-register its side every time a new match seats it.
+            AssignedSide.OnValueChanged += HandleAssignedSideChanged;
+
             if (AssignedSide.Value != 0)
                 RegisterWithDuelManager(AssignedSide.Value);
-            else
-                AssignedSide.OnValueChanged += HandleAssignedSideChanged;
 
             PushLocalProfile();
         }
@@ -67,11 +93,47 @@ public class PlayerSideIdentity : NetworkBehaviour
 
         PlayerName.Value = PlayerProfileManager.Instance.GetLocalName();
         AvatarIndex.Value = PlayerProfileManager.Instance.GetLocalAvatarIndex();
+
+        if (PlayerIQManager.Instance != null)
+            DifficultyLevel.Value = PlayerIQManager.Instance.GetLocalDifficultyLevel();
+    }
+
+    private static void RefreshAllIdentities()
+    {
+        PlayerSideIdentity[] all = FindObjectsByType<PlayerSideIdentity>(FindObjectsInactive.Include);
+
+        for (int i = 0; i < all.Length; i++)
+        {
+            all[i].TryPushIdentity();
+            all[i].TryPushTeamIdentity();
+        }
+    }
+
+    // True when this player is in the same match as the player sitting at this device — the only
+    // case where their name and avatar belong on this screen.
+    private bool SharesMatchWithLocalPlayer()
+    {
+        if (NetworkManager.Singleton == null || NetworkManager.Singleton.LocalClient == null)
+            return true;
+
+        NetworkObject localPlayerObject = NetworkManager.Singleton.LocalClient.PlayerObject;
+        PlayerSideIdentity localIdentity = localPlayerObject != null
+            ? localPlayerObject.GetComponent<PlayerSideIdentity>()
+            : null;
+
+        // Before any match is formed both sides read 0, so identities still show in the lobby.
+        if (localIdentity == null)
+            return true;
+
+        return MatchId.Value == localIdentity.MatchId.Value;
     }
 
     private void TryPushIdentity()
     {
         if (AssignedSide.Value == 0)
+            return;
+
+        if (!SharesMatchWithLocalPlayer())
             return;
 
         string playerName = PlayerName.Value.ToString();
@@ -89,6 +151,9 @@ public class PlayerSideIdentity : NetworkBehaviour
     private void TryPushTeamIdentity()
     {
         if (AssignedSlot.Value == 0)
+            return;
+
+        if (!SharesMatchWithLocalPlayer())
             return;
 
         string playerName = PlayerName.Value.ToString();
@@ -113,8 +178,8 @@ public class PlayerSideIdentity : NetworkBehaviour
 
     private void HandleAssignedSideChanged(int previousValue, int newValue)
     {
-        AssignedSide.OnValueChanged -= HandleAssignedSideChanged;
-        RegisterWithDuelManager(newValue);
+        if (newValue != 0)
+            RegisterWithDuelManager(newValue);
     }
 
     private void RegisterWithDuelManager(int side)
@@ -131,8 +196,9 @@ public class PlayerSideIdentity : NetworkBehaviour
     [ServerRpc]
     private void SubmitAnswerServerRpc(int answerIndex, ServerRpcParams rpcParams = default)
     {
-        if (TriviaDuelManager.Instance != null)
-            TriviaDuelManager.Instance.SubmitAnswerFromNetwork(AssignedSide.Value, answerIndex);
+        // Routed by client id rather than by side: with several matches running at once, "side 1"
+        // is only meaningful inside one particular match.
+        TriviaNetworkSync.Instance?.SubmitAnswerFromClient(OwnerClientId, answerIndex);
     }
 
     public void RequestStartTrivia()
@@ -140,14 +206,31 @@ public class PlayerSideIdentity : NetworkBehaviour
         RequestStartTriviaServerRpc();
     }
 
+    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
+    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
+    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
+    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
+    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartTriviaServerRpc(ServerRpcParams rpcParams = default)
     {
-        // TEMP DIAGNOSTIC — remove once 1v1 start is confirmed working.
-        Debug.Log("[START] Server received ready request from client " + rpcParams.Receive.SenderClientId +
-                  " (sync present: " + (TriviaNetworkSync.Instance != null) + ")");
-
         TriviaNetworkSync.Instance?.MarkClientReady(rpcParams.Receive.SenderClientId);
+    }
+
+    public void RequestLeaveQueue()
+    {
+        LeaveQueueServerRpc();
+    }
+
+    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
+    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
+    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
+    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
+    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
+    [ServerRpc(RequireOwnership = false)]
+    private void LeaveQueueServerRpc(ServerRpcParams rpcParams = default)
+    {
+        TriviaNetworkSync.Instance?.LeaveQueue(rpcParams.Receive.SenderClientId);
     }
 
     public void RequestSubmitTeamAnswer(int answerIndex)
@@ -158,8 +241,7 @@ public class PlayerSideIdentity : NetworkBehaviour
     [ServerRpc]
     private void SubmitTeamAnswerServerRpc(int answerIndex, ServerRpcParams rpcParams = default)
     {
-        if (TeamDuelManager.Instance != null)
-            TeamDuelManager.Instance.SubmitAnswerFromNetwork(AssignedSlot.Value, answerIndex);
+        TriviaNetworkSync.Instance?.SubmitAnswerFromClient(OwnerClientId, answerIndex);
     }
 
     public void RequestStartTeamTrivia()
@@ -167,6 +249,11 @@ public class PlayerSideIdentity : NetworkBehaviour
         RequestStartTeamTriviaServerRpc();
     }
 
+    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
+    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
+    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
+    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
+    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
     [ServerRpc(RequireOwnership = false)]
     private void RequestStartTeamTriviaServerRpc(ServerRpcParams rpcParams = default)
     {
