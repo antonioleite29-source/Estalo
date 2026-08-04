@@ -23,6 +23,7 @@ public class LobbyLearningScroller : MonoBehaviour
     private float slotH;
     private const int SlotCount = 3;
     private int nextSpriteIndex;
+    private readonly List<GameObject> builtSlots = new List<GameObject>();
 
     private bool isDragging;
     private float lastMouseY;
@@ -60,10 +61,28 @@ public class LobbyLearningScroller : MonoBehaviour
 
     private void Build()
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
-            Destroy(transform.GetChild(i).gameObject);
+        // Only the slots this component made are cleared. It used to destroy every child, which
+        // quietly deleted anything else placed on the Learning page — the practice button among
+        // them — the moment the path first built itself.
+        for (int i = 0; i < builtSlots.Count; i++)
+            if (builtSlots[i] != null)
+                Destroy(builtSlots[i]);
 
-        if (!HasValidSprites()) return;
+        builtSlots.Clear();
+
+        // Children that are not ours are kept, and put back on top once the slots exist: slots are
+        // appended, and a later sibling draws over an earlier one, so without this the path art
+        // would cover whatever is sitting on the page.
+        List<Transform> keep = new List<Transform>();
+
+        for (int i = 0; i < transform.childCount; i++)
+            keep.Add(transform.GetChild(i));
+
+        if (!HasValidSprites())
+        {
+            RaiseAbovePath(keep);
+            return;
+        }
 
         Canvas.ForceUpdateCanvases();
         viewH = panel.rect.height > 0f ? panel.rect.height : Screen.height;
@@ -96,7 +115,17 @@ public class LobbyLearningScroller : MonoBehaviour
 
             slotRTs[i] = rt;
             slotImgs[i] = img;
+            builtSlots.Add(go);
         }
+
+        RaiseAbovePath(keep);
+    }
+
+    private static void RaiseAbovePath(List<Transform> keep)
+    {
+        for (int i = 0; i < keep.Count; i++)
+            if (keep[i] != null)
+                keep[i].SetAsLastSibling();
     }
 
     private void Update()

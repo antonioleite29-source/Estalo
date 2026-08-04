@@ -133,7 +133,17 @@ public class TeamDuelManager : MonoBehaviour
             return;
         }
 
-        BeginMatchAuthoritative();
+        // 2v2 has no offline mode at all, so with no session there is nothing to start. Falling
+        // through here used to open a local match against placeholder team-mates.
+        Debug.LogError("StartTeamTriviaFromLobby: not connected to a session, so there is nobody to " +
+                       "play with. The host most likely failed to start — check the Console for a " +
+                       "transport bind failure on the connect port.");
+
+        if (lobbyPageSwitcher != null)
+        {
+            lobbyPageSwitcher.waitingScreen?.HideWaiting();
+            lobbyPageSwitcher.ShowConnectPage();
+        }
     }
 
     public void BeginMatchAuthoritative()

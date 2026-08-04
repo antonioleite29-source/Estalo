@@ -130,8 +130,7 @@ public static class PracticePageBuilder
     {
         // If you already wired a button of your own to StartPersonalisedPractice, that IS the start
         // button — making a second one would leave a stray default sitting on the page.
-        foreach (Button existing in Object.FindObjectsByType<Button>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (Button existing in Object.FindObjectsByType<Button>(FindObjectsInactive.Include))
         {
             if (HasPersistentCall(existing, controller))
                 return 0;

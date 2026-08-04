@@ -52,6 +52,12 @@ public class WaitingScreenController : MonoBehaviour
     {
         isQueued = true;
         SetVisible(true);
+
+        // Draw order inside a Canvas is sibling order, and this screen sits earlier than PageArea,
+        // so anything left showing there covers it. Moving last on show means it cannot end up
+        // behind a page — and it no longer depends on the Hierarchy keeping a particular order.
+        transform.SetAsLastSibling();
+
         Refresh();
     }
 

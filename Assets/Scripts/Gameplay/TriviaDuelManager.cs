@@ -56,8 +56,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         None,
         Fade,
         Pop,
-        WipeFromLeft,
-        WipeFromRight
+        SlideFromLeft,
+        SlideFromRight
     }
 
     public enum BackgroundLoopAnimation
@@ -130,10 +130,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     };
 
     [Tooltip("Background shown when it is YOUR solo turn (the other player answered wrong and now you have a timer to answer).")]
-    public StateBackgroundVisual yourSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.WipeFromLeft };
+    public StateBackgroundVisual yourSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.SlideFromLeft };
 
     [Tooltip("Background shown when it is the OTHER PLAYER's solo turn.")]
-    public StateBackgroundVisual otherPlayerSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.WipeFromRight };
+    public StateBackgroundVisual otherPlayerSoloBackground = new StateBackgroundVisual { animation = BackgroundAnimation.SlideFromRight };
 
     [Tooltip("Background shown when the match ends (someone wins or time runs out).")]
     public StateBackgroundVisual matchEndedBackground = new StateBackgroundVisual { animation = BackgroundAnimation.Fade };
@@ -249,6 +249,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     private static readonly Color DarkSecondaryTextColor = new Color32(51, 65, 85, 255);
 
     private readonly List<TriviaQuestion>[] questionsByDifficulty = new List<TriviaQuestion>[7];
+    private bool hasRetriedQuestionLoad;
 
     private RoundState roundState = RoundState.MatchEnded;
     private TriviaQuestion currentQuestion;
@@ -270,6 +271,9 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     private Coroutine backgroundTransitionCoroutine;
     private Coroutine backgroundLoopCoroutine;
     private Coroutine returnToLobbyCoroutine;
+
+    // How far off-centre a sliding background starts, in the UI's authored pixels.
+    private const float SlideDistance = 80f;
 
     private Image backgroundUnderlay;
     private Image scrollingBackgroundA;
@@ -444,6 +448,25 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             }
 
             identity.RequestStartTrivia();
+            return;
+        }
+
+        // Only a deliberate offline game may start without a server. Otherwise this is a networked
+        // session whose host failed to come up — a leaked port, a dropped connection — and starting
+        // anyway produced a local match against a placeholder opponent that looked like the game
+        // working, which is far worse than saying nothing happened.
+        if (!localPassAndPlayMode)
+        {
+            Debug.LogError("StartTriviaFromLobby: not connected to a session, so there is nobody to " +
+                           "play against. The host most likely failed to start — check the Console " +
+                           "for a transport bind failure on the connect port.");
+
+            if (lobbyPageSwitcher != null)
+            {
+                lobbyPageSwitcher.waitingScreen?.HideWaiting();
+                lobbyPageSwitcher.ShowConnectPage();
+            }
+
             return;
         }
 
@@ -1531,27 +1554,29 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         float duration = Mathf.Max(0.01f, visual.animationSeconds);
         float startScale = 1f;
 
-        bool isWipe = visual.animation == BackgroundAnimation.WipeFromLeft
-                   || visual.animation == BackgroundAnimation.WipeFromRight;
+        bool isSlide = visual.animation == BackgroundAnimation.SlideFromLeft
+                    || visual.animation == BackgroundAnimation.SlideFromRight;
 
-        if (visual.animation == BackgroundAnimation.Pop)
-            startScale = 0.94f;
+        Vector2 startOffset = Vector2.zero;
 
-        if (isWipe)
+        switch (visual.animation)
         {
-            // A wipe uncovers the new background across the screen with a hard edge, so it stays
-            // fully opaque throughout — fading it as well would turn the edge into a soft smear.
-            gameBackground.type = Image.Type.Filled;
-            gameBackground.fillMethod = Image.FillMethod.Horizontal;
-            gameBackground.fillOrigin = visual.animation == BackgroundAnimation.WipeFromLeft
-                ? (int)Image.OriginHorizontal.Left
-                : (int)Image.OriginHorizontal.Right;
-            gameBackground.fillAmount = 0f;
-
-            // No explicit flip for player 2. The fill runs in the image's own space, which
-            // GetMirroredScale has already mirrored, so a wipe authored as "from the right"
-            // arrives from the left on their screen on its own.
+            case BackgroundAnimation.Pop:
+                startScale = 0.94f;
+                break;
+            case BackgroundAnimation.SlideFromLeft:
+                startOffset = new Vector2(-SlideDistance, 0f);
+                break;
+            case BackgroundAnimation.SlideFromRight:
+                startOffset = new Vector2(SlideDistance, 0f);
+                break;
         }
+
+        // Player 2 sees the board mirrored, and anchoredPosition is in the parent's space, so
+        // unlike the artwork it is not flipped by GetMirroredScale. Without this the background
+        // slides in from the side opposite the player it belongs to.
+        startOffset = new Vector2(localViewPlayerSide == 2 ? -startOffset.x : startOffset.x,
+                                  startOffset.y);
 
         RectTransform rect = gameBackground.rectTransform;
         float elapsed = 0f;
@@ -1562,28 +1587,16 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             float t = Mathf.Clamp01(elapsed / duration);
             float eased = 1f - Mathf.Pow(1f - t, 3f);
 
-            if (isWipe)
-            {
-                gameBackground.color = Color.white;
-                gameBackground.fillAmount = eased;
-                rect.localScale = GetMirroredScale(Vector3.one);
-            }
-            else
-            {
-                gameBackground.color = new Color(1f, 1f, 1f, eased);
-                rect.localScale = GetMirroredScale(Vector3.one * Mathf.Lerp(startScale, 1f, eased));
-            }
-
-            rect.anchoredPosition = Vector2.zero;
+            // A slide keeps full opacity: the outgoing background is right behind it, so there is
+            // no gap to hide and fading only muddies the movement.
+            gameBackground.color = isSlide ? Color.white : new Color(1f, 1f, 1f, eased);
+            rect.anchoredPosition = Vector2.Lerp(startOffset, Vector2.zero, eased);
+            rect.localScale = GetMirroredScale(Vector3.one * Mathf.Lerp(startScale, 1f, eased));
 
             yield return null;
         }
 
         gameBackground.color = Color.white;
-        // Back to Simple so the looping animations, which assume a plain stretched image, are not
-        // left drawing through a fill mask.
-        gameBackground.type = Image.Type.Simple;
-        gameBackground.fillAmount = 1f;
         rect.anchoredPosition = Vector2.zero;
         rect.localScale = GetMirroredScale(Vector3.one);
         HideBackgroundUnderlay();
@@ -1927,6 +1940,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     private void LoadQuestions()
     {
+        EnsureQuestionPools();
+
         for (int i = 0; i < questionsByDifficulty.Length; i++)
             questionsByDifficulty[i].Clear();
 
@@ -2048,6 +2063,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         int index = Mathf.Clamp(difficulty, 1, 7) - 1;
 
+        EnsureQuestionPools();
+
         if (questionsByDifficulty[index].Count > 0)
             return questionsByDifficulty[index];
 
@@ -2057,7 +2074,36 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         return null;
     }
 
+    // The pools are built in Awake, but a script recompile while the game is running reloads the
+    // domain: private fields are rebuilt from their initialisers and Awake is NOT called again, so
+    // the array comes back with seven null entries and the next question lookup throws. Cheap to
+    // re-check, and it keeps an Editor recompile mid-session from breaking Start.
+    private void EnsureQuestionPools()
+    {
+        for (int i = 0; i < questionsByDifficulty.Length; i++)
+            if (questionsByDifficulty[i] == null)
+                questionsByDifficulty[i] = new List<TriviaQuestion>();
+    }
+
     private bool HasAnyQuestionSource()
+    {
+        EnsureQuestionPools();
+
+        if (AnyPoolHasQuestions())
+            return true;
+
+        // Same reload case: the pools survive as empty lists, so the questions themselves are gone
+        // too. Reading them again costs one file parse and only ever happens once.
+        if (!hasRetriedQuestionLoad)
+        {
+            hasRetriedQuestionLoad = true;
+            LoadQuestions();
+        }
+
+        return AnyPoolHasQuestions();
+    }
+
+    private bool AnyPoolHasQuestions()
     {
         for (int i = 0; i < questionsByDifficulty.Length; i++)
         {

@@ -12065,7 +12065,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1405330895
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16686,7 +16686,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1900057188
 RectTransform:
   m_ObjectHideFlags: 0
@@ -18183,7 +18183,7 @@ MonoBehaviour:
     mainTextColor: {r: 0.972549, g: 0.98039216, b: 0.9882353, a: 1}
     secondaryTextColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   yourSoloBackground:
-    backgroundSprite: {fileID: 1693569900813650579, guid: f1fadb5ca3e0c4fddbb3303f5e5c9f3f, type: 3}
+    backgroundSprite: {fileID: 4512791962787061515, guid: 826c2e6a8e4224450ace1d0bb6a9ded3, type: 3}
     animation: 3
     animationSeconds: 0.25
     loopAnimation: 0
@@ -18193,7 +18193,7 @@ MonoBehaviour:
     mainTextColor: {r: 0.972549, g: 0.98039216, b: 0.9882353, a: 1}
     secondaryTextColor: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
   otherPlayerSoloBackground:
-    backgroundSprite: {fileID: -3346877024833304431, guid: c7f00d14fe4a446009e5688920273a11, type: 3}
+    backgroundSprite: {fileID: 4122429386545461167, guid: 49a1f676cc2ac4a04aedf7c4b4fc3cc9, type: 3}
     animation: 4
     animationSeconds: 0.25
     loopAnimation: 0
