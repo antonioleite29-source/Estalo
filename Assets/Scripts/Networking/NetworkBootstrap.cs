@@ -56,6 +56,34 @@ public class NetworkBootstrap : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+
+        // Shutting down in OnDestroy/OnApplicationQuit is too late. Those run in the same teardown
+        // phase as NetworkManager's own OnDestroy, and MonoBehaviour destruction order is undefined
+        // — netcode was reaching its shutdown after pieces it needs had already gone, throwing
+        // inside NetworkSceneManager.Dispose and never getting as far as closing the UDP socket.
+        // That is what leaves port 7777 held by the Editor and forces a full restart.
+        //
+        // Application.quitting and the Editor's exiting-play-mode callback both fire BEFORE any of
+        // that, so the transport is closed while netcode is still whole.
+        Application.quitting += ShutdownNetworkingEarly;
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.playModeStateChanged += HandlePlayModeChanged;
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void HandlePlayModeChanged(UnityEditor.PlayModeStateChange change)
+    {
+        if (change == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+            ShutdownNetworkingEarly();
+    }
+#endif
+
+    private void ShutdownNetworkingEarly()
+    {
+        Discovery.StopAll();
+        ReleaseTransport();
     }
 
     private void Start()
@@ -80,7 +108,16 @@ public class NetworkBootstrap : MonoBehaviour
         if (Instance == this)
             Instance = null;
 
+        Application.quitting -= ShutdownNetworkingEarly;
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.playModeStateChanged -= HandlePlayModeChanged;
+#endif
+
         UnsubscribeFromNetworkManager();
+
+        // Still here as a backstop for a bootstrap destroyed on its own, mid-session. By the time a
+        // whole quit reaches this point the early shutdown has already run and this does nothing.
         ReleaseTransport();
     }
 
@@ -115,6 +152,11 @@ public class NetworkBootstrap : MonoBehaviour
 
         if (NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsClient)
             NetworkManager.Singleton.Shutdown();
+
+        // Deliberately NOT calling NetworkTransport.Shutdown() as well. Netcode warns that doing so
+        // gives "unexpected shutdown behaviour" and loses pending events, and it is not needed: the
+        // socket only ever leaked because shutdown ran during teardown and threw before reaching the
+        // transport. Running early, while netcode is still whole, is what fixes it.
     }
 
     // ---------------------------------------------------------------
@@ -163,24 +205,61 @@ public class NetworkBootstrap : MonoBehaviour
         // Listen on 0.0.0.0 rather than the machine's own LAN address: the host doesn't
         // necessarily know which interface a phone will arrive on (Wi-Fi vs. hotspot), and
         // binding to one specific address silently refuses connections from the other.
-        ConfigureTransport("127.0.0.1", listenAddress: "0.0.0.0");
-
-        if (NetworkManager.Singleton.StartHost())
+        // Try a few ports rather than only the configured one. A crashed session can leave the
+        // previous socket bound to the Editor process itself, and nothing short of quitting Unity
+        // gets it back — which made the game untestable until a restart. Stepping to the next port
+        // costs nothing: phones learn the real port from LAN discovery, and Editor clients read it
+        // back from where the host recorded it.
+        for (ushort port = connectPort; port <= connectPort + PortSearchRange; port++)
         {
+            ConfigureTransport("127.0.0.1", listenAddress: "0.0.0.0", port: port);
+
+            if (!NetworkManager.Singleton.StartHost())
+                continue;
+
+            ActivePort = port;
             IsConnecting = false;
-            ReportStatus("Hosting on " + GetLocalIPv4() + ":" + connectPort);
+
+            if (port != connectPort)
+            {
+                Debug.LogWarning($"Network: port {connectPort} was still held by something, so this " +
+                                 $"session is hosting on {port} instead.");
+            }
+
+            ReportStatus("Hosting on " + GetLocalIPv4() + ":" + port);
 
             // Announce on the Wi-Fi so phones can find this game without anyone reading an IP
-            // address aloud and typing it in.
-            Discovery.StartAdvertising(connectPort, HostAdvertisedName());
+            // address aloud and typing it in. The advertised port is the one actually bound.
+            Discovery.StartAdvertising(port, HostAdvertisedName());
 
             SessionStarted?.Invoke();
+            return;
         }
-        else
+
+        ReportStatus($"Could not start hosting. Ports {connectPort}-{connectPort + PortSearchRange} " +
+                     "are all in use.");
+    }
+
+    // How many ports past the configured one the host may fall back to.
+    private const int PortSearchRange = 8;
+
+    // The port this session actually bound. Recorded so Editor virtual players, which cannot hear
+    // LAN discovery over loopback, still know where to connect.
+    private ushort ActivePort
+    {
+        get => (ushort)PlayerPrefs.GetInt(ActivePortKey, connectPort);
+        set
         {
-            ReportStatus("Could not start hosting. Is the port already in use?");
+            PlayerPrefs.SetInt(ActivePortKey, value);
+
+            // Flushed immediately: a virtual player may read this within the same second, and
+            // PlayerPrefs otherwise only writes on quit — which for a crashed session never comes.
+            PlayerPrefs.Save();
         }
     }
+
+    // Deliberately NOT suffixed per virtual player: this is the one value they all need to share.
+    private const string ActivePortKey = "TriviaDuel_ActiveHostPort";
 
     public void StartClientAt(string address)
     {
@@ -201,7 +280,12 @@ public class NetworkBootstrap : MonoBehaviour
             return;
         }
 
-        ConfigureTransport(address, listenAddress: "0.0.0.0");
+        // Loopback means an Editor virtual player, which cannot hear LAN discovery, so it takes the
+        // port the host recorded. A real client keeps the configured port unless discovery told the
+        // Connect page otherwise.
+        ushort port = address == "127.0.0.1" ? ActivePort : connectPort;
+
+        ConfigureTransport(address, listenAddress: "0.0.0.0", port: port);
 
         if (NetworkManager.Singleton.StartClient())
         {
@@ -342,12 +426,12 @@ public class NetworkBootstrap : MonoBehaviour
             && parsed.AddressFamily == AddressFamily.InterNetwork;
     }
 
-    private void ConfigureTransport(string address, string listenAddress)
+    private void ConfigureTransport(string address, string listenAddress, ushort port = 0)
     {
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
         if (transport != null)
-            transport.SetConnectionData(address, connectPort, listenAddress);
+            transport.SetConnectionData(address, port == 0 ? connectPort : port, listenAddress);
         else
             Debug.LogWarning("NetworkBootstrap: NetworkManager has no UnityTransport component.");
     }

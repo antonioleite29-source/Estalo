@@ -207,6 +207,9 @@ public static class PracticePageBuilder
         if (controller.answerLabels == null || controller.answerLabels.Length != 4)
             controller.answerLabels = new TMP_Text[4];
 
+        if (controller.answerVisuals == null || controller.answerVisuals.Length != 4)
+            controller.answerVisuals = new AnswerButtonVisual[4];
+
         for (int i = 0; i < 4; i++)
         {
             // A slot you filled in yourself is left completely alone — no default button is made
@@ -245,10 +248,26 @@ public static class PracticePageBuilder
                 Button newButton = go.AddComponent<Button>();
                 newButton.targetGraphic = buttonBackground;
 
-                MakeLabel(go.transform, "Label", "", 46, FontStyles.Bold, stretch: true, color: Color.black);
+                TMP_Text buttonLabel = MakeLabel(go.transform, "Label", "", 46, FontStyles.Bold,
+                    stretch: true, color: Color.black);
+
+                // The same component the duel screen uses. It switches Unity's own colour transition
+                // off and drives the sprite itself, which is what stops a button rendering as nothing
+                // until it is touched.
+                AnswerButtonVisual visual = go.AddComponent<AnswerButtonVisual>();
+                visual.button = newButton;
+                visual.targetImage = buttonBackground;
+                visual.labelText = buttonLabel;
+                visual.targetRectTransform = rect;
+
+                TriviaDuelManager duel = Object.FindAnyObjectByType<TriviaDuelManager>(FindObjectsInactive.Include);
+
+                if (duel != null)
+                    visual.currentTheme = duel.buttonTheme;
             }
 
             controller.answerButtons[i] = go.GetComponent<Button>();
+            controller.answerVisuals[i] = go.GetComponent<AnswerButtonVisual>();
 
             Transform label = go.transform.Find("Label");
             controller.answerLabels[i] = label != null ? label.GetComponent<TMP_Text>() : null;
@@ -405,10 +424,24 @@ public static class PracticePageBuilder
         return ConfigureLabel(go, text, size, style, color ?? Color.white);
     }
 
+    private static TMP_FontAsset FindGameFont()
+    {
+        TriviaDuelManager duel = Object.FindAnyObjectByType<TriviaDuelManager>(FindObjectsInactive.Include);
+
+        return duel != null && duel.questionText != null ? duel.questionText.font : null;
+    }
+
     private static TMP_Text ConfigureLabel(GameObject go, string text, float size,
         FontStyles style, Color color)
     {
         TextMeshProUGUI label = go.AddComponent<TextMeshProUGUI>();
+
+        // A TMP text with no font asset cannot build a mesh at all — it logs "Can't Generate Mesh"
+        // and draws nothing, which looks exactly like a label that failed to receive its text.
+        // Borrow the font the duel screen already uses so practice matches it, falling back to the
+        // project default.
+        label.font = FindGameFont() ?? TMP_Settings.defaultFontAsset;
+
         label.text = text;
         label.fontSize = size;
         label.fontStyle = style;

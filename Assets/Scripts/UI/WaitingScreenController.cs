@@ -36,6 +36,11 @@ public class WaitingScreenController : MonoBehaviour
     [Tooltip("Drag the LobbyPageSwitcher here so Cancel can return to the lobby.")]
     public LobbyPageSwitcher lobbyPageSwitcher;
 
+    [Header("--- DEBUG ---")]
+    [Tooltip("Logs when this screen is shown and hidden, and who hid it. Off by default; tick it if " +
+             "the waiting screen ever misbehaves again.")]
+    public bool logHideCalls;
+
     private bool isQueued;
 
     private void Awake()
@@ -43,7 +48,14 @@ public class WaitingScreenController : MonoBehaviour
         if (cancelButton != null)
             cancelButton.onClick.AddListener(OnCancelClicked);
 
-        SetVisible(false);
+        // Only hide when nobody has asked for this screen yet.
+        //
+        // This object starts inactive, so Awake has not run by the time the player presses Start.
+        // SetActive(true) inside ShowWaiting runs Awake synchronously, before ShowWaiting has even
+        // returned — so hiding unconditionally here switched the screen straight back off, and it
+        // only ever appeared on the second press, once Awake could no longer fire.
+        if (!isQueued)
+            SetVisible(false);
     }
 
     // Called from LobbyPageSwitcher.StartGame() — pressing Start queues the player, it no longer
@@ -58,12 +70,25 @@ public class WaitingScreenController : MonoBehaviour
         // behind a page — and it no longer depends on the Hierarchy keeping a particular order.
         transform.SetAsLastSibling();
 
+        if (logHideCalls)
+        {
+            GameObject shown = waitingRoot != null ? waitingRoot : gameObject;
+            Debug.Log($"WaitingScreen: ShowWaiting() ran. '{shown.name}' activeSelf={shown.activeSelf} " +
+                      $"activeInHierarchy={shown.activeInHierarchy} parent='{(transform.parent != null ? transform.parent.name : "none")}' " +
+                      $"parentActive={(transform.parent == null || transform.parent.gameObject.activeInHierarchy)}", this);
+        }
+
         Refresh();
     }
 
     // Called when the match actually forms, or when the player cancels out of the queue.
     public void HideWaiting()
     {
+        // Temporary: the screen has been disappearing while a player is still queued, and this is
+        // the only method that takes it down, so the stack trace on this line names whoever did it.
+        if (logHideCalls && isQueued)
+            Debug.Log("WaitingScreen: HideWaiting() called while still queued.", this);
+
         isQueued = false;
         SetVisible(false);
     }

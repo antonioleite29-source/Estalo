@@ -47,6 +47,15 @@ public class LobbyLearningScroller : MonoBehaviour
         Build();
     }
 
+    // Start only ever runs once. Opening the Learning tab again after the slots have been lost — a
+    // script recompile clears them without re-running Start — used to leave the page permanently
+    // blank, so the path is rebuilt whenever the page comes back with nothing on it.
+    private void OnEnable()
+    {
+        if (slotRTs == null || slotRTs.Length == 0)
+            StartCoroutine(RebuildNextFrame());
+    }
+
     public void SetSourceSprites(Sprite[] sprites)
     {
         sourceSprites = sprites;
@@ -64,9 +73,11 @@ public class LobbyLearningScroller : MonoBehaviour
         // Only the slots this component made are cleared. It used to destroy every child, which
         // quietly deleted anything else placed on the Learning page — the practice button among
         // them — the moment the path first built itself.
-        for (int i = 0; i < builtSlots.Count; i++)
-            if (builtSlots[i] != null)
-                Destroy(builtSlots[i]);
+        List<GameObject> doomed = new List<GameObject>(builtSlots);
+
+        for (int i = 0; i < doomed.Count; i++)
+            if (doomed[i] != null)
+                Destroy(doomed[i]);
 
         builtSlots.Clear();
 
@@ -76,7 +87,15 @@ public class LobbyLearningScroller : MonoBehaviour
         List<Transform> keep = new List<Transform>();
 
         for (int i = 0; i < transform.childCount; i++)
-            keep.Add(transform.GetChild(i));
+        {
+            Transform child = transform.GetChild(i);
+
+            // Destroy is deferred to the end of the frame, so slots torn down a moment ago are
+            // still children right now. Without this check a rebuild would adopt them as page
+            // furniture and raise them back over the new path.
+            if (!doomed.Contains(child.gameObject))
+                keep.Add(child);
+        }
 
         if (!HasValidSprites())
         {

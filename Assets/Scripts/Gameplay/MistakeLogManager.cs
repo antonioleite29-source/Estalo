@@ -9,7 +9,26 @@ using UnityEngine;
 // keep four test players from pooling their mistakes into one log.
 public class MistakeLogManager : MonoBehaviour
 {
-    public static MistakeLogManager Instance { get; private set; }
+    private static MistakeLogManager instance;
+
+    // Resolves itself if the static has been lost — a script recompile mid-session clears statics
+    // without calling Awake again, which left practice unable to find the mistake log at all.
+    public static MistakeLogManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindAnyObjectByType<MistakeLogManager>(FindObjectsInactive.Include);
+
+                // Found rather than woken, so its log has not been read off disk yet.
+                instance?.EnsureLoaded();
+            }
+
+            return instance;
+        }
+        private set => instance = value;
+    }
 
     private const string PREFS_KEY_LOG = "MistakeLog_Local";
 
@@ -65,8 +84,20 @@ public class MistakeLogManager : MonoBehaviour
 
     private static string Key => PREFS_KEY_LOG + NetworkBootstrap.GetLocalProfileSuffix();
 
+    private bool hasLoaded;
+
+    internal void EnsureLoaded()
+    {
+        if (hasLoaded)
+            return;
+
+        Load();
+    }
+
     private void Load()
     {
+        hasLoaded = true;
+
         string json = PlayerPrefs.GetString(Key, string.Empty);
 
         if (string.IsNullOrEmpty(json))

@@ -93,7 +93,22 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     [Tooltip("If ON, this device controls both sides locally (hotseat/offline debug mode: 1/2 keys and WASD/JKL switch sides). Turn OFF for real networked play, where each client only controls its own assigned side.")]
     public bool localPassAndPlayMode = false;
 
-    public static TriviaDuelManager Instance { get; private set; }
+    private static TriviaDuelManager instance;
+
+    // Resolves itself if the static has been lost. A script recompile while the game is running
+    // reloads the domain, which clears every static but does NOT call Awake again — so this went
+    // null mid-session and everything that reaches the manager through it started failing.
+    public static TriviaDuelManager Instance
+    {
+        get
+        {
+            if (instance == null)
+                instance = FindAnyObjectByType<TriviaDuelManager>(FindObjectsInactive.Include);
+
+            return instance;
+        }
+        private set => instance = value;
+    }
 
     public int LocalAssignedSide { get; private set; }
 

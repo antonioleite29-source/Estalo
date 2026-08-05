@@ -69,7 +69,9 @@ public class LanDiscovery : MonoBehaviour
 
         try
         {
-            broadcastClient = new UdpClient { EnableBroadcast = true };
+            if (!TryOpenBroadcastSocket())
+                return;
+
             advertising = true;
             nextBroadcastTime = 0f;
 
@@ -220,6 +222,10 @@ public class LanDiscovery : MonoBehaviour
 
     private void AnswerQuery(IPEndPoint asker)
     {
+        // Closed from the main thread by StopAll while this runs on the listen thread.
+        if (listenClient == null)
+            return;
+
         try
         {
             byte[] payload = Encoding.UTF8.GetBytes(
@@ -235,6 +241,13 @@ public class LanDiscovery : MonoBehaviour
 
     private void Broadcast()
     {
+        // The socket can be gone while advertising is still true — a script recompile mid-session
+        // rebuilds private fields without re-running the setup that made it. Rebuilding it beats
+        // giving up: this used to switch discovery off for the rest of the session on one null,
+        // and the only symptom players saw was that nobody could find their game.
+        if (broadcastClient == null && !TryOpenBroadcastSocket())
+            return;
+
         try
         {
             byte[] payload = Encoding.UTF8.GetBytes($"{Magic}|{advertisedGamePort}|{advertisedName}");
@@ -243,8 +256,28 @@ public class LanDiscovery : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogWarning("LAN discovery: broadcast failed, stopping. " + e.Message);
+            // Wi-Fi dropping or switching networks throws here and recovers on its own, so the
+            // socket is dropped and reopened on the next tick rather than ending advertising.
+            Debug.LogWarning("LAN discovery: broadcast failed, retrying next tick. " + e.Message);
+
+            broadcastClient?.Close();
+            broadcastClient = null;
+        }
+    }
+
+    private bool TryOpenBroadcastSocket()
+    {
+        try
+        {
+            broadcastClient = new UdpClient { EnableBroadcast = true };
+            return true;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("LAN discovery: could not open the broadcast socket, players will have " +
+                             "to type the IP instead. " + e.Message);
             advertising = false;
+            return false;
         }
     }
 

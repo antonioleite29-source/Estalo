@@ -30,6 +30,10 @@ public class PracticeQuizController : MonoBehaviour
     [Tooltip("The label inside each answer button, in the same order.")]
     public TMP_Text[] answerLabels = new TMP_Text[4];
 
+    [Tooltip("The AnswerButtonVisual on each answer button, in the same order. Left empty these are " +
+             "found automatically. This is what the duel screen uses, so practice looks the same.")]
+    public AnswerButtonVisual[] answerVisuals = new AnswerButtonVisual[4];
+
     [Header("--- RESULTS ---")]
     [Tooltip("Final score, e.g. \"8 / 10\".")]
     public TMP_Text scoreText;
@@ -99,12 +103,28 @@ public class PracticeQuizController : MonoBehaviour
         if (doneButton != null)
             doneButton.onClick.AddListener(Hide);
 
+        if (answerVisuals == null || answerVisuals.Length != answerButtons.Length)
+            answerVisuals = new AnswerButtonVisual[answerButtons.Length];
+
+        for (int i = 0; i < answerButtons.Length; i++)
+            if (answerVisuals[i] == null && answerButtons[i] != null)
+                answerVisuals[i] = answerButtons[i].GetComponent<AnswerButtonVisual>();
+
         // Done here rather than left to the Inspector so it holds for whatever objects are dragged
         // into these slots, including ones built by hand.
         FitToItsBox(questionText, 0.35f);
 
         for (int i = 0; i < answerLabels.Length; i++)
             FitToItsBox(answerLabels[i], 0.4f);
+
+        // "Seu ponto fraco nas partidas: multiplicação" is the longest line on the results screen and
+        // its length depends on the topic name, so it needs the most room to shrink into.
+        FitToItsBox(weakestTopicText, 0.3f);
+
+        // The breakdown grows a line per topic, so it shrinks to fit vertically as well as across.
+        FitToItsBox(breakdownText, 0.3f);
+        FitToItsBox(scoreText, 0.5f);
+        FitToItsBox(progressText, 0.5f);
 
         SetActive(quizRoot, false);
         SetActive(resultsRoot, false);
@@ -193,10 +213,34 @@ public class PracticeQuizController : MonoBehaviour
         score = 0;
         waitingToAdvance = false;
 
+        ApplyDuelButtonTheme();
+
         SetActive(resultsRoot, false);
         SetActive(quizRoot, true);
 
         ShowCurrentQuestion();
+    }
+
+    // Practice deliberately borrows the duel screen's theme rather than owning one. Without a theme
+    // an AnswerButtonVisual keeps whatever sprite it already had for every state, so a right answer
+    // and a wrong one looked identical. Taken at the start of each set so the two screens cannot
+    // drift apart.
+    private void ApplyDuelButtonTheme()
+    {
+        ButtonTheme theme = TriviaDuelManager.Instance != null
+            ? TriviaDuelManager.Instance.buttonTheme
+            : null;
+
+        if (theme == null)
+        {
+            Debug.LogWarning("PracticeQuizController: TriviaDuelManager has no Button Theme, so the " +
+                             "practice buttons cannot show right/wrong. Assign one on the duel manager.");
+            return;
+        }
+
+        for (int i = 0; i < answerVisuals.Length; i++)
+            if (answerVisuals[i] != null)
+                answerVisuals[i].ApplyTheme(theme);
     }
 
     private void Update()
@@ -231,6 +275,15 @@ public class PracticeQuizController : MonoBehaviour
 
             answerButtons[i].interactable = true;
 
+            // Where an AnswerButtonVisual exists it owns the look completely — it turns Unity's own
+            // colour transition off and drives the sprite itself. Tinting the Image here as well
+            // would fight it, which is what left these buttons blank until they were touched.
+            if (answerVisuals[i] != null)
+            {
+                answerVisuals[i].SetAvailableState();
+                continue;
+            }
+
             Image background = answerButtons[i].GetComponent<Image>();
 
             if (background != null)
@@ -264,30 +317,49 @@ public class PracticeQuizController : MonoBehaviour
         MistakeLogManager.Instance?.RecordAnswer(question, 1, wasCorrect,
             MistakeLogManager.AnswerSource.Practice);
 
-        Paint(answerIndex, wasCorrect ? correctColor : wrongColor);
+        Paint(answerIndex, wasCorrect);
 
         // On a wrong answer also show which one was right — a practice set that only says "wrong"
         // teaches nothing.
         if (!wasCorrect)
-            Paint(question.correctAnswerIndex, correctColor);
+            Paint(question.correctAnswerIndex, true);
 
         for (int i = 0; i < answerButtons.Length; i++)
-            if (answerButtons[i] != null)
-                answerButtons[i].interactable = false;
+        {
+            if (answerButtons[i] == null)
+                continue;
+
+            answerButtons[i].interactable = false;
+
+            // The two buttons Paint just marked keep their result colour; the rest go to the same
+            // locked look the duel screen uses between rounds.
+            if (answerVisuals[i] != null && i != answerIndex && i != question.correctAnswerIndex)
+                answerVisuals[i].SetLockedPressedState();
+        }
 
         advanceAt = Time.unscaledTime + (wasCorrect ? wrongAnswerPauseSeconds * 0.5f : wrongAnswerPauseSeconds);
         waitingToAdvance = true;
     }
 
-    private void Paint(int answerIndex, Color color)
+    private void Paint(int answerIndex, bool asCorrect)
     {
         if (answerIndex < 0 || answerIndex >= answerButtons.Length || answerButtons[answerIndex] == null)
             return;
 
+        if (answerVisuals[answerIndex] != null)
+        {
+            if (asCorrect)
+                answerVisuals[answerIndex].SetPressedRightState();
+            else
+                answerVisuals[answerIndex].SetPressedWrongState();
+
+            return;
+        }
+
         Image background = answerButtons[answerIndex].GetComponent<Image>();
 
         if (background != null)
-            background.color = color;
+            background.color = asCorrect ? correctColor : wrongColor;
     }
 
     private void ShowResults()
