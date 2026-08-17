@@ -171,6 +171,12 @@ public class LobbyLearningScroller : MonoBehaviour
             dragVelocity = ComputeReleaseVelocity(currentMouseY);
         }
 
+        // Nothing moving means nothing to redraw. Writing anchoredPosition dirties the canvas even
+        // when the value is unchanged, and this page sits on the same canvas as the whole game — so
+        // a still path was forcing a full UI rebuild every frame for no visible reason.
+        if (!isDragging && dragVelocity == 0f)
+            return;
+
         float delta;
         if (isDragging)
         {

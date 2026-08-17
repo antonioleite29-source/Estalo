@@ -43,6 +43,10 @@ public class WaitingScreenController : MonoBehaviour
 
     private bool isQueued;
 
+    // What is currently on screen, so a redraw only happens when the numbers actually move.
+    private string lastPlayersLine;
+    private string lastLiveGamesLine;
+
     private void Awake()
     {
         if (cancelButton != null)
@@ -63,6 +67,8 @@ public class WaitingScreenController : MonoBehaviour
     public void ShowWaiting()
     {
         isQueued = true;
+        lastPlayersLine = null;
+        lastLiveGamesLine = null;
         SetVisible(true);
 
         // Draw order inside a Canvas is sibling order, and this screen sits earlier than PageArea,
@@ -114,6 +120,9 @@ public class WaitingScreenController : MonoBehaviour
         if (sync == null || !sync.IsSpawned)
             return;
 
+        // Assigning text rebuilds the canvas even when the string is identical, and this runs every
+        // frame while queued — on a single canvas holding the whole game that was a full rebuild of
+        // 133 renderers per frame to redraw a number that changes once every few seconds.
         if (playersText != null)
         {
             // The queue for the mode THIS player picked. There is one queue per mode, so a player
@@ -126,14 +135,25 @@ public class WaitingScreenController : MonoBehaviour
                 ? sync.NetQueuedTeamFour.Value
                 : sync.NetQueuedOneVsOne.Value;
 
-            playersText.text = playersPrefix
-                             + queued
-                             + playersSeparator
-                             + Matchmaker.RequiredPlayersFor(mode);
+            string line = playersPrefix + queued + playersSeparator + Matchmaker.RequiredPlayersFor(mode);
+
+            if (line != lastPlayersLine)
+            {
+                lastPlayersLine = line;
+                playersText.text = line;
+            }
         }
 
         if (liveGamesText != null)
-            liveGamesText.text = liveGamesPrefix + sync.NetLiveMatches.Value;
+        {
+            string line = liveGamesPrefix + sync.NetLiveMatches.Value;
+
+            if (line != lastLiveGamesLine)
+            {
+                lastLiveGamesLine = line;
+                liveGamesText.text = line;
+            }
+        }
     }
 
     private void OnCancelClicked()
