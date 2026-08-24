@@ -13,10 +13,19 @@ using UnityEngine.SceneManagement;
 // Hierarchy until something activates them.
 public static class ApplyGameFont
 {
-    // Copied into the project rather than read from the Mac's font folder, because a build machine
-    // that does not have the font installed would otherwise produce a build with no text in it.
-    private const string SourceFontPath = "Assets/Fonts/ArialBlack/ArialBlack.ttf";
-    private const string FontAssetPath = "Assets/Fonts/ArialBlack/ArialBlack SDF.asset";
+    // Inter, cut to a static Black at weight 900. Vendored rather than read from the Mac's font
+    // folder for two reasons: a machine without the font installed would build a game with no text
+    // in it, and the previous font here was Arial Black, which belongs to Monotype and is not
+    // licensed to ship inside an app. Inter is OFL — see Assets/Fonts/Inter/OFL.txt.
+    //
+    // To go lighter, point this at Inter-SemiBold.ttf and delete the generated .asset so it is
+    // rebuilt. Worth doing if the answer buttons read as too solid on a phone: 900 is drawn for
+    // headlines, and this font ends up on a 17px button as well as a 56px logo.
+    private const string SourceFontPath = "Assets/Fonts/Inter/Inter-Black.ttf";
+    private const string FontAssetPath = "Assets/Fonts/Inter/Inter Black SDF.asset";
+
+    // Named after the file so the two never drift apart in the Project window.
+    private const string FontAssetName = "Inter Black SDF";
 
     [MenuItem("Trivia Duel/Setup/Apply Game Font To All Text")]
     public static void ApplyToEverything()
@@ -97,7 +106,7 @@ public static class ApplyGameFont
             return null;
         }
 
-        created.name = "ArialBlack SDF";
+        created.name = FontAssetName;
 
         AssetDatabase.CreateAsset(created, FontAssetPath);
 
@@ -105,13 +114,13 @@ public static class ApplyGameFont
         // Editor reloads, and every label goes blank.
         if (created.atlasTextures != null && created.atlasTextures.Length > 0)
         {
-            created.atlasTextures[0].name = "ArialBlack Atlas";
+            created.atlasTextures[0].name = FontAssetName + " Atlas";
             AssetDatabase.AddObjectToAsset(created.atlasTextures[0], created);
         }
 
         if (created.material != null)
         {
-            created.material.name = "ArialBlack SDF Material";
+            created.material.name = FontAssetName + " Material";
             AssetDatabase.AddObjectToAsset(created.material, created);
         }
 
