@@ -10128,7 +10128,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Points
+  m_text: Point
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
   m_sharedMaterial: {fileID: 5165438157745338668, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
@@ -10224,8 +10224,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 237.13, y: 662}
-  m_SizeDelta: {x: 502.37, y: 227.51}
+  m_AnchoredPosition: {x: 211.54, y: 662}
+  m_SizeDelta: {x: 451.19, y: 227.51}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1098697073
 GameObject:
@@ -11290,8 +11290,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 216.49226, y: 828.19995}
-  m_SizeDelta: {x: 118.6813, y: 20}
+  m_AnchoredPosition: {x: 208.13, y: 828.19995}
+  m_SizeDelta: {x: 114.5, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1225874020
 MonoBehaviour:
@@ -13723,8 +13723,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 237.13443, y: 489.99985}
-  m_SizeDelta: {x: 502.3689, y: 227.51}
+  m_AnchoredPosition: {x: 211.54001, y: 489.99985}
+  m_SizeDelta: {x: 451.18, y: 227.51}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1538229518
 GameObject:
@@ -18897,8 +18897,8 @@ MonoBehaviour:
   teamFourHighlight: {fileID: 0}
   oneVsOneButtonImage: {fileID: 1913405546}
   teamFourButtonImage: {fileID: 1846986631}
-  selectedModeColor: {r: 1, g: 1, b: 1, a: 0.5}
-  unselectedModeColor: {r: 1, g: 1, b: 1, a: 1}
+  selectedModeColor: {r: 1, g: 1, b: 1, a: 1}
+  unselectedModeColor: {r: 0.52, g: 0.54, b: 0.62, a: 1}
   profilePage: {fileID: 2047941815}
   learningPage: {fileID: 1405330894}
   lobbyPage: {fileID: 581055454}

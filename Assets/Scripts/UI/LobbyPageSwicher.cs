@@ -74,8 +74,36 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     private void Start()
     {
+        ReleaseModeButtonTints();
         ShowStartupPage();
         RefreshModeHighlight();
+    }
+
+    // Hands the mode buttons' colour over to this script.
+    //
+    // Both are Buttons set to Color Tint whose Target Graphic is the very Image below tints, so
+    // Unity's own Selectable rewrote that colour on every state change -- press, release, the
+    // pointer leaving -- and put back its Normal white a frame after the selection was applied.
+    // The two were fighting over one property and Unity always got the last word, which is why
+    // the highlight looked like it did nothing.
+    //
+    // Transition.None is what AnswerButtonVisual already does for the same reason: a button whose
+    // look is decided by game state cannot also be driven by pointer state.
+    private void ReleaseModeButtonTints()
+    {
+        ReleaseTint(oneVsOneButtonImage);
+        ReleaseTint(teamFourButtonImage);
+    }
+
+    private static void ReleaseTint(Image buttonImage)
+    {
+        if (buttonImage == null)
+            return;
+
+        Button button = buttonImage.GetComponent<Button>();
+
+        if (button != null)
+            button.transition = Selectable.Transition.None;
     }
 
     private void ShowStartupPage()
