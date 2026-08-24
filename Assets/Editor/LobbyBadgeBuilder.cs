@@ -12,14 +12,13 @@ using UnityEngine.UI;
 // guess is a drag-and-drop away from being right rather than a reason to run this again.
 public static class LobbyBadgeBuilder
 {
-    // The chosen mode fades back; the one you have not chosen stays at full strength. That reads
-    // as the selected button being pressed into the page rather than lit up on top of it, which is
-    // the opposite of the usual convention and is what was asked for.
+    // The chosen mode is solid; the one you have not chosen is see-through.
     //
-    // Alpha rather than a darker colour, so it works over whatever the button art happens to be
-    // instead of only over the flat fill it has today.
-    private static readonly Color SelectedMode = new Color(1f, 1f, 1f, 0.5f);
-    private static readonly Color UnselectedMode = Color.white;
+    // Alpha rather than a second colour, so the difference survives whatever artwork ends up on
+    // those buttons -- 1v1Button.png is already sitting in the project waiting to go on. A grey
+    // would have to be re-picked to suit every new sprite; transparency never does.
+    private static readonly Color SelectedMode = Color.white;
+    private static readonly Color UnselectedMode = new Color(1f, 1f, 1f, 0.35f);
 
     [MenuItem("Trivia Duel/Setup/Wire Lobby Profile Badge")]
     public static void Wire()
@@ -73,10 +72,33 @@ public static class LobbyBadgeBuilder
         switcher.unselectedModeColor = UnselectedMode;
         EditorUtility.SetDirty(switcher);
 
+        // Both mode buttons are set to Color Tint on the very Image the switcher colours, so
+        // Unity's Selectable rewrote that colour on every press and release and put its own white
+        // back a frame later -- which is why the two modes looked identical whatever the colours
+        // were set to. LobbyPageSwitcher also does this at runtime; doing it here as well means
+        // the Inspector tells the truth about who owns that colour.
+        ReleaseTint(switcher.oneVsOneButtonImage);
+        ReleaseTint(switcher.teamFourButtonImage);
+
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
 
         Debug.Log($"LobbyBadgeBuilder: picture = '{avatar.name}', name label = '{nameLabel.name}'. " +
                   "Selected mode is now white, unselected dimmed. Save the scene to keep it.", badge);
+    }
+
+    private static void ReleaseTint(Image buttonImage)
+    {
+        if (buttonImage == null)
+            return;
+
+        Button button = buttonImage.GetComponent<Button>();
+
+        if (button == null || button.transition == Selectable.Transition.None)
+            return;
+
+        Undo.RecordObject(button, "Release mode button tint");
+        button.transition = Selectable.Transition.None;
+        EditorUtility.SetDirty(button);
     }
 
     // The picture, by being an Image that is a direct child of the page and is not one of the
