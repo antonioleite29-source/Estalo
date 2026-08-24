@@ -5122,6 +5122,7 @@ GameObject:
   - component: {fileID: 581055455}
   - component: {fileID: 581055457}
   - component: {fileID: 581055456}
+  - component: {fileID: 581055458}
   m_Layer: 5
   m_Name: MainLobbypage
   m_TagString: Untagged
@@ -5195,6 +5196,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 581055454}
   m_CullTransparentMesh: 1
+--- !u!114 &581055458
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 581055454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 774e2ab3da6d34b9397fa3e0781bfa76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LobbyProfileBadge
+  avatarImage: {fileID: 1960210209}
+  nameLabel: {fileID: 1501216628}
+  pageSwitcher: {fileID: 2119174437}
+  placeholderName: Toque para editar
 --- !u!1 &585098112
 GameObject:
   m_ObjectHideFlags: 0
@@ -16633,7 +16650,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 234.7, y: -208}
+  m_AnchoredPosition: {x: 237.12999, y: -215.98994}
   m_SizeDelta: {x: 400, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1846986630
@@ -18880,7 +18897,7 @@ MonoBehaviour:
   teamFourHighlight: {fileID: 0}
   oneVsOneButtonImage: {fileID: 1913405546}
   teamFourButtonImage: {fileID: 1846986631}
-  selectedModeColor: {r: 0.6763191, g: 0.6792453, b: 0.4261303, a: 1}
+  selectedModeColor: {r: 1, g: 1, b: 1, a: 0.5}
   unselectedModeColor: {r: 1, g: 1, b: 1, a: 1}
   profilePage: {fileID: 2047941815}
   learningPage: {fileID: 1405330894}

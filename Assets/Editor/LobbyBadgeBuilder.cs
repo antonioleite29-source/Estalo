@@ -12,11 +12,14 @@ using UnityEngine.UI;
 // guess is a drag-and-drop away from being right rather than a reason to run this again.
 public static class LobbyBadgeBuilder
 {
-    // White for the mode you have chosen, and a dimmed version of the artwork for the one you have
-    // not. The scene had this the wrong way round -- an olive tint on the selected mode, white on
-    // the unselected -- so choosing a mode made it look disabled.
-    private static readonly Color SelectedMode = Color.white;
-    private static readonly Color UnselectedMode = new Color(0.52f, 0.54f, 0.62f, 1f);
+    // The chosen mode fades back; the one you have not chosen stays at full strength. That reads
+    // as the selected button being pressed into the page rather than lit up on top of it, which is
+    // the opposite of the usual convention and is what was asked for.
+    //
+    // Alpha rather than a darker colour, so it works over whatever the button art happens to be
+    // instead of only over the flat fill it has today.
+    private static readonly Color SelectedMode = new Color(1f, 1f, 1f, 0.5f);
+    private static readonly Color UnselectedMode = Color.white;
 
     [MenuItem("Trivia Duel/Setup/Wire Lobby Profile Badge")]
     public static void Wire()
