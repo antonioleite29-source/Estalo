@@ -18,7 +18,7 @@ public static class LobbyBadgeBuilder
     // Alpha rather than a second colour, so the difference survives whatever artwork ends up on
     // those buttons -- 1v1Button.png is already sitting in the project waiting to go on. A grey
     // would have to be re-picked to suit every new sprite; transparency never does.
-    private static readonly Color SelectedMode = new Color(1f, 1f, 1f, 0.35f);
+    private static readonly Color SelectedMode = new Color(1f, 1f, 1f, 0.675f);
     private static readonly Color UnselectedMode = Color.white;
 
     [MenuItem("Trivia Duel/Setup/Wire Lobby Profile Badge")]
