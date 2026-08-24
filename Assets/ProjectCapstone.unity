@@ -16672,7 +16672,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -17493,7 +17493,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -18897,8 +18897,8 @@ MonoBehaviour:
   teamFourHighlight: {fileID: 0}
   oneVsOneButtonImage: {fileID: 1913405546}
   teamFourButtonImage: {fileID: 1846986631}
-  selectedModeColor: {r: 1, g: 1, b: 1, a: 1}
-  unselectedModeColor: {r: 0.52, g: 0.54, b: 0.62, a: 1}
+  selectedModeColor: {r: 1, g: 1, b: 1, a: 0.675}
+  unselectedModeColor: {r: 1, g: 1, b: 1, a: 1}
   profilePage: {fileID: 2047941815}
   learningPage: {fileID: 1405330894}
   lobbyPage: {fileID: 581055454}
