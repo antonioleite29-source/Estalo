@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -165,11 +166,27 @@ public class LobbyPageSwitcher : MonoBehaviour
         if (teamFourHighlight != null)
             teamFourHighlight.SetActive(!isOneVsOne);
 
-        if (oneVsOneButtonImage != null)
-            oneVsOneButtonImage.color = isOneVsOne ? selectedModeColor : unselectedModeColor;
+        ApplyModeTint(oneVsOneButtonImage, isOneVsOne);
+        ApplyModeTint(teamFourButtonImage, !isOneVsOne);
+    }
 
-        if (teamFourButtonImage != null)
-            teamFourButtonImage.color = isOneVsOne ? unselectedModeColor : selectedModeColor;
+    // The label moves with the button, not just the button art. Tinting only the background left
+    // "1x1" and "2x2" reading identically whichever was chosen, so the one piece of the control a
+    // player actually looks at carried none of the state.
+    private void ApplyModeTint(Image buttonImage, bool isSelected)
+    {
+        if (buttonImage == null)
+            return;
+
+        Color tint = isSelected ? selectedModeColor : unselectedModeColor;
+        buttonImage.color = tint;
+
+        // Searched from the button rather than wired in the Inspector: the label is always a child
+        // of the button it belongs to, and one less slot is one less thing to leave empty.
+        TMP_Text label = buttonImage.GetComponentInChildren<TMP_Text>(true);
+
+        if (label != null)
+            label.color = tint;
     }
 
     // ---------------------------------------------------------------
