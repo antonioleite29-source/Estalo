@@ -4,6 +4,14 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
+// The 2v2 screen, and only the screen. Every rule -- who may answer, who scores, when a solo
+// starts, when the match ends -- belongs to MatchSession on the server, which sends the result to
+// this match's four players through TriviaNetworkSync. Everything here is an Apply*/Register*
+// method that draws what arrived.
+//
+// It used to hold a full copy of the rules as well, run locally. That copy became unreachable the
+// moment matchmaking started running several matches at once, and a second set of rules that
+// nobody executes is a second set of rules to keep in step -- so it is gone.
 public class TeamDuelManager : MonoBehaviour
 {
     internal enum RoundState
@@ -21,6 +29,12 @@ public class TeamDuelManager : MonoBehaviour
     public GameObject lobbyRootObject;
     public LobbyPageSwitcher lobbyPageSwitcher;
     public GameObject teamGameplayRoot;
+
+    [Tooltip("The board image behind 2v2 gameplay. This is NOT the same object as the 1v1 " +
+             "background — team mode has its own root with its own Image — which is why flipping " +
+             "the 1v1 one had no effect here. Leave empty and the first Image directly under Team " +
+             "Gameplay Root is used.")]
+    public Image teamBackground;
 
     [Tooltip("Drag the BottomBar GameObject here. It hides when a match starts and reappears when you return to the lobby.")]
     public GameObject bottomBar;
@@ -57,22 +71,12 @@ public class TeamDuelManager : MonoBehaviour
 
     private RoundState roundState = RoundState.MatchEnded;
     private TriviaQuestion currentQuestion;
-    private int currentDifficultyLevel = 1;
-    private int currentQuestionIndex = -1;
     private int teamAScore;
     private int teamBScore;
     private int activeSlotA = 1;
     private int activeSlotB = 3;
-    private int roundNumber;
-    private bool triviaRunning;
-    private bool inputEnabled;
-    private bool isTransitioning;
     private float soloTimer;
-    private float inactivityTimer;
     private readonly string[] slotBaseNames = new string[4];
-
-    private Coroutine stateCoroutine;
-    private Coroutine returnToLobbyCoroutine;
 
     private void Awake()
     {
@@ -86,20 +90,6 @@ public class TeamDuelManager : MonoBehaviour
             questionText.overflowMode = TMPro.TextOverflowModes.Truncate;
         }
     }
-
-    private void Update()
-    {
-        if (!triviaRunning || roundState == RoundState.MatchEnded)
-            return;
-
-        if (IsAuthoritative)
-            UpdateRoundTimers();
-    }
-
-    private bool IsAuthoritative =>
-        NetworkManager.Singleton == null ||
-        !NetworkManager.Singleton.IsListening ||
-        NetworkManager.Singleton.IsServer;
 
     private bool IsNetworkedSession =>
         NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
@@ -117,6 +107,62 @@ public class TeamDuelManager : MonoBehaviour
     {
         LocalAssignedSlot = slot;
         RefreshPfpOpacity();
+
+        // Slots 1 and 2 are Team A, 3 and 4 are Team B.
+        int team = PlayerSideIdentity.TeamForSlot(slot);
+
+        // Still handed to TriviaDuelManager so anything keyed off "which side am I" agrees across
+        // modes, but the flip itself has to be done here: that call mirrors the 1v1 background,
+        // which is on a different root and is not on screen during a team match.
+        TriviaDuelManager.Instance?.SetLocalViewSideForTeams(team == 1 ? 2 : 1);
+
+        ApplyTeamBackgroundSide(team);
+    }
+
+    private Image ResolveTeamBackground()
+    {
+        if (teamBackground != null)
+            return teamBackground;
+
+        if (teamGameplayRoot == null)
+            return null;
+
+        // The board sits first under the root, ahead of the answer buttons and the player slots.
+        // Cached once found, so this walk happens at most once per session.
+        foreach (Transform child in teamGameplayRoot.transform)
+        {
+            Image candidate = child.GetComponent<Image>();
+
+            if (candidate != null)
+            {
+                teamBackground = candidate;
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    // Mirrors the 2v2 board so each player sees it from their own end.
+    private void ApplyTeamBackgroundSide(int team)
+    {
+        Image background = ResolveTeamBackground();
+
+        if (background == null)
+        {
+            Debug.LogWarning("TeamDuelManager: no team background found, so the board cannot be " +
+                             "flipped per side. Assign Team Background on this component.", this);
+            return;
+        }
+
+        Vector3 scale = background.rectTransform.localScale;
+
+        // Only the SIGN of x is touched. The magnitude is whatever the scene set it to — the 1v1
+        // background is sized by a 15 x 30 localScale, and normalising that to 1 is what collapsed
+        // it to 78 pixels once already.
+        float x = Mathf.Abs(scale.x);
+
+        background.rectTransform.localScale = new Vector3(team == 1 ? x : -x, scale.y, scale.z);
     }
 
     public void StartTeamTriviaFromLobby()
@@ -146,50 +192,8 @@ public class TeamDuelManager : MonoBehaviour
         }
     }
 
-    public void BeginMatchAuthoritative()
-    {
-        // Re-bind every time this mode's match actually starts — the answer buttons are shared
-        // with TriviaDuelManager (only one mode is ever active at a time), so whichever mode
-        // starts most recently needs to "claim" the click listeners back.
-        BindAnswerButtons();
-
-        StopGameplayCoroutines();
-        triviaRunning = true;
-        inputEnabled = false;
-        isTransitioning = false;
-        currentQuestion = null;
-        currentQuestionIndex = -1;
-        roundNumber = 0;
-        teamAScore = 0;
-        teamBScore = 0;
-
-        if (PlayerIQManager.Instance != null)
-            currentDifficultyLevel = PlayerIQManager.Instance.GetLocalDifficultyLevel();
-
-        if (lobbyRootObject != null)
-            lobbyRootObject.SetActive(false);
-
-        if (LobbyScreenController.Instance != null)
-            LobbyScreenController.Instance.HideLobby();
-
-        if (teamGameplayRoot != null)
-            teamGameplayRoot.SetActive(true);
-
-        if (bottomBar != null)
-            bottomBar.SetActive(false);
-
-        if (questionText != null)
-            questionText.text = string.Empty;
-
-        UpdateScoreUI();
-
-        TriviaNetworkSync.Instance?.BroadcastTeamMatchStarted();
-        StartNextRound();
-    }
-
     public void ApplyNetworkedMatchStarted()
     {
-
         // Match has formed — take down the queue/waiting screen before showing the gameplay UI.
         if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
             lobbyPageSwitcher.waitingScreen.HideWaiting();
@@ -212,57 +216,6 @@ public class TeamDuelManager : MonoBehaviour
             questionText.text = string.Empty;
 
         ApplyNetworkedRoundState((int)RoundState.OpenBuzz);
-    }
-
-    private void StartNextRound()
-    {
-        if (teamAScore >= pointsToWin)
-        {
-            EndMatch("Team A Wins!", true, winningTeam: 1);
-            return;
-        }
-
-        if (teamBScore >= pointsToWin)
-        {
-            EndMatch("Team B Wins!", true, winningTeam: 2);
-            return;
-        }
-
-        currentQuestion = TriviaDuelManager.Instance != null
-            ? TriviaDuelManager.Instance.GetNextQuestionForDifficulty(currentDifficultyLevel, ref currentQuestionIndex)
-            : null;
-
-        if (currentQuestion == null)
-        {
-            EndMatch("No questions available", false, 0);
-            return;
-        }
-
-        roundNumber++;
-        bool useFirstPairing = (roundNumber % 2) == 1;
-        activeSlotA = useFirstPairing ? 1 : 2;
-        activeSlotB = useFirstPairing ? 3 : 4;
-
-        UpdateActiveSlotIndicators();
-        ResetDonuts();
-        RestoreSlotNames();
-        UpdateScoreUI();
-        ResetInactivityTimer();
-        SetButtonsAvailableNormal();
-        TriviaNetworkSync.Instance?.BroadcastTeamButtonsAvailable();
-
-        if (TriviaDuelManager.Instance != null)
-            TriviaDuelManager.Instance.ApplyQuestionVisualsTo(questionText, answerButtonVisuals, currentQuestion);
-
-        SetState(RoundState.OpenBuzz);
-        inputEnabled = true;
-        isTransitioning = false;
-        PublishNetworkedStateIfServer();
-    }
-
-    private void PublishNetworkedStateIfServer()
-    {
-        TriviaNetworkSync.Instance?.PublishTeamState((int)roundState, currentDifficultyLevel, currentQuestionIndex, activeSlotA, activeSlotB, teamAScore, teamBScore);
     }
 
     public void ApplyNetworkedScore(int newTeamAScore, int newTeamBScore)
@@ -297,8 +250,6 @@ public class TeamDuelManager : MonoBehaviour
         if (questionIndex < 0 || TriviaDuelManager.Instance == null)
             return;
 
-        currentDifficultyLevel = difficultyLevel;
-        currentQuestionIndex = questionIndex;
         currentQuestion = TriviaDuelManager.Instance.GetQuestionAt(difficultyLevel, questionIndex);
 
         if (currentQuestion != null)
@@ -340,9 +291,15 @@ public class TeamDuelManager : MonoBehaviour
             if (slotPfpImages[i] == null)
                 continue;
 
+            bool isLocal = (i + 1) == LocalAssignedSlot;
+
             Color color = slotPfpImages[i].color;
-            color.a = (i + 1) == LocalAssignedSlot ? 1f : 0.5f;
+            color.a = isLocal ? 1f : 0.5f;
             slotPfpImages[i].color = color;
+
+            // Borrowed from TriviaDuelManager rather than reimplemented, so the ring is the same
+            // colour and thickness in both modes and only has to be tuned in one place.
+            TriviaDuelManager.Instance?.ApplyLocalPlayerOutline(slotPfpImages[i], isLocal);
         }
     }
 
@@ -355,178 +312,6 @@ public class TeamDuelManager : MonoBehaviour
         localIdentity?.RequestSubmitTeamAnswer(answerIndex);
     }
 
-    public void SubmitAnswerFromNetwork(int slot, int answerIndex)
-    {
-        if (IsAuthoritative)
-            SubmitAnswer(slot, answerIndex);
-    }
-
-    private void SubmitAnswer(int slot, int answerIndex)
-    {
-        if (!IsSlotAllowedToAnswer(slot))
-            return;
-
-        if (answerIndex < 0 || answerIndex > 3)
-            return;
-
-        ResetInactivityTimer();
-
-        if (answerIndex == currentQuestion.correctAnswerIndex)
-            stateCoroutine = StartCoroutine(HandleCorrectAnswer(slot, answerIndex));
-        else
-            stateCoroutine = StartCoroutine(HandleWrongAnswer(slot, answerIndex));
-    }
-
-    private bool IsSlotAllowedToAnswer(int slot)
-    {
-        if (!triviaRunning || !inputEnabled || isTransitioning)
-            return false;
-
-        bool isCurrentlyActiveSlot = slot == activeSlotA || slot == activeSlotB;
-
-        if (!isCurrentlyActiveSlot)
-            return false;
-
-        switch (roundState)
-        {
-            case RoundState.OpenBuzz:
-                return true;
-            case RoundState.SoloActiveA:
-                return slot == activeSlotA;
-            case RoundState.SoloActiveB:
-                return slot == activeSlotB;
-            default:
-                return false;
-        }
-    }
-
-    private IEnumerator HandleCorrectAnswer(int slot, int answerIndex)
-    {
-        BeginResolve();
-        MarkAnswerRight(answerIndex);
-        TriviaNetworkSync.Instance?.BroadcastTeamAnswerMarked(answerIndex, true);
-        AwardPointToTeamForSlot(slot);
-        UpdateScoreUI();
-        PublishNetworkedStateIfServer();
-
-        yield return new WaitForSeconds(correctResolveSeconds);
-
-        if (teamAScore >= pointsToWin)
-        {
-            EndMatch("Team A Wins!", true, winningTeam: 1);
-            yield break;
-        }
-
-        if (teamBScore >= pointsToWin)
-        {
-            EndMatch("Team B Wins!", true, winningTeam: 2);
-            yield break;
-        }
-
-        yield return new WaitForSeconds(nextRoundDelaySeconds);
-        stateCoroutine = null;
-        StartNextRound();
-    }
-
-    private IEnumerator HandleWrongAnswer(int slot, int answerIndex)
-    {
-        bool wasInSolo = roundState == RoundState.SoloActiveA || roundState == RoundState.SoloActiveB;
-
-        BeginResolve();
-        MarkAnswerWrong(answerIndex);
-        TriviaNetworkSync.Instance?.BroadcastTeamAnswerMarked(answerIndex, false);
-
-        yield return new WaitForSeconds(wrongFlashSeconds);
-
-        stateCoroutine = null;
-
-        if (wasInSolo)
-            EndSoloAndReturnToOpen();
-        else
-            BeginSoloForSlot(slot == activeSlotA ? activeSlotB : activeSlotA);
-    }
-
-    private void BeginResolve()
-    {
-        inputEnabled = false;
-        isTransitioning = true;
-        SetState(RoundState.Resolving);
-        LockAllButtons();
-        TriviaNetworkSync.Instance?.BroadcastTeamLockAllButtons();
-    }
-
-    private void BeginSoloForSlot(int soloSlot)
-    {
-        inputEnabled = true;
-        isTransitioning = false;
-        soloTimer = soloTimeSeconds;
-        ResetInactivityTimer();
-        SetButtonsAvailableNormal();
-        TriviaNetworkSync.Instance?.BroadcastTeamButtonsAvailable();
-
-        SetState(soloSlot == activeSlotA ? RoundState.SoloActiveA : RoundState.SoloActiveB);
-        UpdateSoloDonuts();
-        PublishNetworkedStateIfServer();
-    }
-
-    private void EndSoloAndReturnToOpen()
-    {
-        inputEnabled = true;
-        isTransitioning = false;
-        ResetDonuts();
-        SetButtonsAvailableNormal();
-        TriviaNetworkSync.Instance?.BroadcastTeamButtonsAvailable();
-        ResetInactivityTimer();
-        SetState(RoundState.OpenBuzz);
-        PublishNetworkedStateIfServer();
-    }
-
-    private void UpdateRoundTimers()
-    {
-        if (isTransitioning)
-            return;
-
-        bool runInactivity = roundState == RoundState.OpenBuzz || roundState == RoundState.SoloActiveA || roundState == RoundState.SoloActiveB;
-
-        if (runInactivity)
-        {
-            inactivityTimer -= Time.deltaTime;
-
-            if (inactivityTimer <= 0f)
-            {
-                inactivityTimer = 0f;
-                EndMatch("Game ended: no attempts for 1 minute", false, 0);
-                return;
-            }
-        }
-
-        if (roundState == RoundState.SoloActiveA || roundState == RoundState.SoloActiveB)
-        {
-            soloTimer -= Time.deltaTime;
-            UpdateSoloDonuts();
-            TriviaNetworkSync.Instance?.PublishTeamSoloTimer(soloTimer);
-
-            if (soloTimer <= 0f)
-            {
-                soloTimer = 0f;
-                EndSoloAndReturnToOpen();
-            }
-        }
-    }
-
-    private void ResetInactivityTimer()
-    {
-        inactivityTimer = inactivityEndSeconds;
-    }
-
-    private void AwardPointToTeamForSlot(int slot)
-    {
-        if (PlayerSideIdentity.TeamForSlot(slot) == 1)
-            teamAScore++;
-        else
-            teamBScore++;
-    }
-
     private void UpdateScoreUI()
     {
         if (teamAScoreText != null)
@@ -534,15 +319,6 @@ public class TeamDuelManager : MonoBehaviour
 
         if (teamBScoreText != null)
             teamBScoreText.text = teamBScore.ToString();
-    }
-
-    private void RestoreSlotNames()
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            if (slotNameTexts != null && i < slotNameTexts.Length && slotNameTexts[i] != null)
-                slotNameTexts[i].text = slotBaseNames[i];
-        }
     }
 
     private void UpdateActiveSlotIndicators()
@@ -598,11 +374,6 @@ public class TeamDuelManager : MonoBehaviour
         }
     }
 
-    private void SetState(RoundState newState)
-    {
-        roundState = newState;
-    }
-
     internal void SetButtonsAvailableNormal()
     {
         if (answerButtonVisuals == null)
@@ -645,78 +416,35 @@ public class TeamDuelManager : MonoBehaviour
             answerButtonVisuals[answerIndex].SetPressedWrongState();
     }
 
-    public bool IsMatchRunning => triviaRunning;
-
-    // Server-side counterpart to TriviaDuelManager.AbortMatchForDisconnect. Losing any one of the
-    // four players strands the match the same way: the active slot for that player never answers.
-    public void AbortMatchForDisconnect(string message)
-    {
-        if (!triviaRunning)
-            return;
-
-        EndMatch(message, false, 0);
-        TriviaNetworkSync.Instance?.BroadcastTeamMatchAborted(message);
-
-        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
-            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
-    }
-
-    public void ApplyNetworkedMatchAborted(string message)
-    {
-        if (questionText != null)
-            questionText.text = message;
-
-        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
-            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
-    }
-
-    private void EndMatch(string message, bool hasWinner, int winningTeam)
-    {
-        StopGameplayCoroutines(false);
-        triviaRunning = false;
-        inputEnabled = false;
-        isTransitioning = false;
-        SetState(RoundState.MatchEnded);
-        LockAllButtons();
-        TriviaNetworkSync.Instance?.BroadcastTeamLockAllButtons();
-        ResetDonuts();
-
-        if (questionText != null)
-            questionText.text = message;
-
-        if (hasWinner && PlayerIQManager.Instance != null)
-            PlayerIQManager.Instance.AdjustLocalIQAfterMatch(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == winningTeam);
-
-        PublishNetworkedStateIfServer();
-        TriviaNetworkSync.Instance?.BroadcastTeamMatchEnded(message, hasWinner, winningTeam);
-
-        if (hasWinner && returnToLobbyAfterWin)
-            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
-    }
-
     public void ApplyNetworkedMatchEnd(string message, bool hasWinner, int winningTeam)
     {
+        // The winning team's own solo animation introduces the end screen, the same way it does
+        // in 1v1 — team mode has no background system of its own and borrows that one.
+        if (hasWinner)
+            TriviaDuelManager.Instance?.PlayWinnerBackground(winningTeam);
+
         if (questionText != null)
             questionText.text = message;
 
         if (hasWinner && PlayerIQManager.Instance != null)
             PlayerIQManager.Instance.AdjustLocalIQAfterMatch(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == winningTeam);
 
-        if (hasWinner && returnToLobbyAfterWin)
-            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
+        // NOT gated on hasWinner any more. A match that ends without one — the inactivity
+        // timeout, or an opponent abandoning — used to skip this entirely and leave the player
+        // parked on the end screen with no way back except quitting. Whether to return is the
+        // returnToLobbyAfterWin preference; whether somebody won is beside the point.
+        if (returnToLobbyAfterWin)
+            StartCoroutine(ReturnToLobbyAfterDelay());
     }
 
     private IEnumerator ReturnToLobbyAfterDelay()
     {
         yield return new WaitForSeconds(Mathf.Max(0f, returnToLobbyDelaySeconds));
-        returnToLobbyCoroutine = null;
         ReturnToLobby();
     }
 
     private void ReturnToLobby()
     {
-        triviaRunning = false;
-
         if (teamGameplayRoot != null)
             teamGameplayRoot.SetActive(false);
 
@@ -726,26 +454,13 @@ public class TeamDuelManager : MonoBehaviour
         if (lobbyRootObject != null)
             lobbyRootObject.SetActive(true);
 
+        // The Lobby page by name, not Default Page — that one is Profile, and a finished 2v2 has
+        // no business ending up there.
         if (lobbyPageSwitcher != null)
-            lobbyPageSwitcher.ShowDefaultPage();
+            lobbyPageSwitcher.ShowLobbyPage();
 
         if (LobbyScreenController.Instance != null)
             LobbyScreenController.Instance.ShowLobby();
-    }
-
-    private void StopGameplayCoroutines(bool stopBackground = true)
-    {
-        if (stateCoroutine != null)
-        {
-            StopCoroutine(stateCoroutine);
-            stateCoroutine = null;
-        }
-
-        if (returnToLobbyCoroutine != null)
-        {
-            StopCoroutine(returnToLobbyCoroutine);
-            returnToLobbyCoroutine = null;
-        }
     }
 
     private void BindAnswerButtons()
@@ -765,5 +480,4 @@ public class TeamDuelManager : MonoBehaviour
             button.onClick.AddListener(() => OnAnswerButtonClicked(answerIndex));
         }
     }
-
 }

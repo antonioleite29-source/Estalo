@@ -179,21 +179,6 @@ public class PracticeQuizController : MonoBehaviour
         Begin(MistakeLogManager.Instance.BuildPracticeSet(questionsPerSet, all));
     }
 
-    // Wire this to a level node on the path. Plain practice at one difficulty, no personalisation.
-    public void StartLevelPractice(int difficultyLevel)
-    {
-        if (TriviaDuelManager.Instance == null)
-            return;
-
-        List<TriviaQuestion> pool = TriviaDuelManager.Instance.GetQuestionsForLevel(difficultyLevel);
-        Shuffle(pool);
-
-        if (pool.Count > questionsPerSet)
-            pool.RemoveRange(questionsPerSet, pool.Count - questionsPerSet);
-
-        Begin(pool);
-    }
-
     private void Begin(List<TriviaQuestion> questions)
     {
         set.Clear();
@@ -416,14 +401,5 @@ public class PracticeQuizController : MonoBehaviour
     {
         if (target != null)
             target.SetActive(active);
-    }
-
-    private static void Shuffle(List<TriviaQuestion> list)
-    {
-        for (int i = list.Count - 1; i > 0; i--)
-        {
-            int j = Random.Range(0, i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
     }
 }

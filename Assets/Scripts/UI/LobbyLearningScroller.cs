@@ -56,12 +56,6 @@ public class LobbyLearningScroller : MonoBehaviour
             StartCoroutine(RebuildNextFrame());
     }
 
-    public void SetSourceSprites(Sprite[] sprites)
-    {
-        sourceSprites = sprites;
-        StartCoroutine(RebuildNextFrame());
-    }
-
     private IEnumerator RebuildNextFrame()
     {
         yield return null;
@@ -151,12 +145,19 @@ public class LobbyLearningScroller : MonoBehaviour
     {
         if (slotRTs == null || slotRTs.Length == 0) return;
 
-        var mouse = Mouse.current;
-        if (mouse == null) return;
+        // Pointer, not Mouse. A phone has no mouse at all, so Mouse.current is null there and this
+        // returned on the first line every frame -- the page scrolled perfectly in the Editor and
+        // not at all on the device, which is the most expensive kind of bug to notice.
+        //
+        // Pointer.current is whichever device last reported: the mouse in the Editor, the
+        // touchscreen on a phone. `press` is the left button on one and a finger on the other, so
+        // the drag logic below needs no idea which it is.
+        Pointer pointer = Pointer.current;
+        if (pointer == null) return;
 
-        float currentMouseY = mouse.position.ReadValue().y;
+        float currentMouseY = pointer.position.ReadValue().y;
 
-        if (mouse.leftButton.wasPressedThisFrame)
+        if (pointer.press.wasPressedThisFrame)
         {
             isDragging   = true;
             lastMouseY   = currentMouseY;
@@ -164,7 +165,7 @@ public class LobbyLearningScroller : MonoBehaviour
             velHistory.Clear();
             velHistory.Add((Time.time, currentMouseY));
         }
-        else if (mouse.leftButton.wasReleasedThisFrame)
+        else if (pointer.press.wasReleasedThisFrame)
         {
             isDragging = false;
             // Compute release velocity from the last VelWindowSec of movement

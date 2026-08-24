@@ -79,6 +79,18 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     private void ShowStartupPage()
     {
+        // With an always-on server configured there is nothing to ask: nobody hosts and nobody
+        // types an address, so the Connect page has no job and showing it would be a screen the
+        // player has to dismiss before a game that is already online lets them play.
+        NetworkBootstrap bootstrap = NetworkBootstrap.Instance;
+
+        if (bootstrap != null && bootstrap.autoConnectToServer &&
+            !string.IsNullOrWhiteSpace(bootstrap.serverAddress))
+        {
+            ShowLobbyPage();
+            return;
+        }
+
         // No longer build-only. Keeping the Editor on Default Page meant the one screen that has to
         // be tested — the one every real player sees first — was the one never seen while working.
         if (forceConnectPageInBuild && connectPage != null)
@@ -169,7 +181,6 @@ public class LobbyPageSwitcher : MonoBehaviour
     public void ShowLobbyPage()    { ShowPage(LobbyPage.Lobby); }
     public void ShowMorePage()     { ShowPage(LobbyPage.More); }
     public void ShowConnectPage()  { ShowPage(LobbyPage.Connect); }
-    public void ShowMainPage()     { ShowLobbyPage(); }
     public void ShowTriviaPage()   { ShowLobbyPage(); }
 
     public void ShowPage(LobbyPage page)

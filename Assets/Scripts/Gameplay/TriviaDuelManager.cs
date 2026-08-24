@@ -57,7 +57,12 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         Fade,
         Pop,
         SlideFromLeft,
-        SlideFromRight
+        SlideFromRight,
+
+        // Play a sequence of images instead of moving one. This is what hand-drawn transitions
+        // exported out of Adobe Animate as a PNG sequence use — the frames themselves carry the
+        // motion, so nothing here slides, scales or fades them.
+        Frames
     }
 
     public enum BackgroundLoopAnimation
@@ -75,6 +80,19 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         public Sprite backgroundSprite;
         public BackgroundAnimation animation = BackgroundAnimation.Fade;
         public float animationSeconds = 0.25f;
+
+        [Tooltip("Only used when animation is Frames. The exported sequence, in order — select " +
+                 "them all in the Project window and drag them in together. The same list is the " +
+                 "way IN to this state and, played backwards, the way OUT of it, so a state that " +
+                 "has frames animates in both directions and one that has none animates in " +
+                 "neither. Nothing needs setting on the state you leave towards.")]
+        public Sprite[] frames;
+
+        [Tooltip("Only used when animation is Frames. Match what the timeline was authored at in " +
+                 "Animate (24 by default). animationSeconds is ignored: the frame count and this " +
+                 "rate decide how long it runs.")]
+        public float framesPerSecond = 24f;
+
         public BackgroundLoopAnimation loopAnimation = BackgroundLoopAnimation.None;
         public float loopSeconds = 4f;
         public float loopStrength = 0.04f;
@@ -189,6 +207,38 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     [Tooltip("The sprite shown on the ring when it is the OTHER player's solo turn.")]
     public Sprite otherSoloDonutSprite;
 
+    [Header("--- LOCAL PLAYER OUTLINE ---")]
+    [Tooltip("Ring drawn around whichever avatar belongs to the person holding the device. Sampled " +
+             "from the blue half of the board art (#80B3C8) so it reads as 'this side is yours' " +
+             "rather than as a decoration.")]
+    public Color localPlayerOutlineColor = new Color32(128, 179, 200, 255);
+
+    [Tooltip("Thickness of that ring, in UI units.")]
+    public float localPlayerOutlineWidth = 12f;
+
+    [Header("--- MATCH START ANIMATION ---")]
+    [Tooltip("Full-screen Image that sits ABOVE the waiting screen and is switched off the rest of " +
+             "the time. The match-start animation plays here, which is what lets it run while the " +
+             "player is still in the waiting room and the gameplay page is still hidden.")]
+    public Image matchStartOverlay;
+
+    [Tooltip("The exported sequence to play when a match forms. Leave empty and the match opens " +
+             "immediately, exactly as it did before.")]
+    public Sprite[] matchStartFrames;
+
+    [Tooltip("Playback rate for the match-start frames.")]
+    public float matchStartFramesPerSecond = 24f;
+
+    [Tooltip("Beat between the match forming and the animation starting. A moment of the waiting " +
+             "screen still being there is what makes the cut read as 'found them' rather than as " +
+             "the screen glitching.")]
+    public float matchStartDelaySeconds = 0.2f;
+
+    [Tooltip("How long the names, avatars, question and answer buttons take to fade up once the " +
+             "start animation has finished. The board itself is already there — only the pieces on " +
+             "top of it fade. Set to 0 for the old instant appearance.")]
+    public float matchStartUiFadeSeconds = 0.5f;
+
     [Tooltip("Color of the ring when it is your solo turn.")]
     public Color mySoloDonutColor = new Color32(248, 250, 252, 255);
 
@@ -202,9 +252,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     [Tooltip("Text component that shows Team 2's current score.")]
     public TMP_Text team2ScoreText;
 
-    [Tooltip("DEBUG ONLY — shows which player controls the mouse and the active difficulty level. Remove or hide this text before publishing your game.")]
-    public TMP_Text debugMouseOwnerText;
-
     [Header("--- BUTTON APPEARANCE ---")]
     [Tooltip("The ButtonTheme ScriptableObject that controls how the answer buttons look (normal, hovered, correct answer, wrong answer). Create one via Right-click > Create > Trivia > Button Theme.")]
     public ButtonTheme buttonTheme;
@@ -215,9 +262,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     [Tooltip("The filename (without .tsv) of the question file inside Assets/Resources. Default is 'TriviaQuestions'. Only used if Question Document above is empty.")]
     public string questionDocumentResourceName = "TriviaQuestions";
-
-    [Tooltip("(Optional) Images to show on the Learning page in the lobby. Drag your learning/study images here.")]
-    public Sprite[] learningPageSprites;
 
     [Tooltip("(Optional) Add trivia questions directly here instead of using a TSV file. Leave empty if you are using a TSV file.")]
     public TriviaQuestion[] questions;
@@ -284,12 +328,23 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     private Coroutine stateCoroutine;
     private Coroutine backgroundTransitionCoroutine;
+    private Coroutine matchStartCoroutine;
+
+    // The visual currently on screen. A state's exit animation belongs to the state being LEFT, not
+    // the one being entered — otherwise every state you can arrive at would need to know which
+    // states might precede it, and Open Buzz would need solo's frames just to get out of a solo.
+    private StateBackgroundVisual activeBackgroundVisual;
+
+    // Which side won the match just ended, or 0 for no winner (an abandoned match). Read only by
+    // the match-ended background, to decide whose solo animation introduces the end screen.
+    private int lastWinnerSide;
     private Coroutine backgroundLoopCoroutine;
     private Coroutine returnToLobbyCoroutine;
 
     // How far off-centre a sliding background starts, in the UI's authored pixels.
     private const float SlideDistance = 80f;
 
+    private Transform scrollingLayer;
     private Image backgroundUnderlay;
     private Image scrollingBackgroundA;
     private Image scrollingBackgroundB;
@@ -406,7 +461,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         }
     }
 
-    public void PrepareForLobby()
+    // openLobbyPage separates the two reasons this runs. On startup the app should open on whatever
+    // Default Page says. Coming back from a match it should not: Default Page is Profile in this
+    // scene, so finishing a game dumped the player on their profile instead of the screen with the
+    // Start button on it.
+    public void PrepareForLobby(bool openLobbyPage = false)
     {
         StopGameplayCoroutines();
         triviaRunning = false;
@@ -434,7 +493,12 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             lobbyRootObject.SetActive(true);
 
         if (lobbyPageSwitcher != null)
-            lobbyPageSwitcher.ShowDefaultPage();
+        {
+            if (openLobbyPage)
+                lobbyPageSwitcher.ShowLobbyPage();
+            else
+                lobbyPageSwitcher.ShowDefaultPage();
+        }
 
         if (LobbyScreenController.Instance != null)
             LobbyScreenController.Instance.ShowLobby();
@@ -526,13 +590,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         SetTriviaUiVisible(true);
         UpdateScoreUI();
-        UpdateDebugMouseOwnerUI();
         ResetDonuts();
 
         if (gameBackground != null)
             gameBackground.enabled = true;
 
-        TriviaNetworkSync.Instance?.BroadcastMatchStarted();
         StartNextRound();
     }
 
@@ -540,6 +602,145 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         BindAnswerButtons();
 
+        if (matchStartCoroutine != null)
+            StopCoroutine(matchStartCoroutine);
+
+        matchStartCoroutine = StartCoroutine(MatchStartSequence());
+    }
+
+    // Holds the player on the waiting screen for a beat, plays the match-start animation over it,
+    // and only then swaps to the gameplay page. The reveal is deliberately last: doing it first and
+    // animating afterwards would show the board for a frame before the animation covered it, which
+    // is the flicker this sequence exists to avoid.
+    private IEnumerator MatchStartSequence()
+    {
+        // Pin the waiting screen at "found" before anything else. The queue these players came from
+        // is already empty, so left live it would count itself down to 0 / 2 while the start
+        // animation played over it.
+        if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
+            lobbyPageSwitcher.waitingScreen.FreezeOnMatchFound();
+
+        if (matchStartDelaySeconds > 0f)
+            yield return new WaitForSecondsRealtime(matchStartDelaySeconds);
+
+        if (matchStartOverlay != null && matchStartFrames != null && matchStartFrames.Length > 0)
+        {
+            // Configured while still INACTIVE, then switched on. Setting up an object that is
+            // already visible lets it render once in whatever state it was left in — which is what
+            // produced the couple of stretched frames at the start: the overlay appeared, and the
+            // rect, sprite and scale only reached their right values on the following frame.
+            PrepareFrameSurface(matchStartOverlay, matchStartFrames[0]);
+
+            matchStartOverlay.gameObject.SetActive(true);
+            matchStartOverlay.transform.SetAsLastSibling();
+
+            yield return PlayFramesOn(matchStartOverlay, matchStartFrames, matchStartFramesPerSecond, false);
+        }
+
+        RevealGameplayAfterMatchStart();
+
+        // Alpha is dropped BEFORE the overlay comes down, so the UI is never visible at full
+        // opacity for even one frame. Reveal makes the objects active; this makes them invisible
+        // again immediately, and the fade below is the only thing that brings them up.
+        List<CanvasGroup> fadeGroups = matchStartUiFadeSeconds > 0f ? CollectTriviaUiFadeGroups() : null;
+
+        if (fadeGroups != null)
+            SetFadeGroupsAlpha(fadeGroups, 0f);
+
+        // Taken down after the reveal, not before: hiding it first would uncover the board while
+        // this frame is still on screen, which is the same flicker in the other direction.
+        if (matchStartOverlay != null)
+            matchStartOverlay.gameObject.SetActive(false);
+
+        if (fadeGroups != null)
+            yield return FadeInTriviaUi(fadeGroups, matchStartUiFadeSeconds);
+
+        matchStartCoroutine = null;
+    }
+
+    // A CanvasGroup per element rather than one on the gameplay root, because the root also holds
+    // the background — and the background is the thing the start animation just finished drawing.
+    // Fading it would undo the transition instead of completing it.
+    private List<CanvasGroup> CollectTriviaUiFadeGroups()
+    {
+        List<CanvasGroup> groups = new List<CanvasGroup>();
+
+        AddFadeGroup(groups, questionText);
+        AddFadeGroup(groups, leftPlayerNameText);
+        AddFadeGroup(groups, rightPlayerNameText);
+        AddFadeGroup(groups, leftPlayerPfpImage);
+        AddFadeGroup(groups, rightPlayerPfpImage);
+        AddFadeGroup(groups, leftSoloDonut);
+        AddFadeGroup(groups, rightSoloDonut);
+        AddFadeGroup(groups, team1ScoreText);
+        AddFadeGroup(groups, team2ScoreText);
+
+        if (answerButtons != null)
+        {
+            for (int i = 0; i < answerButtons.Length; i++)
+            {
+                if (answerButtons[i] != null)
+                    AddFadeGroup(groups, answerButtons[i].gameObject);
+            }
+        }
+
+        return groups;
+    }
+
+    private void AddFadeGroup(List<CanvasGroup> groups, Graphic graphic)
+    {
+        if (graphic != null)
+            AddFadeGroup(groups, graphic.gameObject);
+    }
+
+    private void AddFadeGroup(List<CanvasGroup> groups, GameObject target)
+    {
+        if (target == null)
+            return;
+
+        CanvasGroup group = target.GetComponent<CanvasGroup>();
+
+        // Explicit null check rather than ??: GetComponent returns a fake null that the null
+        // coalescing operator does not recognise, so ?? would leave the component unadded.
+        if (group == null)
+            group = target.AddComponent<CanvasGroup>();
+
+        groups.Add(group);
+    }
+
+    private void SetFadeGroupsAlpha(List<CanvasGroup> groups, float alpha)
+    {
+        for (int i = 0; i < groups.Count; i++)
+        {
+            if (groups[i] == null)
+                continue;
+
+            groups[i].alpha = alpha;
+
+            // Nothing half-faded should be clickable. An answer button at 20% opacity still takes
+            // a press otherwise, and the round has not visually started yet.
+            groups[i].blocksRaycasts = alpha >= 1f;
+        }
+    }
+
+    private IEnumerator FadeInTriviaUi(List<CanvasGroup> groups, float seconds)
+    {
+        float elapsed = 0f;
+
+        // Unscaled, to match the rest of the start sequence — the delay and the frame playback are
+        // both unscaled, so a timeScale change cannot desynchronise one part of it from another.
+        while (elapsed < seconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            SetFadeGroupsAlpha(groups, Mathf.Clamp01(elapsed / seconds));
+            yield return null;
+        }
+
+        SetFadeGroupsAlpha(groups, 1f);
+    }
+
+    private void RevealGameplayAfterMatchStart()
+    {
         // The player has been sitting on the waiting screen since they pressed Start; their match
         // has now formed, so take it down before revealing the gameplay UI underneath.
         if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
@@ -557,49 +758,39 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (bottomBar != null)
             bottomBar.SetActive(false);
 
-        if (questionText != null)
-            questionText.text = string.Empty;
-
         SetTriviaUiVisible(true);
-        UpdateDebugMouseOwnerUI();
         ResetDonuts();
+
+        // Deliberately NOT blanked here any more.
+        //
+        // The server publishes the first question as the match forms, which is now a second or so
+        // BEFORE this runs — the delay and the start animation sit in between. Clearing the text at
+        // this point wiped a question that had already been delivered, and nothing sends it again,
+        // so the board stayed empty for the whole round.
+        //
+        // Re-applied rather than merely left alone: the question landed while triviaGameplayRoot
+        // was still inactive, and TMP components on an inactive object are not guaranteed to have
+        // taken the value. Setting it again once everything is visible costs nothing and does not
+        // depend on that.
+        if (currentQuestion != null)
+        {
+            ApplyQuestionToButtons(currentQuestion);
+
+            if (questionText != null)
+                questionText.text = currentQuestion.question;
+        }
+        else if (questionText != null)
+        {
+            questionText.text = string.Empty;
+        }
 
         if (gameBackground != null)
             gameBackground.enabled = true;
 
-        // A fresh match always opens on OpenBuzz, which is also RoundState's/the NetworkVariable's
-        // own default value — so NetRoundState.OnValueChanged never fires for this transition.
-        // Apply it explicitly here instead of relying on that callback.
+        // A fresh match always opens on OpenBuzz. The server publishes that state as the match
+        // forms, which is before this runs, so nothing else is coming — apply it explicitly rather
+        // than waiting for a message that has already been and gone.
         ApplyNetworkedRoundState((int)RoundState.OpenBuzz);
-    }
-
-    public void StartTriviaFromGameManagerButton()
-    {
-        StartTriviaFromLobby();
-    }
-
-    public void ReturnToLobbyFromGameManagerButton()
-    {
-        ReturnToLobby();
-    }
-
-    public Sprite[] GetLearningPageSprites()
-    {
-        List<Sprite> sprites = new List<Sprite>();
-
-        if (learningPageSprites != null)
-        {
-            for (int i = 0; i < learningPageSprites.Length; i++)
-            {
-                if (learningPageSprites[i] != null)
-                    sprites.Add(learningPageSprites[i]);
-            }
-        }
-
-        if (sprites.Count == 0 && openBuzzBackground.backgroundSprite != null)
-            sprites.Add(openBuzzBackground.backgroundSprite);
-
-        return sprites.ToArray();
     }
 
     private void StartNextRound()
@@ -633,10 +824,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         ResetDonuts();
         RestorePlayerNames();
         UpdateScoreUI();
-        UpdateDebugMouseOwnerUI();
         ResetInactivityTimer();
         SetButtonsAvailableNormal();
-        TriviaNetworkSync.Instance?.BroadcastButtonsAvailable();
 
         if (questionText != null)
             questionText.text = currentQuestion.question;
@@ -644,21 +833,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         SetState(RoundState.OpenBuzz);
         inputEnabled = true;
         isTransitioning = false;
-        PublishNetworkedStateIfServer();
-    }
-
-    private void PublishNetworkedStateIfServer()
-    {
-        TriviaNetworkSync.Instance?.PublishState((int)roundState, currentDifficultyLevel, currentQuestionIndex, currentDuelIndex, team1Score, team2Score);
-    }
-
-    public void ApplyNetworkedDuelIndex(int duelIndex)
-    {
-        if (duelPairs == null || duelIndex < 0 || duelIndex >= duelPairs.Length)
-            return;
-
-        currentDuelIndex = duelIndex;
-        ApplyCurrentDuelUI();
     }
 
     public void ApplyNetworkedScore(int newTeam1Score, int newTeam2Score)
@@ -712,7 +886,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         LocalAssignedSide = side;
         localViewPlayerSide = side;
-        UpdateDebugMouseOwnerUI();
         RefreshBackgroundForCurrentState();
         RefreshPfpOpacity();
     }
@@ -745,12 +918,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         // request and let the server's IsPlayerAllowedToAnswer be the real gate.
         PlayerSideIdentity localIdentity = GetLocalPlayerIdentity();
         localIdentity?.RequestSubmitAnswer(answerIndex);
-    }
-
-    public void SubmitAnswerFromNetwork(int playerSide, int answerIndex)
-    {
-        if (IsAuthoritative)
-            SubmitAnswer(playerSide, answerIndex);
     }
 
     private void SubmitAnswer(int playerSide, int answerIndex)
@@ -791,10 +958,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         BeginResolve();
         MarkAnswerRight(answerIndex);
-        TriviaNetworkSync.Instance?.BroadcastAnswerMarked(answerIndex, true);
         AwardPointToPlayerSide(playerSide);
         UpdateScoreUI();
-        PublishNetworkedStateIfServer();
 
         if (playerSide == 1 && leftPlayerNameText != null)
             leftPlayerNameText.text = "ACERTOU!";
@@ -828,7 +993,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         BeginResolve();
         MarkAnswerWrong(answerIndex);
-        TriviaNetworkSync.Instance?.BroadcastAnswerMarked(answerIndex, false);
 
         if (playerSide == 1 && leftPlayerNameText != null)
             leftPlayerNameText.text = "ERROU";
@@ -853,7 +1017,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         isTransitioning = true;
         SetState(RoundState.Resolving);
         LockAllButtons();
-        TriviaNetworkSync.Instance?.BroadcastLockAllButtons();
     }
 
     private void BeginSoloForPlayer(int soloPlayerSide)
@@ -863,7 +1026,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         soloTimer = soloTimeSeconds;
         ResetInactivityTimer();
         SetButtonsAvailableNormal();
-        TriviaNetworkSync.Instance?.BroadcastButtonsAvailable();
 
         if (soloPlayerSide == 1)
         {
@@ -887,7 +1049,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         }
 
         UpdateSoloDonut();
-        PublishNetworkedStateIfServer();
     }
 
     private void EndSoloAndReturnToOpen()
@@ -897,10 +1058,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         ResetDonuts();
         RestorePlayerNames();
         SetButtonsAvailableNormal();
-        TriviaNetworkSync.Instance?.BroadcastButtonsAvailable();
         ResetInactivityTimer();
         SetState(RoundState.OpenBuzz);
-        PublishNetworkedStateIfServer();
     }
 
     private void HandleKeyboardAnswers()
@@ -928,7 +1087,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         {
             debugMouseOwner = 1;
             localViewPlayerSide = 1;
-            UpdateDebugMouseOwnerUI();
             RefreshBackgroundForCurrentState();
             RefreshPfpOpacity();
         }
@@ -937,7 +1095,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         {
             debugMouseOwner = 2;
             localViewPlayerSide = 2;
-            UpdateDebugMouseOwnerUI();
             RefreshBackgroundForCurrentState();
             RefreshPfpOpacity();
         }
@@ -956,7 +1113,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             {
                 currentDifficultyLevel = Mathf.Clamp(keyNumber - 2, 1, 7);
                 currentQuestionIndex = -1;
-                UpdateDebugMouseOwnerUI();
                 break;
             }
         }
@@ -1000,7 +1156,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         {
             soloTimer -= Time.deltaTime;
             UpdateSoloDonut();
-            TriviaNetworkSync.Instance?.PublishSoloTimer(soloTimer);
 
             if (soloTimer <= 0f)
             {
@@ -1080,6 +1235,50 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         SetPfpOpacity(leftPlayerPfpImage, localViewPlayerSide == 1);
         SetPfpOpacity(rightPlayerPfpImage, localViewPlayerSide == 2);
+
+        ApplyLocalPlayerOutline(leftPlayerPfpImage, localViewPlayerSide == 1);
+        ApplyLocalPlayerOutline(rightPlayerPfpImage, localViewPlayerSide == 2);
+    }
+
+    // Public so TeamDuelManager can mark its own slots without a second copy of this: 2v2 owns four
+    // avatars instead of two, but "the local one gets a blue ring" is the same rule.
+    public void ApplyLocalPlayerOutline(Graphic target, bool isLocalPlayer)
+    {
+        if (target == null)
+            return;
+
+        Outline outline = target.GetComponent<Outline>();
+
+        // Explicit null check, not ??: GetComponent hands back a fake null that ?? treats as a real
+        // object, which would leave the component unadded and the ring silently missing.
+        if (outline == null)
+        {
+            if (!isLocalPlayer)
+                return;   // nothing to turn off, and no reason to add a component to hide it
+
+            outline = target.gameObject.AddComponent<Outline>();
+        }
+
+        outline.effectColor = localPlayerOutlineColor;
+        outline.effectDistance = new Vector2(localPlayerOutlineWidth, localPlayerOutlineWidth);
+        outline.useGraphicAlpha = false;   // stays solid while the avatar itself is dimmed to 50%
+        outline.enabled = isLocalPlayer;
+    }
+
+    // Team mode has no background system of its own, so it cannot flip the board by changing
+    // roundState the way 1v1 does. This lets it set which side the local player is looking from and
+    // re-apply the current background immediately — RefreshBackgroundForCurrentState would bail,
+    // because it checks triviaGameplayRoot, which is inactive for the whole of a 2v2 match.
+    public void SetLocalViewSideForTeams(int side)
+    {
+        if (side != 1 && side != 2)
+            return;
+
+        LocalAssignedSide = side;
+        localViewPlayerSide = side;
+
+        if (activeBackgroundVisual != null)
+            ApplyStateBackground(activeBackgroundVisual, defaultBackgroundColor, animateExit: false);
     }
 
     private void SetPfpOpacity(Image pfpImage, bool isLocalPlayer)
@@ -1111,16 +1310,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             team2Score++;
     }
 
-    private void DeductPointFromPlayerSide(int playerSide)
-    {
-        int teamId = GetTeamIdForPlayerSide(playerSide);
-
-        if (teamId == 1)
-            team1Score--;
-        else
-            team2Score--;
-    }
-
     private int GetTeamIdForPlayerSide(int playerSide)
     {
         // Player 1 = Team 1, Player 2 = Team 2.
@@ -1137,12 +1326,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             team2ScoreText.text = team2Score.ToString();
     }
 
-    private void UpdateDebugMouseOwnerUI()
-    {
-        if (debugMouseOwnerText != null)
-            debugMouseOwnerText.text = string.Empty;
-    }
-
     private void ApplyQuestionToButtons(TriviaQuestion questionData)
     {
         if (answerButtonVisuals == null || questionData == null || questionData.answers == null)
@@ -1153,35 +1336,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             if (answerButtonVisuals[i] != null)
                 answerButtonVisuals[i].SetLabel(questionData.answers[i]);
         }
-    }
-
-    // Lets other managers (e.g. TeamDuelManager) reuse the loaded question pool without duplicating
-    // TSV parsing. lastQuestionIndex is the caller's own repeat-avoidance state, kept separate from
-    // this manager's currentQuestionIndex so the two modes don't interfere with each other.
-    internal TriviaQuestion GetNextQuestionForDifficulty(int difficultyLevel, ref int lastQuestionIndex)
-    {
-        List<TriviaQuestion> pool = GetQuestionPool(difficultyLevel);
-
-        if (pool == null || pool.Count == 0)
-            return null;
-
-        if (pool.Count == 1)
-        {
-            lastQuestionIndex = 0;
-            return pool[0];
-        }
-
-        int next;
-        int attempts = 0;
-        do
-        {
-            next = Random.Range(0, pool.Count);
-            attempts++;
-        }
-        while (next == lastQuestionIndex && attempts < 10);
-
-        lastQuestionIndex = next;
-        return pool[lastQuestionIndex];
     }
 
     // Lets a client-side caller (e.g. TeamDuelManager.ApplyNetworkedQuestion) deterministically
@@ -1217,12 +1371,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         return all;
     }
 
-    public List<TriviaQuestion> GetQuestionsForLevel(int difficultyLevel)
-    {
-        List<TriviaQuestion> pool = GetQuestionPool(difficultyLevel);
-        return pool != null ? new List<TriviaQuestion>(pool) : new List<TriviaQuestion>();
-    }
-
     internal void ApplyQuestionVisualsTo(TMP_Text targetQuestionText, AnswerButtonVisual[] targetVisuals, TriviaQuestion questionData)
     {
         if (targetQuestionText != null && questionData != null)
@@ -1249,7 +1397,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         SetGraphicVisible(rightSoloDonut, isVisible);
         SetGraphicVisible(team1ScoreText, isVisible);
         SetGraphicVisible(team2ScoreText, isVisible);
-        SetGraphicVisible(debugMouseOwnerText, isVisible);
 
         if (answerButtons == null)
             return;
@@ -1379,47 +1526,16 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     public bool IsMatchRunning => triviaRunning;
 
-    // Called on the server when a player drops mid-match. The match cannot continue: a missing
-    // side can never answer its solo turn, so the state machine would sit in SoloLeft/SoloRight
-    // forever with the remaining player locked out and no way back to the lobby.
-    public void AbortMatchForDisconnect(string message)
-    {
-        if (!triviaRunning)
-            return;
-
-        EndMatch(message, false);
-        TriviaNetworkSync.Instance?.BroadcastMatchAborted(message);
-
-        // EndMatch only schedules the lobby return when there was a winner, but an abandoned
-        // match needs it just as much — otherwise the survivor is stranded on the game screen.
-        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
-            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
-    }
-
-    public void ApplyNetworkedMatchAborted(string message)
-    {
-        if (questionText != null)
-            questionText.text = message;
-
-        if (leftPlayerNameText != null)
-            leftPlayerNameText.text = string.Empty;
-
-        if (rightPlayerNameText != null)
-            rightPlayerNameText.text = string.Empty;
-
-        if (returnToLobbyCoroutine == null && returnToLobbyAfterWin)
-            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
-    }
-
     private void EndMatch(string message, bool hasWinner, int winnerSide = 0)
     {
+        lastWinnerSide = hasWinner ? winnerSide : 0;
+
         StopGameplayCoroutines(false);
         triviaRunning = false;
         inputEnabled = false;
         isTransitioning = false;
         SetState(RoundState.MatchEnded);
         LockAllButtons();
-        TriviaNetworkSync.Instance?.BroadcastLockAllButtons();
         ResetDonuts();
 
         if (questionText != null)
@@ -1434,15 +1550,18 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (hasWinner && PlayerIQManager.Instance != null)
             PlayerIQManager.Instance.AdjustLocalIQAfterMatch(winnerSide == localViewPlayerSide);
 
-        PublishNetworkedStateIfServer();
-        TriviaNetworkSync.Instance?.BroadcastMatchEnded(message, hasWinner, winnerSide);
-
-        if (hasWinner && returnToLobbyAfterWin)
+        // NOT gated on hasWinner any more. A match that ends without one — the inactivity
+        // timeout, or an opponent abandoning — used to skip this entirely and leave the player
+        // parked on the end screen with no way back except quitting. Whether to return is the
+        // returnToLobbyAfterWin preference; whether somebody won is beside the point.
+        if (returnToLobbyAfterWin)
             returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
     }
 
     public void ApplyNetworkedMatchEnd(string message, bool hasWinner, int winnerSide)
     {
+        lastWinnerSide = hasWinner ? winnerSide : 0;
+
         if (questionText != null)
             questionText.text = message;
 
@@ -1455,21 +1574,99 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (hasWinner && PlayerIQManager.Instance != null)
             PlayerIQManager.Instance.AdjustLocalIQAfterMatch(winnerSide == localViewPlayerSide);
 
-        if (hasWinner && returnToLobbyAfterWin)
+        // NOT gated on hasWinner any more. A match that ends without one — the inactivity
+        // timeout, or an opponent abandoning — used to skip this entirely and leave the player
+        // parked on the end screen with no way back except quitting. Whether to return is the
+        // returnToLobbyAfterWin preference; whether somebody won is beside the point.
+        if (returnToLobbyAfterWin)
             returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
     }
 
+    // The way out is the way in, run backwards: the results sit for their delay, the pieces on the
+    // board fade away, the start animation unwinds, and only then does the lobby appear. Doing it
+    // in this order means the player never sees the board empty or the lobby snap in.
     private IEnumerator ReturnToLobbyAfterDelay()
     {
         yield return new WaitForSeconds(Mathf.Max(0f, returnToLobbyDelaySeconds));
+
+        // Fade the names, avatars, question and buttons back out. Same groups, same duration as the
+        // way in, so the two halves of the match are symmetrical.
+        if (matchStartUiFadeSeconds > 0f)
+        {
+            List<CanvasGroup> fadeGroups = CollectTriviaUiFadeGroups();
+            yield return FadeOutTriviaUi(fadeGroups, matchStartUiFadeSeconds);
+        }
+
+        // Then the start animation in reverse, and the lobby behind it.
         returnToLobbyCoroutine = null;
-        ReturnToLobby();
+        yield return ReturnToLobbyTransition(ReturnToLobby);
+
+        // The UI was faded to zero on the way out and its objects are switched off with the
+        // gameplay root, so alpha is put back for the next match — otherwise the following round
+        // would reveal itself into invisible text.
+        SetFadeGroupsAlpha(CollectTriviaUiFadeGroups(), 1f);
+    }
+
+    // Giving up in the queue leaves by the same door as finishing a match, so the animation lives
+    // in one place. Called by WaitingScreenController when its timeout fires; there is no UI fade
+    // in that case because the gameplay UI was never shown.
+    public void PlayReturnToLobbyTransition(System.Action returnToLobby)
+    {
+        StartCoroutine(ReturnToLobbyTransition(returnToLobby));
+    }
+
+    private IEnumerator ReturnToLobbyTransition(System.Action returnToLobby)
+    {
+        if (matchStartOverlay != null && matchStartFrames != null && matchStartFrames.Length > 0)
+        {
+            // Prepared on the LAST frame, since this runs backwards — the same reason the way in
+            // prepares on the first. Configuring an object that is already visible is what caused
+            // the stretched frames at the start.
+            PrepareFrameSurface(matchStartOverlay, matchStartFrames[matchStartFrames.Length - 1]);
+
+            matchStartOverlay.gameObject.SetActive(true);
+            matchStartOverlay.transform.SetAsLastSibling();
+
+            // The lobby is put up BEFORE the animation plays, not after it finishes. That last
+            // frame covers the whole screen, so the swap happens completely hidden behind it, and
+            // the frames then open onto the lobby. Switching afterwards meant the animation spent
+            // its whole length uncovering the finished match instead.
+            returnToLobby?.Invoke();
+
+            // Showing the lobby activates its root, which can put it above the overlay in the
+            // draw order. Re-asserted so the animation stays on top of the thing it is revealing.
+            matchStartOverlay.transform.SetAsLastSibling();
+
+            yield return PlayFramesOn(matchStartOverlay, matchStartFrames, matchStartFramesPerSecond, true);
+
+            // Hidden only once the frames are done — by now the lobby has been up behind it the
+            // whole time, so there is nothing left to uncover.
+            matchStartOverlay.gameObject.SetActive(false);
+            yield break;
+        }
+
+        // No animation configured: nothing to hide behind, so this is just the plain switch.
+        returnToLobby?.Invoke();
+    }
+
+    private IEnumerator FadeOutTriviaUi(List<CanvasGroup> groups, float seconds)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < seconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            SetFadeGroupsAlpha(groups, 1f - Mathf.Clamp01(elapsed / seconds));
+            yield return null;
+        }
+
+        SetFadeGroupsAlpha(groups, 0f);
     }
 
     private void ReturnToLobby()
     {
         showLobbyOnStart = true;
-        PrepareForLobby();
+        PrepareForLobby(true);
     }
 
     private void StopGameplayCoroutines(bool stopBackground = true)
@@ -1526,16 +1723,64 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
                 break;
 
             case RoundState.MatchEnded:
-                ApplyStateBackground(matchEndedBackground, defaultBackgroundColor);
+                // animateExit is off here: the win is already being announced by the winner's solo
+                // animation playing forwards, and unwinding the previous state first would show two
+                // sequences back to back for one event.
+                ApplyStateBackground(BuildMatchEndVisual(), defaultBackgroundColor, animateExit: false);
                 break;
         }
     }
 
-    private void ApplyStateBackground(StateBackgroundVisual visual, Color fallbackColor)
+    // On a win, the transition into the end screen is the winning side's own solo animation played
+    // forwards. Rather than a second animation system, this borrows that visual's frames and hands
+    // them to the normal Frames path, which settles onto the match-ended background afterwards
+    // exactly as it would after any other sequence.
+    // Team mode has no background system of its own: TeamDuelManager owns its own root, slots and
+    // scores, but shares this one background Image — the same arrangement that already has it
+    // borrowing question visuals through ApplyQuestionVisualsTo. This is its way in.
+    //
+    // It calls ApplyStateBackground directly rather than RefreshBackgroundForCurrentState, because
+    // that method bails when triviaGameplayRoot is inactive, and during a team match it always is.
+    public void PlayWinnerBackground(int winnerSide)
+    {
+        lastWinnerSide = winnerSide;
+        ApplyStateBackground(BuildMatchEndVisual(), defaultBackgroundColor, animateExit: false);
+    }
+
+    private StateBackgroundVisual BuildMatchEndVisual()
+    {
+        StateBackgroundVisual winnerSolo = lastWinnerSide == 0 ? null
+            : lastWinnerSide == localViewPlayerSide ? yourSoloBackground
+            : otherPlayerSoloBackground;
+
+        // No winner, or that side has no animation exported yet: the end screen behaves as before.
+        if (!HasFrames(winnerSolo))
+            return matchEndedBackground;
+
+        return new StateBackgroundVisual
+        {
+            backgroundSprite = matchEndedBackground.backgroundSprite,
+            animation = BackgroundAnimation.Frames,
+            animationSeconds = matchEndedBackground.animationSeconds,
+            frames = winnerSolo.frames,
+            framesPerSecond = winnerSolo.framesPerSecond,
+            loopAnimation = matchEndedBackground.loopAnimation,
+            loopSeconds = matchEndedBackground.loopSeconds,
+            loopStrength = matchEndedBackground.loopStrength,
+            scrollSpeed = matchEndedBackground.scrollSpeed,
+            mainTextColor = matchEndedBackground.mainTextColor,
+            secondaryTextColor = matchEndedBackground.secondaryTextColor
+        };
+    }
+
+    private void ApplyStateBackground(StateBackgroundVisual visual, Color fallbackColor, bool animateExit = true)
     {
         ApplyVisualTextColors(visual, fallbackColor);
 
-        if (visual == null || visual.backgroundSprite == null || gameBackground == null)
+        // A visual with frames but no still sprite is legitimate — the match-ended slot has no
+        // background of its own and is introduced entirely by the winner's animation, which then
+        // holds on its final frame.
+        if (visual == null || gameBackground == null || (visual.backgroundSprite == null && !HasFrames(visual)))
         {
             SetSolidBackground(fallbackColor);
             return;
@@ -1550,11 +1795,96 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         StopBackgroundMotion();
         DisableScrollingBackground();
 
-        backgroundTransitionCoroutine = StartCoroutine(AnimateStaticBackground(visual));
+        StateBackgroundVisual outgoing = animateExit ? activeBackgroundVisual : null;
+        activeBackgroundVisual = visual;
+
+        backgroundTransitionCoroutine = StartCoroutine(AnimateStaticBackground(visual, outgoing));
     }
 
-    private IEnumerator AnimateStaticBackground(StateBackgroundVisual visual)
+    private static bool HasFrames(StateBackgroundVisual visual)
     {
+        return visual != null && visual.frames != null && visual.frames.Length > 0;
+    }
+
+    // One sequence player for both directions. Reverse is an index flip rather than a second loop,
+    // so the way out can never drift out of step with the way in.
+    private IEnumerator PlayFrames(StateBackgroundVisual visual, bool reversed)
+    {
+        yield return PlayFramesOn(gameBackground, visual.frames, visual.framesPerSecond, reversed);
+    }
+
+    // Puts an Image into the exact state frame playback needs, including its first sprite. Split
+    // out so it can be done BEFORE the object is shown; anything visible while being configured
+    // renders at least one frame in the wrong shape.
+    private void PrepareFrameSurface(Image target, Sprite firstFrame)
+    {
+        if (target == null)
+            return;
+
+        target.enabled = true;
+        target.color = Color.white;
+        target.type = Image.Type.Simple;
+        target.preserveAspect = false;
+
+        if (firstFrame != null)
+            target.sprite = firstFrame;
+
+        StretchImageToFill(target.rectTransform);
+        target.rectTransform.anchoredPosition = Vector2.zero;
+        target.rectTransform.localScale = GetMirroredScale(Vector3.one);
+    }
+
+    // Drives any Image, not just the background, so the match-start animation can play on an
+    // overlay above the waiting screen while the gameplay page is still hidden behind it.
+    private IEnumerator PlayFramesOn(Image target, Sprite[] frames, float framesPerSecond, bool reversed)
+    {
+        if (target == null || frames == null || frames.Length == 0)
+            yield break;
+
+        float secondsPerFrame = 1f / Mathf.Max(1f, framesPerSecond);
+
+        PrepareFrameSurface(target, frames[reversed ? frames.Length - 1 : 0]);
+
+        // Driven by total elapsed time, not by waiting a fixed slice per frame.
+        //
+        // Waiting per frame is what made 24 fps play back at 15. Each step waited until at least
+        // secondsPerFrame had passed, which on a 60Hz display rounds UP to the next rendered frame:
+        // a 41.7 ms step becomes 50 ms, and the 8.3 ms of overshoot is thrown away rather than
+        // carried into the next step. Seven frames of that is a third longer than asked for, and
+        // worse whenever the editor dips under 60.
+        //
+        // Asking the clock which frame is due instead keeps the TOTAL duration exact and skips a
+        // frame when the display cannot keep up, which is what any video player does.
+        float startedAt = Time.unscaledTime;
+        int lastShown = -1;
+
+        while (true)
+        {
+            // Unscaled, so a transition still plays at the right speed if anything ever pauses the
+            // game by setting Time.timeScale.
+            int step = Mathf.FloorToInt((Time.unscaledTime - startedAt) / secondsPerFrame);
+
+            if (step >= frames.Length)
+                break;
+
+            if (step != lastShown)
+            {
+                lastShown = step;
+                target.sprite = frames[reversed ? frames.Length - 1 - step : step];
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator AnimateStaticBackground(StateBackgroundVisual visual, StateBackgroundVisual outgoing)
+    {
+        // Leaving a state that has frames runs those frames backwards first, so a solo animates out
+        // the way it animated in, using the one export. Open Buzz has no frames, so arriving there
+        // adds nothing of its own — the whole transition is the solo's own animation unwinding.
+        if (outgoing != null && outgoing != visual && HasFrames(outgoing))
+            yield return PlayFrames(outgoing, reversed: true);
+
         // The outgoing sprite stays on screen underneath for the length of the transition. The new
         // one fades in from alpha 0, and with nothing behind it that used to mean fading up from
         // whatever the camera clears to — a black flash on every state change.
@@ -1565,6 +1895,31 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         gameBackground.type = Image.Type.Simple;
         gameBackground.preserveAspect = false;
         StretchImageToFill(gameBackground.rectTransform);
+
+        // Frames carry their own motion, so none of the slide/scale/fade machinery below applies.
+        // Handled before any of it rather than as another case in the switch, because every one of
+        // those effects would fight the artwork instead of adding to it.
+        if (visual.animation == BackgroundAnimation.Frames && !HasFrames(visual))
+        {
+            // Silently falling through to the slide is how a background slot sits misconfigured for
+            // an afternoon: the animation still plays, just not the one that was asked for.
+            Debug.LogWarning("Background: this state is set to Frames but has no frames assigned, " +
+                             "so the old slide/fade played instead. Drag the exported sprites into " +
+                             "its Frames list.", this);
+        }
+
+        if (HasFrames(visual) && visual.animation == BackgroundAnimation.Frames)
+        {
+            yield return PlayFrames(visual, reversed: false);
+
+            // Settle on the still background the state uses for the rest of the round, so the
+            // sequence reads as a transition INTO something rather than the last frame sticking.
+            gameBackground.sprite = visual.backgroundSprite;
+
+            HideBackgroundUnderlay();
+            StartBackgroundLoop(visual);
+            yield break;
+        }
 
         float duration = Mathf.Max(0.01f, visual.animationSeconds);
         float startScale = 1f;
@@ -1660,8 +2015,13 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         gameBackground.enabled = true;
         gameBackground.sprite = null;
         gameBackground.color = color;
+        // StretchImageToFill rather than only normalising the scale. The background in the scene is
+        // 78.6 x 85.2 with a localScale of 15 x 30, which is what makes it screen sized — so setting
+        // the scale to 1 on its own collapses it to 78 pixels until something else happens to
+        // stretch it. That is where the white edges came from: every path that normalised the scale
+        // without fixing the rect left the image the wrong size, and only the ones that went on to
+        // call this recovered. Rect and scale are now always changed together.
         StretchImageToFill(gameBackground.rectTransform);
-        gameBackground.rectTransform.localScale = GetMirroredScale(Vector3.one);
         gameBackground.rectTransform.anchoredPosition = Vector2.zero;
     }
 
@@ -1749,6 +2109,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (position.y >= height)
             position.y -= height * 3f;
 
+        // Deliberately written every frame. Skipping the write when the rounded pixel is unchanged
+        // looks like a saving, but the next frame reads this value back — so at a scroll speed
+        // slower than half a pixel per frame the position could never advance and the background
+        // would stall. Isolating this on its own canvas is what makes the per-frame write cheap.
         rect.anchoredPosition = new Vector2(0f, Mathf.Round(position.y));
     }
 
@@ -1773,8 +2137,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     private Image CreateScrollingImage(string objectName, Transform parent, int siblingIndex)
     {
         GameObject go = new GameObject(objectName, typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(parent, false);
-        go.transform.SetSiblingIndex(siblingIndex);
+        go.transform.SetParent(ScrollingLayer(parent, siblingIndex), false);
 
         Image image = go.GetComponent<Image>();
         image.type = Image.Type.Simple;
@@ -1782,6 +2145,34 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         image.color = Color.white;
         StretchImageToFill(image.rectTransform);
         return image;
+    }
+
+    // The scrolling background moves three full-screen images EVERY frame for as long as a round
+    // lasts. Unity rebuilds a canvas whole, so on the single canvas this scene uses that meant
+    // re-batching all ~133 renderers every frame — the lobby, the practice panels and every page,
+    // none of which had changed. Giving the scroll its own nested canvas confines that rebuild to
+    // the three images that actually moved.
+    private Transform ScrollingLayer(Transform parent, int siblingIndex)
+    {
+        if (scrollingLayer != null)
+            return scrollingLayer;
+
+        Transform existing = parent.Find("ScrollingBackgroundLayer");
+
+        if (existing != null)
+        {
+            scrollingLayer = existing;
+            return scrollingLayer;
+        }
+
+        GameObject layer = new GameObject("ScrollingBackgroundLayer", typeof(RectTransform), typeof(Canvas));
+        layer.transform.SetParent(parent, false);
+        layer.transform.SetSiblingIndex(siblingIndex);
+
+        StretchImageToFill(layer.GetComponent<RectTransform>());
+
+        scrollingLayer = layer.transform;
+        return scrollingLayer;
     }
 
     private void ConfigureScrollingImage(Image image, Sprite sprite)
@@ -1838,7 +2229,13 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (gameBackground != null)
         {
             gameBackground.color = Color.white;
-            gameBackground.rectTransform.localScale = GetMirroredScale(Vector3.one);
+            // StretchImageToFill rather than only normalising the scale. The background in the scene is
+            // 78.6 x 85.2 with a localScale of 15 x 30, which is what makes it screen sized — so setting
+            // the scale to 1 on its own collapses it to 78 pixels until something else happens to
+            // stretch it. That is where the white edges came from: every path that normalised the scale
+            // without fixing the rect left the image the wrong size, and only the ones that went on to
+            // call this recovered. Rect and scale are now always changed together.
+            StretchImageToFill(gameBackground.rectTransform);
             gameBackground.rectTransform.anchoredPosition = Vector2.zero;
         }
 
@@ -1874,7 +2271,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     private Vector3 GetMirroredScale(Vector3 scale)
     {
-        return new Vector3(localViewPlayerSide == 2 ? -Mathf.Abs(scale.x) : Mathf.Abs(scale.x), scale.y, scale.z);
+        // Both sides are mirrored from what they used to be: side 1 is now negated and side 2 is
+        // not, where it was the other way round. The two sides stay opposite each other, so the
+        // board still reads correctly for whoever is looking at it — the whole thing is just
+        // flipped. One place, no per-background switch, nothing to remember to tick.
+        return new Vector3(localViewPlayerSide == 2 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x), scale.y, scale.z);
     }
 
     private void ApplyVisualTextColors(StateBackgroundVisual visual, Color fallbackColor)
@@ -1887,7 +2288,6 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         ApplyTextColor(rightPlayerNameText, secondaryColor);
         ApplyTextColor(team1ScoreText, mainColor);
         ApplyTextColor(team2ScoreText, mainColor);
-        ApplyTextColor(debugMouseOwnerText, secondaryColor);
     }
 
     private void ApplyTextColor(TMP_Text text, Color color)
@@ -1896,6 +2296,15 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             return;
 
         text.color = color;
+
+        // outlineWidth reaches into the font material, and TextMeshPro only creates that once the
+        // component has been enabled at least once. At the end of a 2v2 these trivia text objects
+        // have never been shown -- team mode draws on its own root -- so this threw an NRE from
+        // inside TMP, which surfaced as "Unhandled RPC exception!" and took the whole match-end
+        // message down with it. Colour still applies; only the outline needs a live material.
+        if (!text.gameObject.activeInHierarchy || text.fontSharedMaterial == null)
+            return;
+
         text.outlineWidth = 0.12f;
         text.outlineColor = GetContrastRatio(color, DarkTextColor) >= GetContrastRatio(color, LightTextColor) ? DarkTextColor : LightTextColor;
     }

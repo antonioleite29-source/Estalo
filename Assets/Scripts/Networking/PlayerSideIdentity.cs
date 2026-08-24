@@ -206,13 +206,10 @@ public class PlayerSideIdentity : NetworkBehaviour
         RequestStartTriviaServerRpc();
     }
 
-    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
-    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
-    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
-    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
-    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestStartTriviaServerRpc(ServerRpcParams rpcParams = default)
+    // Any client may send this, not just the object's owner: a player readies up through their own
+    // identity object, and the server needs the sender to know who it was.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void RequestStartTriviaServerRpc(RpcParams rpcParams = default)
     {
         TriviaNetworkSync.Instance?.MarkClientReady(rpcParams.Receive.SenderClientId);
     }
@@ -222,13 +219,10 @@ public class PlayerSideIdentity : NetworkBehaviour
         LeaveQueueServerRpc();
     }
 
-    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
-    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
-    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
-    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
-    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
-    [ServerRpc(RequireOwnership = false)]
-    private void LeaveQueueServerRpc(ServerRpcParams rpcParams = default)
+    // Any client may send this, not just the object's owner: a player readies up through their own
+    // identity object, and the server needs the sender to know who it was.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void LeaveQueueServerRpc(RpcParams rpcParams = default)
     {
         TriviaNetworkSync.Instance?.LeaveQueue(rpcParams.Receive.SenderClientId);
     }
@@ -249,13 +243,10 @@ public class PlayerSideIdentity : NetworkBehaviour
         RequestStartTeamTriviaServerRpc();
     }
 
-    // Kept on the deprecated [ServerRpc] attribute on purpose. The modern
-    // [Rpc(SendTo.Server, ...)] form rejects a ServerRpcParams parameter outright — the netcode
-    // ILPP fails the build with "Only ServerRpcs may accept ServerRpcParams as a parameter" —
-    // and these need rpcParams.Receive.SenderClientId to know which player is readying up.
-    // Migrating means switching to RpcParams throughout, which is not worth doing mid-testing.
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestStartTeamTriviaServerRpc(ServerRpcParams rpcParams = default)
+    // Any client may send this, not just the object's owner: a player readies up through their own
+    // identity object, and the server needs the sender to know who it was.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    private void RequestStartTeamTriviaServerRpc(RpcParams rpcParams = default)
     {
         TriviaNetworkSync.Instance?.MarkClientReadyForMode(rpcParams.Receive.SenderClientId, MatchMode.TeamFour);
     }

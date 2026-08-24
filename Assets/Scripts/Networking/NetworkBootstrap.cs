@@ -16,6 +16,19 @@ public class NetworkBootstrap : MonoBehaviour
     [Tooltip("Pre-filled into the Join address box. Only a convenience — the player can type any address.")]
     [SerializeField] private string defaultConnectAddress = "192.168.1.1";
 
+    [Header("--- ALWAYS-ON SERVER ---")]
+    [Tooltip("Address of the always-on server: an IP like 203.0.113.10, or a name like " +
+             "trivia.meudominio.com. Leave empty to keep the old behaviour, where one player hosts " +
+             "and the others type an address on the Connect page.")]
+    public string serverAddress = "";
+
+    [Tooltip("Connect to Server Address by itself on launch, and keep reconnecting if it drops. " +
+             "With this on, nobody hosts and nobody types an address — the game is simply online.")]
+    public bool autoConnectToServer = true;
+
+    [Tooltip("Seconds to wait before trying the server again after a failed or lost connection.")]
+    public float reconnectDelaySeconds = 5f;
+
     [Tooltip("Editor only: automatically host (main Editor) or join 127.0.0.1 (virtual players) on Play, " +
              "so Multiplayer Play Mode testing needs no clicking. Never runs in a build.")]
     [SerializeField] private bool autoConnectInEditor = true;
@@ -46,7 +59,9 @@ public class NetworkBootstrap : MonoBehaviour
     // test devices was already one over.
     public const int MaxRoomPlayers = 8;
 
-    public int RoomCapacity => MaxRoomPlayers;
+    // What the always-on server holds, as opposed to one phone's room. Players are matched into
+    // pairs and fours by the queue, so this is a count of people online at once, not of one game.
+    public const int MaxServerPlayers = 64;
 
     public ushort Port => connectPort;
 
@@ -66,6 +81,13 @@ public class NetworkBootstrap : MonoBehaviour
         // Application.quitting and the Editor's exiting-play-mode callback both fire BEFORE any of
         // that, so the transport is closed while netcode is still whole.
         Application.quitting += ShutdownNetworkingEarly;
+
+        // The single most effective part of staying connected on a phone, and it is not a netcode
+        // setting at all: stop the screen locking in the first place. Once Android suspends the
+        // app, no timeout value keeps the connection alive, because the game is not running to
+        // answer anything.
+        if (keepScreenAwake)
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.playModeStateChanged += HandlePlayModeChanged;
@@ -91,9 +113,26 @@ public class NetworkBootstrap : MonoBehaviour
         SubscribeToNetworkManager();
         EnableConnectionApproval();
 
-        // A build always waits for the player to pick Host or Join on the Connect page. Only the
-        // Editor auto-connects, so the existing Multiplayer Play Mode workflow keeps working
-        // exactly as it did before this screen existed.
+        // A headless build is the always-on server and nothing else. Checked first: it must never
+        // fall through and try to be a client of itself.
+        if (IsDedicatedServerBuild)
+        {
+            StartDedicatedServer();
+            return;
+        }
+
+        // With a server address configured, every copy of the game is a client of it and nobody
+        // hosts. The Editor is included on purpose — testing against the real server is the point
+        // of having one.
+        if (autoConnectToServer && !string.IsNullOrWhiteSpace(serverAddress))
+        {
+            BeginAutoConnect();
+            return;
+        }
+
+        // No server configured, so this is the old arrangement: a build waits for the player to
+        // pick Host or Join on the Connect page, and only the Editor connects by itself, which is
+        // what keeps the Multiplayer Play Mode workflow working.
         if (Application.isEditor && autoConnectInEditor)
         {
             if (IsClonedVirtualPlayer())
@@ -101,6 +140,149 @@ public class NetworkBootstrap : MonoBehaviour
             else
                 StartHost();
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Always-on server
+    // ---------------------------------------------------------------
+
+    // True in a build made with the Dedicated Server platform, and also when any build is launched
+    // with -batchmode. The second half matters because it lets the server be tested from a normal
+    // desktop build before the Linux server module is ever installed.
+    public static bool IsDedicatedServerBuild
+    {
+        get
+        {
+            // Never the Editor, whatever the defines say. UNITY_SERVER is defined in the Editor
+            // as soon as the active build target is Dedicated Server -- so simply building the
+            // server once turned the Editor into one, and it stopped being able to play at all:
+            // a dedicated server creates no player object for itself, so readying up failed with
+            // "no local PlayerSideIdentity".
+            //
+            // The Editor is the machine you test FROM. It is always a client of whatever Server
+            // Address points at.
+            if (Application.isEditor)
+                return false;
+
+#if UNITY_SERVER
+            return true;
+#else
+            return Application.isBatchMode;
+#endif
+        }
+    }
+
+    // Server, not host. StartHost would give this machine a player object and a seat in the room,
+    // which is exactly what an always-on server must not have: it runs the queue and the matches
+    // and never plays in one.
+    public void StartDedicatedServer()
+    {
+        if (NetworkManager.Singleton == null)
+        {
+            ReportStatus("No NetworkManager in the scene.");
+            return;
+        }
+
+        if (NetworkManager.Singleton.IsListening)
+            return;
+
+        // 0.0.0.0 so it answers on every interface the machine has. A cloud box usually has
+        // several, and binding to whichever one was guessed is how a server ends up running
+        // perfectly while refusing every connection.
+        ConfigureTransport("0.0.0.0", listenAddress: "0.0.0.0", port: connectPort);
+
+        if (NetworkManager.Singleton.StartServer())
+        {
+            ReportStatus("Dedicated server listening on port " + connectPort + ".");
+            SessionStarted?.Invoke();
+        }
+        else
+        {
+            ReportStatus("Dedicated server could not bind port " + connectPort + ".");
+        }
+    }
+
+    private Coroutine autoConnectRoutine;
+
+    // Set while the reconnect loop owns the connection, so a deliberate Disconnect() can tell
+    // itself apart from a drop and stop the loop instead of being fought by it.
+    private bool wantsServerConnection;
+
+    private void BeginAutoConnect()
+    {
+        wantsServerConnection = true;
+
+        if (autoConnectRoutine == null)
+            autoConnectRoutine = StartCoroutine(KeepConnectedToServer());
+    }
+
+    private void StopAutoConnect()
+    {
+        wantsServerConnection = false;
+
+        if (autoConnectRoutine != null)
+        {
+            StopCoroutine(autoConnectRoutine);
+            autoConnectRoutine = null;
+        }
+    }
+
+    // Retries for as long as the app is running rather than giving up after a few attempts. The
+    // server being briefly unreachable — a phone changing from Wi-Fi to mobile data, a reboot on
+    // the server, a tunnel dropping — is an ordinary event, not a reason to strand the player on
+    // an error screen with nothing to press.
+    private System.Collections.IEnumerator KeepConnectedToServer()
+    {
+        while (wantsServerConnection)
+        {
+            if (NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
+            {
+                StartClientAt(serverAddress);
+
+                // A failed attempt raises OnClientDisconnectCallback rather than returning false,
+                // so give the handshake a moment before deciding whether anything came of it.
+                float waited = 0f;
+                while (waited < 5f && IsConnecting)
+                {
+                    waited += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+            }
+
+            yield return new WaitForSecondsRealtime(Mathf.Max(1f, reconnectDelaySeconds));
+        }
+
+        autoConnectRoutine = null;
+    }
+
+    // Turns a name like trivia.meudominio.com into an address UnityTransport can use. UTP takes a
+    // literal IP and does no lookup of its own, so without this a domain fails the same way a typo
+    // would. Worth having: the address lives in a build on someone's phone, and a domain can be
+    // repointed at a new server without shipping a new one.
+    private static string ResolveToIPv4(string address)
+    {
+        if (string.IsNullOrWhiteSpace(address))
+            return address;
+
+        address = address.Trim();
+
+        if (IsValidIPv4(address))
+            return address;
+
+        try
+        {
+            foreach (IPAddress candidate in Dns.GetHostAddresses(address))
+            {
+                if (candidate.AddressFamily == AddressFamily.InterNetwork)
+                    return candidate.ToString();
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning("NetworkBootstrap: could not look up \"" + address + "\". " + exception.Message);
+        }
+
+        return address;
     }
 
     private void OnDestroy()
@@ -134,9 +316,19 @@ public class NetworkBootstrap : MonoBehaviour
     // had finally killed the process, started clean. Releasing on pause makes the first launch work.
     private void OnApplicationPause(bool isPaused)
     {
+        // A client of the always-on server keeps its session across a short trip out of the app --
+        // a notification, a glance at another app, a moment on the home screen. The OS suspends
+        // the process, so nothing is sent while away, and that is exactly what the widened
+        // disconnectTimeoutSeconds is for. Tearing the transport down here instead is what made
+        // leaving the app forfeit the match.
+        if (wantsServerConnection)
+            return;
+
         if (!isPaused)
             return;
 
+        // Still torn down for a player-hosted session. A suspended host is a game nobody can
+        // reach, and one still advertising itself strands every phone that tries to join.
         ReleaseTransport();
         Discovery.StopAll();
     }
@@ -150,13 +342,19 @@ public class NetworkBootstrap : MonoBehaviour
         if (NetworkManager.Singleton == null)
             return;
 
-        if (NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsClient)
-            NetworkManager.Singleton.Shutdown();
+        // Unconditional. The guard here used to be (IsListening || IsClient), which is false in
+        // precisely the case this method exists for — see the comment above: NetworkManager reports
+        // IsListening == false while the transport is still holding the socket, so the guard
+        // skipped the shutdown exactly when the shutdown was needed. Shutdown() is a no-op when
+        // nothing was started, so the guard was protecting against nothing.
+        NetworkManager.Singleton.Shutdown();
 
-        // Deliberately NOT calling NetworkTransport.Shutdown() as well. Netcode warns that doing so
-        // gives "unexpected shutdown behaviour" and loses pending events, and it is not needed: the
-        // socket only ever leaked because shutdown ran during teardown and threw before reaching the
-        // transport. Running early, while netcode is still whole, is what fixes it.
+        // NOT NetworkTransport.Shutdown() as well, and this time the reason is measured rather than
+        // argued. Calling it here disposes the transport's driver while NetworkManager still
+        // intends to shut down through it, so the later ShutdownInternal walks into
+        // UnityTransport.GetDisconnectEventMessage with the driver already gone and throws a
+        // NullReferenceException on every exit from play mode. The unconditional Shutdown() above
+        // is what actually releases the socket; this line only added noise on the way out.
     }
 
     // ---------------------------------------------------------------
@@ -245,21 +443,59 @@ public class NetworkBootstrap : MonoBehaviour
 
     // The port this session actually bound. Recorded so Editor virtual players, which cannot hear
     // LAN discovery over loopback, still know where to connect.
+    //
+    // This used to live in PlayerPrefs and it did not work, in a way that looked like it should.
+    // PlayerPrefs is a per-process in-memory cache: each process loads it once at startup and
+    // serves every read from that copy. PlayerPrefs.Save() flushes the HOST's copy to disk, but a
+    // virtual player that was already running never re-reads the file, so it kept answering with
+    // the value it booted with — and clones DO share this machine's prefs storage (see
+    // IsClonedVirtualPlayer below), so the staleness was the whole of it. The host moved to 7778,
+    // by which time the clone had long since cached 7777; it went on
+    // dialling 7777, connected to the socket a previous session had left stranded there, and timed
+    // out with ProtocolTimeout. It looked like a netcode fault and was really a stale cache.
+    //
+    // A file is read at the moment it is asked for, so it actually crosses the process boundary.
     private ushort ActivePort
     {
-        get => (ushort)PlayerPrefs.GetInt(ActivePortKey, connectPort);
+        get
+        {
+            try
+            {
+                if (System.IO.File.Exists(ActivePortFile) &&
+                    ushort.TryParse(System.IO.File.ReadAllText(ActivePortFile).Trim(), out ushort stored))
+                {
+                    return stored;
+                }
+            }
+            catch (System.Exception)
+            {
+                // Unreadable for any reason means "fall back to the configured port", which is
+                // exactly what happened before this file existed.
+            }
+
+            return connectPort;
+        }
         set
         {
-            PlayerPrefs.SetInt(ActivePortKey, value);
-
-            // Flushed immediately: a virtual player may read this within the same second, and
-            // PlayerPrefs otherwise only writes on quit — which for a crashed session never comes.
-            PlayerPrefs.Save();
+            try
+            {
+                System.IO.File.WriteAllText(ActivePortFile, value.ToString());
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("Network: could not record the active port, so Editor virtual " +
+                                 "players may dial the wrong one. " + e.Message);
+            }
         }
     }
 
-    // Deliberately NOT suffixed per virtual player: this is the one value they all need to share.
-    private const string ActivePortKey = "TriviaDuel_ActiveHostPort";
+    // The temp directory rather than anywhere under the project: MPPM redirects a clone's Library
+    // and can isolate its prefs and persistent data, but temp comes from the environment the clone
+    // inherits from the Editor that launched it, so both processes genuinely see one file. Scoping
+    // it to this machine is correct rather than sloppy — the only clients that read it are the ones
+    // connecting over loopback, which are on this machine by definition.
+    private static string ActivePortFile =>
+        System.IO.Path.Combine(System.IO.Path.GetTempPath(), "TriviaDuel_ActiveHostPort");
 
     public void StartClientAt(string address)
     {
@@ -274,18 +510,22 @@ public class NetworkBootstrap : MonoBehaviour
 
         address = (address ?? string.Empty).Trim();
 
-        if (!IsValidIPv4(address))
+        // Resolved before validating, so a domain name is as acceptable as an IP here.
+        string resolved = ResolveToIPv4(address);
+
+        if (!IsValidIPv4(resolved))
         {
-            ReportStatus("\"" + address + "\" is not a valid address. It should look like 192.168.1.42.");
+            ReportStatus("\"" + address + "\" is not a valid address. It should look like " +
+                         "192.168.1.42, or a name that resolves to one.");
             return;
         }
 
         // Loopback means an Editor virtual player, which cannot hear LAN discovery, so it takes the
         // port the host recorded. A real client keeps the configured port unless discovery told the
         // Connect page otherwise.
-        ushort port = address == "127.0.0.1" ? ActivePort : connectPort;
+        ushort port = resolved == "127.0.0.1" ? ActivePort : connectPort;
 
-        ConfigureTransport(address, listenAddress: "0.0.0.0", port: port);
+        ConfigureTransport(resolved, listenAddress: "0.0.0.0", port: port);
 
         if (NetworkManager.Singleton.StartClient())
         {
@@ -303,6 +543,10 @@ public class NetworkBootstrap : MonoBehaviour
     {
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             return;
+
+        // Leaving on purpose. Without this the reconnect loop would notice the session gone and
+        // put the player straight back into it, which reads as a Disconnect button that does not work.
+        StopAutoConnect();
 
         NetworkManager.Singleton.Shutdown();
         IsConnecting = false;
@@ -347,21 +591,28 @@ public class NetworkBootstrap : MonoBehaviour
             return;
         }
 
-        bool matchRunning =
-            (TriviaDuelManager.Instance != null && TriviaDuelManager.Instance.IsMatchRunning) ||
-            (TeamDuelManager.Instance != null && TeamDuelManager.Instance.IsMatchRunning);
-
-        if (matchRunning)
+        // Both gates below exist for a session hosted on somebody's phone: one room, one match at
+        // a time, a handful of seats. An always-on server is the opposite of all three -- it holds
+        // many matches at once and people arrive whenever they feel like it. Left in place, the
+        // first pair to start a game would lock every later arrival out of the server for good.
+        if (!IsDedicatedServerBuild)
         {
-            response.Approved = false;
-            response.Reason = "A match is already in progress. Try again when it ends.";
-            return;
+            bool matchRunning = TriviaDuelManager.Instance != null && TriviaDuelManager.Instance.IsMatchRunning;
+
+            if (matchRunning)
+            {
+                response.Approved = false;
+                response.Reason = "A match is already in progress. Try again when it ends.";
+                return;
+            }
         }
 
-        if (NetworkManager.Singleton.ConnectedClientsIds.Count >= MaxRoomPlayers)
+        int capacity = IsDedicatedServerBuild ? MaxServerPlayers : MaxRoomPlayers;
+
+        if (NetworkManager.Singleton.ConnectedClientsIds.Count >= capacity)
         {
             response.Approved = false;
-            response.Reason = "This game is full (" + MaxRoomPlayers + " players).";
+            response.Reason = "The server is full (" + capacity + " players).";
             return;
         }
 
@@ -426,14 +677,35 @@ public class NetworkBootstrap : MonoBehaviour
             && parsed.AddressFamily == AddressFamily.InterNetwork;
     }
 
+    [Header("--- STAYING CONNECTED ---")]
+    [Tooltip("How long a silent connection is tolerated before netcode drops it, in seconds. The " +
+             "scene default is 30s; a phone that locks its screen stops sending anything at all, " +
+             "so a short timeout ends the match while the player is still in it.")]
+    public float disconnectTimeoutSeconds = 120f;
+
+    [Tooltip("Keep the phone's screen awake while the app is running. A locked screen suspends the " +
+             "app, which is the actual cause of 'my phone turned off and I got disconnected' — no " +
+             "timeout setting can help once the OS has stopped running the game.")]
+    public bool keepScreenAwake = true;
+
     private void ConfigureTransport(string address, string listenAddress, ushort port = 0)
     {
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
-        if (transport != null)
-            transport.SetConnectionData(address, port == 0 ? connectPort : port, listenAddress);
-        else
+        if (transport == null)
+        {
             Debug.LogWarning("NetworkBootstrap: NetworkManager has no UnityTransport component.");
+            return;
+        }
+
+        transport.SetConnectionData(address, port == 0 ? connectPort : port, listenAddress);
+
+        // Widened from the scene's 30s. Backgrounding a phone for a few seconds — a notification
+        // shade, a glance at another app — stops the game loop entirely, so nothing is sent and the
+        // other end starts counting. A longer window lets the session survive that instead of
+        // ending a match the player never left.
+        if (disconnectTimeoutSeconds > 0f)
+            transport.DisconnectTimeoutMS = Mathf.RoundToInt(disconnectTimeoutSeconds * 1000f);
     }
 
     // ---------------------------------------------------------------
@@ -501,6 +773,12 @@ public class NetworkBootstrap : MonoBehaviour
         IsConnecting = false;
         ReportStatus(reason);
         SessionEnded?.Invoke(reason);
+
+        // The loop is still running and will try again on its own; this only makes sure the
+        // session is fully shut down first, since netcode will not start a new client while the
+        // old one is half up.
+        if (wantsServerConnection && NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
     }
 
     private void ReportStatus(string message)

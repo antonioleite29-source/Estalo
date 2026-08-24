@@ -36,12 +36,28 @@ public class WaitingScreenController : MonoBehaviour
     [Tooltip("Drag the LobbyPageSwitcher here so Cancel can return to the lobby.")]
     public LobbyPageSwitcher lobbyPageSwitcher;
 
+    [Header("--- TIMEOUT ---")]
+    [Tooltip("Give up and return to the lobby after this many seconds with no match. Sitting on a " +
+             "waiting screen that never resolves is indistinguishable from the game having frozen, " +
+             "which is the same reason this screen exists at all. Set to 0 to wait forever.")]
+    public float giveUpAfterSeconds = 60f;
+
+    [Header("--- BACKGROUND ---")]
+    [Tooltip("Optional. The Estalo artwork is put behind the waiting room automatically; drag an " +
+             "Image here only to place it on a specific object instead of a generated one.")]
+    public Image backgroundImage;
+
     [Header("--- DEBUG ---")]
     [Tooltip("Logs when this screen is shown and hidden, and who hid it. Off by default; tick it if " +
              "the waiting screen ever misbehaves again.")]
-    public bool logHideCalls;
-
     private bool isQueued;
+
+    // When the current queue started, in unscaled time, so the wait is measured in real seconds.
+    private float queuedSince;
+
+    // Set the moment a match forms. From then on the numbers are frozen, because the queue they
+    // came from has already been emptied.
+    private bool matchFound;
 
     // What is currently on screen, so a redraw only happens when the numbers actually move.
     private string lastPlayersLine;
@@ -49,6 +65,8 @@ public class WaitingScreenController : MonoBehaviour
 
     private void Awake()
     {
+        ApplyBackground();
+
         if (cancelButton != null)
             cancelButton.onClick.AddListener(OnCancelClicked);
 
@@ -62,11 +80,44 @@ public class WaitingScreenController : MonoBehaviour
             SetVisible(false);
     }
 
+    // The same artwork as the launch screen, behind the queue. The waiting room is the one place
+    // in the game that is literally loading something, so it is the one screen where a loading
+    // image is telling the truth rather than decorating.
+    private void ApplyBackground()
+    {
+        Sprite art = LoadingScreenController.Artwork;
+
+        if (art == null)
+            return;
+
+        GameObject host = waitingRoot != null ? waitingRoot : gameObject;
+
+        if (backgroundImage == null)
+        {
+            // Generated rather than required in the inspector, and pushed to the back of the
+            // sibling order so it sits behind the queue numbers and the Cancel button instead of
+            // covering them. Draw order inside a Canvas is sibling order, nothing else.
+            GameObject made = new GameObject("WaitingBackground", typeof(RectTransform));
+            made.transform.SetParent(host.transform, false);
+            made.transform.SetAsFirstSibling();
+            backgroundImage = made.AddComponent<Image>();
+        }
+
+        backgroundImage.sprite = art;
+        backgroundImage.color = Color.white;
+        backgroundImage.type = Image.Type.Simple;
+        backgroundImage.preserveAspect = false;
+        backgroundImage.raycastTarget = false;
+        LoadingScreenController.FillScreen(backgroundImage.rectTransform);
+    }
+
     // Called from LobbyPageSwitcher.StartGame() — pressing Start queues the player, it no longer
     // starts a match outright.
     public void ShowWaiting()
     {
         isQueued = true;
+        matchFound = false;
+        queuedSince = Time.unscaledTime;
         lastPlayersLine = null;
         lastLiveGamesLine = null;
         SetVisible(true);
@@ -76,25 +127,12 @@ public class WaitingScreenController : MonoBehaviour
         // behind a page — and it no longer depends on the Hierarchy keeping a particular order.
         transform.SetAsLastSibling();
 
-        if (logHideCalls)
-        {
-            GameObject shown = waitingRoot != null ? waitingRoot : gameObject;
-            Debug.Log($"WaitingScreen: ShowWaiting() ran. '{shown.name}' activeSelf={shown.activeSelf} " +
-                      $"activeInHierarchy={shown.activeInHierarchy} parent='{(transform.parent != null ? transform.parent.name : "none")}' " +
-                      $"parentActive={(transform.parent == null || transform.parent.gameObject.activeInHierarchy)}", this);
-        }
-
         Refresh();
     }
 
     // Called when the match actually forms, or when the player cancels out of the queue.
     public void HideWaiting()
     {
-        // Temporary: the screen has been disappearing while a player is still queued, and this is
-        // the only method that takes it down, so the stack trace on this line names whoever did it.
-        if (logHideCalls && isQueued)
-            Debug.Log("WaitingScreen: HideWaiting() called while still queued.", this);
-
         isQueued = false;
         SetVisible(false);
     }
@@ -105,12 +143,75 @@ public class WaitingScreenController : MonoBehaviour
             waitingRoot.SetActive(visible);
         else
             gameObject.SetActive(visible);
+
+        SetBottomBarVisible(!visible);
+    }
+
+    // The nav bar has nowhere useful to go from here — the player is queued, and the only way out
+    // is Cancel, which is already on this screen. Leaving it up also lets a tap land on another
+    // lobby page while still holding a seat in the queue.
+    //
+    // Driven from SetVisible so every exit restores it: Cancel, the timeout, and a match forming.
+    // A match then hides it again on its own a moment later, which is harmless — one SetActive.
+    private void SetBottomBarVisible(bool visible)
+    {
+        GameObject bar = TriviaDuelManager.Instance != null ? TriviaDuelManager.Instance.bottomBar : null;
+
+        if (bar == null && TeamDuelManager.Instance != null)
+            bar = TeamDuelManager.Instance.bottomBar;
+
+        if (bar != null)
+            bar.SetActive(visible);
+    }
+
+    // Called when the match forms, before the start animation plays.
+    //
+    // Forming a match takes the players OUT of the queue, so the live count is already back to zero
+    // by the time anyone sees it — the screen would read "Players: 0 / 2" for the whole length of
+    // the start animation, which looks like the match evaporated at the moment it was found. The
+    // numbers are pinned full instead, and the timeout stops counting.
+    public void FreezeOnMatchFound()
+    {
+        matchFound = true;
+
+        if (playersText == null)
+            return;
+
+        MatchMode mode = lobbyPageSwitcher != null ? lobbyPageSwitcher.SelectedMode : MatchMode.OneVsOne;
+        int required = Matchmaker.RequiredPlayersFor(mode);
+
+        lastPlayersLine = playersPrefix + required + playersSeparator + required;
+        playersText.text = lastPlayersLine;
     }
 
     private void Update()
     {
-        if (isQueued)
-            Refresh();
+        if (!isQueued || matchFound)
+            return;
+
+        // Leaving the queue properly rather than just hiding the screen: the server is still
+        // holding a slot for this player, and abandoning it silently is what leaves a queue
+        // reporting people who are no longer there.
+        if (giveUpAfterSeconds > 0f && Time.unscaledTime - queuedSince >= giveUpAfterSeconds)
+        {
+            Debug.Log($"WaitingScreen: no match after {giveUpAfterSeconds:0} seconds, returning to the lobby.", this);
+
+            // Stop the countdown before the animation starts, or the timeout fires again on every
+            // frame of it and stacks a transition per frame.
+            matchFound = true;
+
+            // Leaves by the same door a finished match does: the start animation, backwards, and
+            // the lobby behind it. Falls back to leaving immediately if the manager is missing, so
+            // a timeout can never strand the player on the waiting screen.
+            if (TriviaDuelManager.Instance != null)
+                TriviaDuelManager.Instance.PlayReturnToLobbyTransition(OnCancelClicked);
+            else
+                OnCancelClicked();
+
+            return;
+        }
+
+        Refresh();
     }
 
     private void Refresh()

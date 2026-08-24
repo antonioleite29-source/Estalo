@@ -60,8 +60,6 @@ public class LanDiscovery : MonoBehaviour
     private readonly Queue<FoundHost> pendingHosts = new Queue<FoundHost>();
     private readonly Dictionary<string, FoundHost> knownHosts = new Dictionary<string, FoundHost>();
 
-    public IEnumerable<FoundHost> KnownHosts => knownHosts.Values;
-
     public void StartAdvertising(int gamePort, string hostName)
     {
         advertisedGamePort = gamePort;

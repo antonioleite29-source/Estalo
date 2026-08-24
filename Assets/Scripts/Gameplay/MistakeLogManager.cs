@@ -196,28 +196,6 @@ public class MistakeLogManager : MonoBehaviour
         return weak.Count > 0 ? weak[0] : string.Empty;
     }
 
-    public float GetAccuracyFor(string topic)
-    {
-        TopicRecord record = FindTopic(topic);
-
-        if (record == null || record.attempts == 0)
-            return 1f;
-
-        return (record.attempts - record.misses) / (float)record.attempts;
-    }
-
-    public List<string> GetPractisedTopics()
-    {
-        List<string> topics = new List<string>(data.topics.Count);
-
-        for (int i = 0; i < data.topics.Count; i++)
-            topics.Add(data.topics[i].topic);
-
-        return topics;
-    }
-
-    public int MissedQuestionCount => data.questions.Count;
-
     // True once real matches have produced enough data to judge a weakness at all. Lets the results
     // screen say "play some games first" instead of implying the player has no weak topics.
     public bool HasMatchHistory
@@ -267,12 +245,6 @@ public class MistakeLogManager : MonoBehaviour
                 practice.Add(allQuestions[i]);
 
         return practice;
-    }
-
-    public void ClearLog()
-    {
-        data = new LogData();
-        Save();
     }
 
     private void AddUnseenFromTopic(List<TriviaQuestion> practice,

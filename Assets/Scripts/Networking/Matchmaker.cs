@@ -37,8 +37,6 @@ public class Matchmaker
 
     public static int RequiredPlayersFor(MatchMode mode) => mode == MatchMode.TeamFour ? 4 : 2;
 
-    public bool IsQueued(ulong clientId) => IndexOf(clientId) >= 0;
-
     public void Enqueue(ulong clientId, int difficultyLevel, MatchMode mode)
     {
         int existing = IndexOf(clientId);
@@ -64,8 +62,6 @@ public class Matchmaker
         if (index >= 0)
             queue.RemoveAt(index);
     }
-
-    public void Clear() => queue.Clear();
 
     // Pulls out every complete group the queue can currently form. Returns one list of client ids
     // per match, ordered so callers can hand out seats by position.
