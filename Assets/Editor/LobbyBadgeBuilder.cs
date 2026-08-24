@@ -12,13 +12,14 @@ using UnityEngine.UI;
 // guess is a drag-and-drop away from being right rather than a reason to run this again.
 public static class LobbyBadgeBuilder
 {
-    // The chosen mode is solid; the one you have not chosen is see-through.
+    // The chosen mode is see-through; the one you have not chosen is solid. It reads as the
+    // selected button being pressed into the page rather than raised off it.
     //
     // Alpha rather than a second colour, so the difference survives whatever artwork ends up on
     // those buttons -- 1v1Button.png is already sitting in the project waiting to go on. A grey
     // would have to be re-picked to suit every new sprite; transparency never does.
-    private static readonly Color SelectedMode = Color.white;
-    private static readonly Color UnselectedMode = new Color(1f, 1f, 1f, 0.35f);
+    private static readonly Color SelectedMode = new Color(1f, 1f, 1f, 0.35f);
+    private static readonly Color UnselectedMode = Color.white;
 
     [MenuItem("Trivia Duel/Setup/Wire Lobby Profile Badge")]
     public static void Wire()
