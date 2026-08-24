@@ -1,0 +1,40 @@
+# systemd unit for the always-on Trivia Duel server.
+#
+# systemd is what makes "always on" true rather than aspirational: it starts the server when the
+# machine boots, and starts it again if it ever exits. Without this, one crash at 3am means the
+# game is down until somebody notices and logs in.
+#
+# Install:  sudo cp triviaduel.service /etc/systemd/system/
+#           sudo systemctl daemon-reload
+#           sudo systemctl enable --now triviaduel
+
+[Unit]
+Description=Trivia Duel dedicated server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=trivia
+Group=trivia
+WorkingDirectory=/opt/triviaduel
+ExecStart=/opt/triviaduel/TriviaDuelServer -batchmode -nographics -logFile /var/log/triviaduel/server.log
+
+# Always, not on-failure. A Unity player that is asked to quit exits cleanly with code 0, and
+# on-failure would treat that as "it meant to stop" and leave the game offline.
+Restart=always
+RestartSec=5
+
+# If it is crash-looping, stop hammering it -- but never give up permanently, because the cause is
+# usually something temporary outside the process (the network not up yet, a full disk).
+StartLimitIntervalSec=0
+
+# The server reads its own build and writes a log. It has no business anywhere else on the machine.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/log/triviaduel
+
+[Install]
+WantedBy=multi-user.target

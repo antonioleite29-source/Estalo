@@ -11,22 +11,35 @@ using UnityEngine.UI;
 // on another machine and Unity resets something. Run the menu items, then File > Save Project.
 public static class BuildSetup
 {
-    private const string AndroidBundleId = "com.tomdeleite.triviaduel";
+    // Chosen before the first store upload on purpose: a Google Play application id can never
+    // be changed or reused once published, for the life of the app. The display name is free to
+    // change afterwards; this is not.
+    private const string BundleId = "com.tomdeleite.estalo";
 
     [MenuItem("Trivia Duel/Setup/Apply Android Build Settings")]
     public static void ApplyAndroidBuildSettings()
     {
         PlayerSettings.companyName = "Tom de Leite";
-        PlayerSettings.productName = "Trivia Duel";
+        PlayerSettings.productName = "Estalo";
 
         // The Android identifier was never set — only the Standalone one was, so an Android build
         // would ship under the leftover com.DefaultCompany id. Two apps sharing an id cannot be
         // installed side by side, which matters the moment testers have an older build on their phone.
-        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, AndroidBundleId);
+        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, BundleId);
+
+        // iOS gets the same id. Two stores, one identity — and it means the App Store entry can
+        // be set up now rather than being invented on the day of the first iPhone build.
+        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, BundleId);
 
         // Was 0, meaning "highest SDK installed" — the same source then builds differently on a
         // different machine. Pin it so a rebuild is reproducible.
-        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
+        //
+        // 36 (Android 16), not 34: from 31 August 2026 Google Play rejects new apps and updates
+        // that target anything lower, and an app at 34 also stops being offered to new users on
+        // newer Android versions. Pinned rather than left to track the newest installed SDK,
+        // because "whatever this machine happens to have" is how a build silently drops below the
+        // line again later.
+        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
 
         // Was auto-rotation. The whole lobby and duel UI is laid out portrait; allowing landscape
@@ -48,7 +61,7 @@ public static class BuildSetup
 
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"Android build settings applied: id={AndroidBundleId}, " +
+        Debug.Log($"Android build settings applied: id={BundleId}, " +
                   $"target SDK 34, min SDK 25, portrait-locked, ARM64, version 0.1. " +
                   "Now do File > Save Project.");
     }
@@ -81,7 +94,7 @@ public static class BuildSetup
 
         // Version-stamped filename: testers end up holding several builds over several sessions,
         // and "which APK were you on?" is unanswerable if they are all called the same thing.
-        string fileName = $"TriviaDuel-{PlayerSettings.bundleVersion}-" +
+        string fileName = $"Estalo-{PlayerSettings.bundleVersion}-" +
                           $"{System.DateTime.Now:yyyyMMdd-HHmm}.apk";
         string outputDir = System.IO.Path.Combine(
             System.IO.Directory.GetParent(Application.dataPath).FullName, "Builds");
