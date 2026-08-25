@@ -155,57 +155,29 @@ def body(frames, v, wave_type, start, end, glide, attack, decay, level, lp=0):
     return out
 
 
-def fm_tone(frames, carrier_hz, ratio, depth, attack, decay, level):
-    """One oscillator bending another's pitch.
-
-    The only way to get inharmonic partials -- the ones a bell or a struck glass has, sitting at
-    ratios like 2.83 rather than 2 or 3. Stacking whole-number harmonics can never produce them,
-    which is why additive synthesis always sounds like an organ and never like glass.
-
-    The bending depth collapses as the note decays, so it starts bright and clangy and settles
-    into something close to a pure tone. That collapse is the whole character.
-    """
-    n = min(int(RATE * (attack + decay + 0.3)), frames)
-    t = np.arange(n) / RATE
-
-    start_depth = carrier_hz * depth
-    end_depth = start_depth * 0.02
-    span = max(decay * 0.6, 1e-4)
-
-    swing = np.where(t < span, start_depth * (end_depth / start_depth) ** (t / span), end_depth)
-    modulator = np.sin(2 * np.pi * carrier_hz * ratio * t)
-
-    # Integrating the instantaneous frequency rather than modulating a phase directly: anything
-    # else drifts out of tune as the depth changes.
-    instantaneous = carrier_hz + swing * modulator
-    phase = 2 * np.pi * np.cumsum(instantaneous) / RATE
-
-    tone = np.sin(phase) * envelope(n, attack, level, decay)
-
-    out = np.zeros(frames)
-    out[:n] = tone
-    return out
-
-
 def click(frames, v):
-    """Glass: a tapped rim.
+    """Warm bass, tuned to the button's own note.
 
-    No noise transient at all, which is the whole point. The click this replaced fired a burst of
-    noise on top of a triangle wave, so it was a click and a tone at the same time and the ear had
-    to deal with both -- that is what made it read as harsh rather than as a note.
+    Three sine partials at 1, 2 and 4.3 times the fundamental, the upper ones dying faster. That
+    4.3 is what stops it being an organ: a whole-number ratio would fuse into one tone, while
+    something slightly off sits beside the fundamental and reads as an instrument with a body.
 
-    The carrier sits a fifth above the written note. Every button moves together, so the intervals
-    between them are unchanged and the scale still works; it simply sounds a fifth higher than the
-    name suggests.
+    Two octaves below the written note, which puts C on 131 Hz. That is the register the whole
+    thing depends on -- there is very little energy up top to become fatiguing, which is why a low
+    click survives being pressed forty times and a bright one does not.
+
+    No noise transient anywhere. That was what made every earlier version read as harsh.
     """
-    return fm_tone(
-        frames,
-        carrier_hz=v["note"] * 1.5,
-        ratio=2.83,
-        depth=1.1,
-        attack=0.003,
-        decay=0.26 * v["decay"],
-        level=0.20 * v["level"],
+    root = v["note"] / 4
+
+    # Scaled with the note rather than fixed. A fixed corner would let the top partial through on
+    # C and cut it on A, so the scale would get duller as it went up -- backwards.
+    lp = root * 6.1
+
+    return (
+        body(frames, v, "sine", root,       0, 0, 0.005, 0.170, 0.380, lp=lp)
+        + body(frames, v, "sine", root * 2, 0, 0, 0.005, 0.102, 0.099, lp=lp)
+        + body(frames, v, "sine", root * 4.3, 0, 0, 0.005, 0.051, 0.034, lp=lp)
     )
 
 
