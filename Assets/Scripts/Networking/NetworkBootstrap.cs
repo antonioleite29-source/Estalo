@@ -271,13 +271,20 @@ public class NetworkBootstrap : MonoBehaviour
         autoConnectRoutine = null;
     }
 
-    // When the server was last heard from. Zero means "not expecting one yet" -- before the first
-    // pulse arrives, and for a moment after coming back from the background.
+    // When the server was last heard from, or zero for "this server does not pulse".
+    //
+    // Armed only by an actual pulse, never by connecting. A server built before the heartbeat
+    // existed sends nothing, and arming on connect meant the watchdog waited sixteen seconds for a
+    // message that was never coming and then dropped a perfectly good connection -- every twenty
+    // seconds, forever. A watchdog that fires on an old server is worse than no watchdog.
     private float lastServerPulse;
 
     // Called by TriviaNetworkSync every time the server's heartbeat lands.
     public void NoteServerPulse()
     {
+        if (lastServerPulse <= 0f)
+            Debug.Log("Network: server heartbeat detected, so a dead connection will now be noticed.");
+
         lastServerPulse = Time.unscaledTime;
     }
 
@@ -361,10 +368,10 @@ public class NetworkBootstrap : MonoBehaviour
         // leaving the app forfeit the match.
         if (wantsServerConnection)
         {
-            // Coming back from the background, the clock restarts. The app was suspended, so of
-            // course nothing arrived while it was away -- judging the connection on that would
-            // disconnect every player who glanced at a notification.
-            if (!isPaused)
+            // Coming back from the background, the clock restarts -- but only if it was running.
+            // The app was suspended, so of course nothing arrived while it was away, and judging
+            // the connection on that would disconnect every player who glanced at a notification.
+            if (!isPaused && lastServerPulse > 0f)
                 lastServerPulse = Time.unscaledTime;
 
             return;
@@ -791,7 +798,11 @@ public class NetworkBootstrap : MonoBehaviour
             return;
 
         IsConnecting = false;
-        lastServerPulse = Time.unscaledTime;
+
+        // Left at zero deliberately. The first pulse arms it; a server that never pulses simply
+        // never gets policed, which is the old behaviour rather than a broken one.
+        lastServerPulse = 0f;
+
         ReportStatus("Conectado.");
         SessionStarted?.Invoke();
     }
