@@ -1472,6 +1472,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (answerButtonVisuals == null || answerIndex < 0 || answerIndex >= answerButtonVisuals.Length)
             return;
 
+        // Opposite the C that plays on a wrong one. This lands a moment after the tap that caused
+        // it, so the two together read as a question and its answer rather than as two clicks.
+        MatchSounds.PlayCorrect();
+
         if (answerButtonVisuals[answerIndex] != null)
             answerButtonVisuals[answerIndex].SetPressedRightState();
     }

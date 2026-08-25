@@ -9,6 +9,7 @@ library, so no licence is attached to any of it.
     python3 render_sounds.py
 
     Assets/Resources/Click/<note>/01..05.wav the button, one folder per pentatonic note
+    Assets/Resources/Match/Correct.wav       you answered right
     Assets/Resources/Match/Point.wav         you scored
     Assets/Resources/Match/Against.wav       they scored
     Assets/Resources/Match/Win.wav           you won
@@ -240,6 +241,17 @@ def sweep_burst(frames, t0, start_hz, end_hz, decay, level, q=0.7):
 
 # --- the four match moments, exactly as auditioned ---------------------------
 
+def correct(frames):
+    """Triad: three notes up the chord, settled and clearly finished.
+
+    Climbs, because a wrong answer resolves downward onto the root and the pair only works as
+    opposites. Kept to three notes and under a third of a second because this fires many times a
+    match and the next question follows almost immediately.
+    """
+    return run(frames, 0.0, [C5, E5, G5], 0.065,
+               decay=0.24, level=0.28, lp=4600, partial=0.3)
+
+
 def point(frames):
     """Two-note up. A rising fifth: the simplest thing that means yes."""
     return (note(frames, 0.000, C5, decay=0.12, level=0.30, lp=4000)
@@ -374,14 +386,15 @@ def main():
 
     frames = int(RATE * 2.2)
 
-    for name, make, level in [("Point", point, 0.62), ("Against", against, 0.52),
+    for name, make, level in [("Correct", correct, 0.58), ("Point", point, 0.62),
+                              ("Against", against, 0.52),
                               ("Win", win, 0.70), ("Lose", lose, 0.58)]:
         signal = finish(room(saturate(make(frames))), level)
         path = os.path.join(moments, name + ".wav")
         write(path, signal)
         print(f"  {name + '.wav':<14}{len(signal) / RATE * 1000:5.0f} ms  peak {np.max(np.abs(signal)):.2f}")
 
-    print(f"\n4 match sounds written to {moments}")
+    print(f"\n5 match sounds written to {moments}")
 
 
 if __name__ == "__main__":

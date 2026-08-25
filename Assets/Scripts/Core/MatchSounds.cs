@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// The four moments a match actually has: you scored, they scored, you won, you lost.
+// The moments a match actually has: you answered right, you scored, they scored, you won, you lost.
 //
 // Every note in all four comes from C major pentatonic, the same scale the button click is tuned
 // to, which is why they never clash with each other or with a tap that lands on top of them.
@@ -15,8 +15,12 @@ public static class MatchSounds
     public static float Volume = 0.8f;
 
     private static AudioSource source;
-    private static AudioClip point, against, win, lose;
+    private static AudioClip correct, point, against, win, lose;
     private static bool ready;
+
+    // Three notes up the chord. It climbs because the wrong answer resolves downward onto the
+    // root, and the pair only reads as opposites if one of them goes the other way.
+    public static void PlayCorrect() => Play(correct);
 
     public static void PlayPoint() => Play(point);
     public static void PlayAgainst() => Play(against);
@@ -61,12 +65,13 @@ public static class MatchSounds
         if (NetworkBootstrap.IsDedicatedServerBuild)
             return false;
 
+        correct = Resources.Load<AudioClip>(ClipFolder + "/Correct");
         point = Resources.Load<AudioClip>(ClipFolder + "/Point");
         against = Resources.Load<AudioClip>(ClipFolder + "/Against");
         win = Resources.Load<AudioClip>(ClipFolder + "/Win");
         lose = Resources.Load<AudioClip>(ClipFolder + "/Lose");
 
-        if (point == null && against == null && win == null && lose == null)
+        if (correct == null && point == null && against == null && win == null && lose == null)
         {
             Debug.LogWarning("MatchSounds: nothing in Resources/" + ClipFolder + ", so the match is silent.");
             return false;
