@@ -56,6 +56,6 @@ public class IQBarController : MonoBehaviour
             iqValueText.text = iq.ToString("F2");
 
         if (levelText != null && PlayerIQManager.Instance != null)
-            levelText.text = "Level " + PlayerIQManager.Instance.GetLocalDifficultyLevel();
+            levelText.text = "Nível " + PlayerIQManager.Instance.GetLocalDifficultyLevel();
     }
 }

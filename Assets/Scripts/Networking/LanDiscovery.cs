@@ -51,7 +51,7 @@ public class LanDiscovery : MonoBehaviour
     private volatile bool listening;
 
     private int advertisedGamePort;
-    private string advertisedName = "Trivia Duel";
+    private string advertisedName = "Estalo";
     private float nextBroadcastTime;
     private bool advertising;
 
@@ -63,7 +63,7 @@ public class LanDiscovery : MonoBehaviour
     public void StartAdvertising(int gamePort, string hostName)
     {
         advertisedGamePort = gamePort;
-        advertisedName = string.IsNullOrEmpty(hostName) ? "Trivia Duel" : hostName;
+        advertisedName = string.IsNullOrEmpty(hostName) ? "Estalo" : hostName;
 
         try
         {

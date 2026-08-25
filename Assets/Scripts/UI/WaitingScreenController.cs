@@ -21,10 +21,10 @@ public class WaitingScreenController : MonoBehaviour
 
     [Header("--- LABELS ---")]
     [Tooltip("Text placed before the player numbers. Clear this if you have a separate label object.")]
-    public string playersPrefix = "Players: ";
+    public string playersPrefix = "Jogadores: ";
 
     [Tooltip("Text placed before the live-games number. Clear this if you have a separate label object.")]
-    public string liveGamesPrefix = "Live games: ";
+    public string liveGamesPrefix = "Partidas em andamento: ";
 
     [Tooltip("Separator between queued and required, e.g. the \" / \" in \"3 / 4\".")]
     public string playersSeparator = " / ";

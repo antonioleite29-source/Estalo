@@ -101,13 +101,13 @@ public class MatchSession
     {
         if (teamAScore >= rules.pointsToWin)
         {
-            EndMatch(Mode == MatchMode.TeamFour ? "Team A Wins!" : "Team 1 Wins!", true, 1);
+            EndMatch(Mode == MatchMode.TeamFour ? "Time A venceu!" : "Jogador 1 venceu!", true, 1);
             return;
         }
 
         if (teamBScore >= rules.pointsToWin)
         {
-            EndMatch(Mode == MatchMode.TeamFour ? "Team B Wins!" : "Team 2 Wins!", true, 2);
+            EndMatch(Mode == MatchMode.TeamFour ? "Time B venceu!" : "Jogador 2 venceu!", true, 2);
             return;
         }
 
@@ -115,7 +115,7 @@ public class MatchSession
 
         if (poolSize <= 0)
         {
-            EndMatch("No questions available", false, 0);
+            EndMatch("Sem perguntas disponíveis", false, 0);
             return;
         }
 
@@ -268,7 +268,7 @@ public class MatchSession
 
             if (inactivityTimer <= 0f)
             {
-                EndMatch("Game ended: no attempts for 1 minute", false, 0);
+                EndMatch("Partida encerrada: ninguém respondeu por 1 minuto", false, 0);
                 return;
             }
         }
@@ -330,7 +330,7 @@ public class MatchSession
         seatByClient.Remove(departedClientId);
         participants.Remove(departedClientId);
 
-        EndMatch(Mode == MatchMode.TeamFour ? "A player disconnected." : "Your opponent disconnected.",
+        EndMatch(Mode == MatchMode.TeamFour ? "Um jogador saiu da partida." : "Seu adversário saiu da partida.",
                  false, 0);
     }
 

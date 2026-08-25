@@ -382,7 +382,7 @@ public class NetworkBootstrap : MonoBehaviour
             ? PlayerProfileManager.Instance.GetLocalName()
             : null;
 
-        return string.IsNullOrEmpty(playerName) ? "Trivia Duel" : "Sala de " + playerName;
+        return string.IsNullOrEmpty(playerName) ? "Estalo" : "Sala de " + playerName;
     }
 
     // ---------------------------------------------------------------
@@ -424,7 +424,7 @@ public class NetworkBootstrap : MonoBehaviour
                                  $"session is hosting on {port} instead.");
             }
 
-            ReportStatus("Hosting on " + GetLocalIPv4() + ":" + port);
+            ReportStatus("Hospedando em " + GetLocalIPv4() + ":" + port);
 
             // Announce on the Wi-Fi so phones can find this game without anyone reading an IP
             // address aloud and typing it in. The advertised port is the one actually bound.
@@ -434,8 +434,8 @@ public class NetworkBootstrap : MonoBehaviour
             return;
         }
 
-        ReportStatus($"Could not start hosting. Ports {connectPort}-{connectPort + PortSearchRange} " +
-                     "are all in use.");
+        ReportStatus($"Não foi possível hospedar. As portas {connectPort}-{connectPort + PortSearchRange} " +
+                     "estão todas em uso.");
     }
 
     // How many ports past the configured one the host may fall back to.
@@ -515,8 +515,8 @@ public class NetworkBootstrap : MonoBehaviour
 
         if (!IsValidIPv4(resolved))
         {
-            ReportStatus("\"" + address + "\" is not a valid address. It should look like " +
-                         "192.168.1.42, or a name that resolves to one.");
+            ReportStatus("\"" + address + "\" não é um endereço válido. Deve ser algo como " +
+                         "192.168.1.42, ou um nome que aponte para um.");
             return;
         }
 
@@ -530,11 +530,11 @@ public class NetworkBootstrap : MonoBehaviour
         if (NetworkManager.Singleton.StartClient())
         {
             IsConnecting = true;
-            ReportStatus("Connecting to " + address + "…");
+            ReportStatus("Conectando a " + address + "…");
         }
         else
         {
-            ReportStatus("Could not start connecting to " + address + ".");
+            ReportStatus("Não foi possível conectar a " + address + ".");
         }
     }
 
@@ -555,7 +555,7 @@ public class NetworkBootstrap : MonoBehaviour
         // a game they cannot join.
         Discovery.StopAll();
 
-        ReportStatus("Disconnected.");
+        ReportStatus("Desconectado.");
         SessionEnded?.Invoke(string.Empty);
     }
 
@@ -602,7 +602,7 @@ public class NetworkBootstrap : MonoBehaviour
             if (matchRunning)
             {
                 response.Approved = false;
-                response.Reason = "A match is already in progress. Try again when it ends.";
+                response.Reason = "Já há uma partida em andamento. Tente de novo quando ela terminar.";
                 return;
             }
         }
@@ -612,7 +612,7 @@ public class NetworkBootstrap : MonoBehaviour
         if (NetworkManager.Singleton.ConnectedClientsIds.Count >= capacity)
         {
             response.Approved = false;
-            response.Reason = "The server is full (" + capacity + " players).";
+            response.Reason = "O servidor está cheio (" + capacity + " jogadores).";
             return;
         }
 
@@ -736,7 +736,7 @@ public class NetworkBootstrap : MonoBehaviour
         if (NetworkManager.Singleton.IsServer)
         {
             int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
-            ReportStatus(count + " player" + (count == 1 ? "" : "s") + " connected. Hosting on "
+            ReportStatus(count + (count == 1 ? " jogador conectado" : " jogadores conectados") + ". Hospedando em "
                          + GetLocalIPv4() + ":" + connectPort);
             return;
         }
@@ -745,7 +745,7 @@ public class NetworkBootstrap : MonoBehaviour
             return;
 
         IsConnecting = false;
-        ReportStatus("Connected.");
+        ReportStatus("Conectado.");
         SessionStarted?.Invoke();
     }
 
@@ -754,7 +754,7 @@ public class NetworkBootstrap : MonoBehaviour
         if (NetworkManager.Singleton.IsServer && clientId != NetworkManager.Singleton.LocalClientId)
         {
             int count = NetworkManager.Singleton.ConnectedClientsIds.Count;
-            ReportStatus("A player left. " + count + " connected.");
+            ReportStatus("Um jogador saiu. " + count + " conectados.");
             return;
         }
 
@@ -766,8 +766,8 @@ public class NetworkBootstrap : MonoBehaviour
         if (string.IsNullOrEmpty(reason))
         {
             reason = IsConnecting
-                ? "Could not reach the host. Check the address and that both devices are on the same Wi-Fi."
-                : "Disconnected from the host.";
+                ? "Não foi possível encontrar o jogo. Confira o endereço e se os dois aparelhos estão no mesmo Wi-Fi."
+                : "Você foi desconectado.";
         }
 
         IsConnecting = false;

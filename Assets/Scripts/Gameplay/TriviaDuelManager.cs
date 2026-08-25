@@ -797,13 +797,13 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         if (team1Score >= pointsToWin)
         {
-            EndMatch("Team 1 Wins!", true, winnerSide: 1);
+            EndMatch("Jogador 1 venceu!", true, winnerSide: 1);
             return;
         }
 
         if (team2Score >= pointsToWin)
         {
-            EndMatch("Team 2 Wins!", true, winnerSide: 2);
+            EndMatch("Jogador 2 venceu!", true, winnerSide: 2);
             return;
         }
 
@@ -811,7 +811,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         if (currentQuestion == null)
         {
-            EndMatch("No questions available", false);
+            EndMatch("Sem perguntas disponíveis", false);
             return;
         }
 
@@ -971,13 +971,13 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         if (team1Score >= pointsToWin)
         {
-            EndMatch("Team 1 Wins!", true, winnerSide: 1);
+            EndMatch("Jogador 1 venceu!", true, winnerSide: 1);
             yield break;
         }
 
         if (team2Score >= pointsToWin)
         {
-            EndMatch("Team 2 Wins!", true, winnerSide: 2);
+            EndMatch("Jogador 2 venceu!", true, winnerSide: 2);
             yield break;
         }
 
@@ -1147,7 +1147,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             if (inactivityTimer <= 0f)
             {
                 inactivityTimer = 0f;
-                EndMatch("Game ended: no attempts for 1 minute", false);
+                EndMatch("Partida encerrada: ninguém respondeu por 1 minuto", false);
                 return;
             }
         }

@@ -163,7 +163,7 @@ public class ConnectPageController : MonoBehaviour
     {
         if (Bootstrap == null)
         {
-            SetStatus("No NetworkBootstrap in the scene — drag one onto the NetworkManager object.");
+            SetStatus("Erro de configuração: falta o NetworkBootstrap na cena.");
             return;
         }
 
@@ -210,7 +210,7 @@ public class ConnectPageController : MonoBehaviour
 
         if (!NetworkBootstrap.IsValidIPv4(address))
         {
-            SetStatus("Type the host's address, like 192.168.1.42.");
+            SetStatus("Digite o endereço do jogo, algo como 192.168.1.42.");
             return;
         }
 
