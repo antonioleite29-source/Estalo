@@ -314,7 +314,50 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         MatchAnswerMarkedTargetedClientRpc((int)match.Mode, answerIndex, wasCorrect, answeringSeat, OnlyFor(match));
 
     public void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam) =>
-        MatchEndedTargetedClientRpc((int)match.Mode, message, hasWinner, winningTeam, OnlyFor(match));
+        MatchEndedTargetedClientRpc((int)match.Mode, NameTheWinner(match, message, hasWinner, winningTeam),
+            hasWinner, winningTeam, OnlyFor(match));
+
+    // "Tom ganhou!" rather than "Jogador 1 venceu!".
+    //
+    // MatchSession decides the rules and knows nothing about who is playing -- deliberately, since
+    // that is what lets several matches run at once. The router is the piece that can see both, so
+    // putting the name in is its job rather than something MatchSession has to be handed.
+    //
+    // Falls back to whatever MatchSession wrote if a name cannot be found, so a missing profile
+    // costs the flourish and never the announcement.
+    private string NameTheWinner(MatchSession match, string message, bool hasWinner, int winningTeam)
+    {
+        if (!hasWinner)
+            return message;
+
+        List<string> winners = new List<string>();
+
+        foreach (ulong clientId in match.Participants)
+        {
+            int seat = match.GetSeat(clientId);
+
+            // 1v1 seats are the side number outright; team seats are 1-4, paired into two teams.
+            int team = match.Mode == MatchMode.TeamFour ? PlayerSideIdentity.TeamForSlot(seat) : seat;
+
+            if (team != winningTeam)
+                continue;
+
+            PlayerSideIdentity identity = FindIdentity(clientId);
+            string name = identity != null ? identity.PlayerName.Value.ToString() : string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(name))
+                winners.Add(name);
+        }
+
+        if (winners.Count == 0)
+            return message;
+
+        if (winners.Count == 1)
+            return winners[0] + " ganhou!";
+
+        // A whole team, so the verb agrees with them rather than with one of them.
+        return string.Join(" e ", winners) + " ganharam!";
+    }
 
     // Targeted at the single client who answered, not the whole match: each device logs only its
     // own mistakes.
