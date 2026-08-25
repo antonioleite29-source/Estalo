@@ -15,14 +15,22 @@ using UnityEngine.UI;
 // one on a page nobody thought to check.
 public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
 {
-    // Which note this particular button plays. Every note is from C major pentatonic, so any
-    // combination of buttons pressed in any order stays in key -- and in key with the match
-    // sounds, which are drawn from the same five notes.
+    // Which note this particular button plays, named by its degree in C major pentatonic. Every
+    // note is from that one scale, so any combination of buttons pressed in any order stays in
+    // key -- and in key with the match sounds, which are drawn from the same five.
+    //
+    // What the degrees are used for:
+    //
+    //   1  C   going back, and getting it wrong. The root: settled, final, nothing owed.
+    //   2  D   pressing something that was already true. A shrug.
+    //   3  E   the neutral tap. Most buttons.
+    //   4  G   spare.
+    //   5  A   Jogar. The highest, so starting a game is the brightest thing you can press.
     public enum Note { C, D, E, G, A }
 
-    [Tooltip("The note this button plays. C is the neutral tap; give a button a different note " +
-             "when pressing it means something.")]
-    public Note note = Note.C;
+    [Tooltip("The note this button plays. E is the neutral tap; give a button another note when " +
+             "pressing it means something in particular.")]
+    public Note note = Note.E;
 
     // One folder per note, five variations inside each.
     private const string ClipFolder = "Click";
@@ -33,7 +41,7 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
 
     // Public so anything that acts like a button without being one -- the avatar on the lobby,
     // an answer tile -- can make the same noise.
-    public static void Play(Note which = Note.C)
+    public static void Play(Note which = Note.E)
     {
         if (!Prepare())
             return;
@@ -138,6 +146,7 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
         // Include inactive: most pages in this game start switched off, and their buttons are
         // exactly the ones that would otherwise be silent.
         Selectable[] selectables = Object.FindObjectsByType<Selectable>(FindObjectsInactive.Include);
+        LobbyPageSwitcher switcher = Object.FindAnyObjectByType<LobbyPageSwitcher>(FindObjectsInactive.Include);
 
         int attached = 0;
 
@@ -151,13 +160,23 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
             if (selectable.GetComponent<ButtonClickSound>() != null)
                 continue;
 
+            // The two game-mode buttons are driven by LobbyPageSwitcher instead, because what
+            // they should play depends on whether the mode was already chosen -- which a pointer
+            // handler on the button cannot know.
+            if (IsModeButton(selectable, switcher))
+                continue;
+
             ButtonClickSound click = selectable.gameObject.AddComponent<ButtonClickSound>();
 
-            // Everything is C except the one button that starts a game. Found by the word on it
-            // rather than by which object it is: the Start button is called "Button" in the
-            // hierarchy, and what it says is the one unambiguous fact about it.
-            if (IsPlayButton(selectable))
-                click.note = Note.E;
+            // Found by the word written on it rather than by which object it is: these buttons are
+            // called things like "Button" in the hierarchy, and what they say is the one
+            // unambiguous fact about them.
+            string label = LabelOf(selectable);
+
+            if (label == "Jogar" || label == "Start")
+                click.note = Note.A;
+            else if (label == "Cancelar" || label == "Cancel")
+                click.note = Note.C;
 
             attached++;
         }
@@ -166,14 +185,18 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
             Debug.Log($"ButtonClickSound: {attached} button(s) will click when pressed.");
     }
 
-    private static bool IsPlayButton(Selectable selectable)
+    private static string LabelOf(Selectable selectable)
     {
         TMPro.TMP_Text label = selectable.GetComponentInChildren<TMPro.TMP_Text>(true);
+        return label != null ? label.text.Trim() : string.Empty;
+    }
 
-        if (label == null)
+    private static bool IsModeButton(Selectable selectable, LobbyPageSwitcher switcher)
+    {
+        if (switcher == null)
             return false;
 
-        string written = label.text.Trim();
-        return written == "Jogar" || written == "Start";
+        Image image = selectable.GetComponent<Image>();
+        return image != null && (image == switcher.oneVsOneButtonImage || image == switcher.teamFourButtonImage);
     }
 }

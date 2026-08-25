@@ -186,6 +186,13 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     private void SelectMode(MatchMode mode)
     {
+        // These two buttons make their own noise rather than taking the automatic one, because
+        // what they should play depends on whether anything actually changed -- and a pointer
+        // handler on the button has no way of knowing that.
+        ButtonClickSound.Play(mode == selectedMode
+            ? ButtonClickSound.Note.D      // already chosen: a shrug
+            : ButtonClickSound.Note.E);    // a real choice: the neutral tap
+
         selectedMode = mode;
         RefreshModeHighlight();
     }
