@@ -48,9 +48,9 @@ public class LobbyProfileBadge : MonoBehaviour
         {
             string playerName = profile.GetLocalName();
 
-            // "Player" is PlayerProfileManager's own default, meaning nobody has chosen yet — worth
-            // saying so, since the whole point of this badge is to be the way in to changing it.
-            nameLabel.text = string.IsNullOrWhiteSpace(playerName) || playerName == "Player"
+            // The default means nobody has chosen yet — worth saying so, since the whole point of
+            // this badge is to be the way in to changing it.
+            nameLabel.text = string.IsNullOrWhiteSpace(playerName) || playerName == PlayerProfileManager.DefaultName
                 ? placeholderName
                 : playerName;
         }

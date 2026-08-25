@@ -107,7 +107,7 @@ public class FirstRunTutorial : MonoBehaviour
         if (profile == null)
             return;
 
-        if (profile.GetLocalName() == "Player" || string.IsNullOrWhiteSpace(profile.GetLocalName()))
+        if (profile.GetLocalName() == PlayerProfileManager.DefaultName || string.IsNullOrWhiteSpace(profile.GetLocalName()))
             profile.SetLocalName(PlayerName);
 
         int avatarCount = profile.availableAvatars != null ? profile.availableAvatars.Length : 0;

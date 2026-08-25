@@ -9,7 +9,10 @@ public class PlayerProfileManager : MonoBehaviour
 
     private const string PREFS_KEY_NAME = "PlayerProfileName";
     private const string PREFS_KEY_AVATAR = "PlayerProfileAvatarIndex";
-    private const string DEFAULT_NAME = "Player";
+    // Public and const because two other places have to recognise "they have not chosen a name
+    // yet" -- the lobby badge, which prompts instead, and the first-run tutorial, which fills it
+    // in. Comparing against a literal in three files is how they end up disagreeing.
+    public const string DefaultName = "Jogador";
 
     private void Awake()
     {
@@ -26,13 +29,13 @@ public class PlayerProfileManager : MonoBehaviour
 
     public string GetLocalName()
     {
-        return PlayerPrefs.GetString(PREFS_KEY_NAME + KeySuffix, DEFAULT_NAME);
+        return PlayerPrefs.GetString(PREFS_KEY_NAME + KeySuffix, DefaultName);
     }
 
     public void SetLocalName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            name = DEFAULT_NAME;
+            name = DefaultName;
 
         PlayerPrefs.SetString(PREFS_KEY_NAME + KeySuffix, name);
         PlayerPrefs.Save();
