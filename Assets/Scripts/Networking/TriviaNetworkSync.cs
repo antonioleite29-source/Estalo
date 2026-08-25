@@ -76,8 +76,17 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     public NetworkVariable<int> NetLiveMatches = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    // Seconds between server pulses. Frequent enough that a client notices a dead line within a
+    // few of them, rare enough to be nothing on the wire -- an empty RPC to everyone connected.
+    private const float PulseSeconds = 3f;
+
+    private float nextPulse;
+
     private void Update()
     {
+        if (IsServer)
+            PulseIfDue();
+
         if (!IsServer || liveMatches.Count == 0)
             return;
 
@@ -92,6 +101,28 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         }
 
         NetLiveMatches.Value = liveMatches.Count;
+    }
+
+    // A heartbeat the client can time.
+    //
+    // UnityTransport has its own keepalive, but nothing above it ever finds out: a client whose
+    // line has quietly died still reports IsListening true, so the reconnect loop -- which only
+    // acts when IsListening is false -- sits and waits forever. That is the disconnection that
+    // does not recover. This gives NetworkBootstrap something it can miss.
+    private void PulseIfDue()
+    {
+        if (Time.unscaledTime < nextPulse || !CanSendRpc)
+            return;
+
+        nextPulse = Time.unscaledTime + PulseSeconds;
+        PulseClientRpc();
+    }
+
+    [ClientRpc]
+    private void PulseClientRpc()
+    {
+        if (NetworkBootstrap.Instance != null)
+            NetworkBootstrap.Instance.NoteServerPulse();
     }
 
     // Called instead of the old single-match ready gate. Queues the player, then drains the queue

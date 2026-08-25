@@ -270,9 +270,14 @@ def point(frames):
 
 
 def against(frames):
-    """Two-note down. Your point backwards, so conceding is the opposite of scoring."""
-    return (note(frames, 0.000, G5, decay=0.12, level=0.26, lp=3000)
-            + note(frames, 0.070, C5, decay=0.24, level=0.26, lp=2600))
+    """Two-note down: your point played backwards, and nothing else changed.
+
+    It used to be darker and quieter as well as inverted, which muddled the message -- conceding
+    sounded like a lesser event rather than the opposite one. Same notes, same levels, same filter
+    as point(); only the order of the two pitches is reversed. That is the whole idea.
+    """
+    return (note(frames, 0.000, G5, decay=0.12, level=0.30, lp=4500)
+            + note(frames, 0.070, C5, decay=0.22, level=0.30, lp=4000))
 
 
 def win(frames):

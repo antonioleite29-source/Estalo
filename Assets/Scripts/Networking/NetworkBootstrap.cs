@@ -29,6 +29,11 @@ public class NetworkBootstrap : MonoBehaviour
     [Tooltip("Seconds to wait before trying the server again after a failed or lost connection.")]
     public float reconnectDelaySeconds = 5f;
 
+    [Tooltip("Give up on a connection that has gone quiet for this long and reconnect. The server " +
+             "pulses every 3 seconds, so anything past a few of those means the line is dead even " +
+             "if netcode has not noticed yet.")]
+    public float staleConnectionSeconds = 16f;
+
     [Tooltip("Editor only: automatically host (main Editor) or join 127.0.0.1 (virtual players) on Play, " +
              "so Multiplayer Play Mode testing needs no clicking. Never runs in a build.")]
     [SerializeField] private bool autoConnectInEditor = true;
@@ -248,11 +253,44 @@ public class NetworkBootstrap : MonoBehaviour
                     yield return null;
                 }
             }
+            else if (ConnectionHasGoneQuiet())
+            {
+                Debug.LogWarning($"Network: no word from the server for {staleConnectionSeconds:0} " +
+                                 "seconds, so this connection is dead. Reconnecting.");
+
+                // Shutting down is what makes the branch above fire on the next pass. Without it
+                // the client sits on a line nobody is listening to, believing it is connected.
+                NetworkManager.Singleton.Shutdown();
+                IsConnecting = false;
+                lastServerPulse = 0f;
+            }
 
             yield return new WaitForSecondsRealtime(Mathf.Max(1f, reconnectDelaySeconds));
         }
 
         autoConnectRoutine = null;
+    }
+
+    // When the server was last heard from. Zero means "not expecting one yet" -- before the first
+    // pulse arrives, and for a moment after coming back from the background.
+    private float lastServerPulse;
+
+    // Called by TriviaNetworkSync every time the server's heartbeat lands.
+    public void NoteServerPulse()
+    {
+        lastServerPulse = Time.unscaledTime;
+    }
+
+    private bool ConnectionHasGoneQuiet()
+    {
+        if (staleConnectionSeconds <= 0f || lastServerPulse <= 0f)
+            return false;
+
+        // A host is its own server and has nothing to wait for.
+        if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer)
+            return false;
+
+        return Time.unscaledTime - lastServerPulse > staleConnectionSeconds;
     }
 
     // Turns a name like trivia.meudominio.com into an address UnityTransport can use. UTP takes a
@@ -322,7 +360,15 @@ public class NetworkBootstrap : MonoBehaviour
         // disconnectTimeoutSeconds is for. Tearing the transport down here instead is what made
         // leaving the app forfeit the match.
         if (wantsServerConnection)
+        {
+            // Coming back from the background, the clock restarts. The app was suspended, so of
+            // course nothing arrived while it was away -- judging the connection on that would
+            // disconnect every player who glanced at a notification.
+            if (!isPaused)
+                lastServerPulse = Time.unscaledTime;
+
             return;
+        }
 
         if (!isPaused)
             return;
@@ -745,6 +791,7 @@ public class NetworkBootstrap : MonoBehaviour
             return;
 
         IsConnecting = false;
+        lastServerPulse = Time.unscaledTime;
         ReportStatus("Conectado.");
         SessionStarted?.Invoke();
     }
