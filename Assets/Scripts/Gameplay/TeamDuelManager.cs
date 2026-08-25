@@ -229,11 +229,17 @@ public class TeamDuelManager : MonoBehaviour
         teamBScore = newTeamBScore;
         UpdateScoreUI();
 
-        if (teamAScored || teamBScored)
-        {
-            int scoringTeam = teamAScored ? 1 : 2;
-            MatchSounds.PlayScored(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == scoringTeam);
-        }
+        if (!teamAScored && !teamBScored)
+            return;
+
+        int scoringTeam = teamAScored ? 1 : 2;
+        bool byMyTeam = PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == scoringTeam;
+
+        MatchSounds.PlayScored(byMyTeam);
+
+        // Borrowed rather than reimplemented, so the pulse is the same length and the same two
+        // colours in both modes and only has to be tuned in one place.
+        TriviaDuelManager.Instance?.FlashScore(teamAScored ? teamAScoreText : teamBScoreText, byMyTeam);
     }
 
     public void ApplyNetworkedRoundState(int newRoundState)
@@ -409,27 +415,31 @@ public class TeamDuelManager : MonoBehaviour
         }
     }
 
-    internal void MarkAnswerRight(int answerIndex)
+    // byLocalPlayer decides whether this device makes a noise about it. The button turning green
+    // is news for everyone in the match; the sound is only for the person who answered.
+    internal void MarkAnswerRight(int answerIndex, bool byLocalPlayer = true)
     {
         if (answerButtonVisuals == null || answerIndex < 0 || answerIndex >= answerButtonVisuals.Length)
             return;
 
         // Opposite the C that plays on a wrong one. This lands a moment after the tap that caused
         // it, so the two together read as a question and its answer rather than as two clicks.
-        MatchSounds.PlayCorrect();
+        if (byLocalPlayer)
+            MatchSounds.PlayCorrect();
 
         if (answerButtonVisuals[answerIndex] != null)
             answerButtonVisuals[answerIndex].SetPressedRightState();
     }
 
-    internal void MarkAnswerWrong(int answerIndex)
+    internal void MarkAnswerWrong(int answerIndex, bool byLocalPlayer = true)
     {
         if (answerButtonVisuals == null || answerIndex < 0 || answerIndex >= answerButtonVisuals.Length)
             return;
 
         // The root of the scale: settled and final, nothing owed. It lands a moment after the tap
         // that caused it, so the pair reads as a question and its answer rather than two clicks.
-        ButtonClickSound.Play(ButtonClickSound.Note.C);
+        if (byLocalPlayer)
+            ButtonClickSound.Play(ButtonClickSound.Note.C);
 
         if (answerButtonVisuals[answerIndex] != null)
             answerButtonVisuals[answerIndex].SetPressedWrongState();

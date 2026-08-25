@@ -852,8 +852,13 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         team2Score = newTeam2Score;
         UpdateScoreUI();
 
-        if (mineWentUp || theirsWentUp)
-            MatchSounds.PlayScored(localViewPlayerSide == (mineWentUp ? 1 : 2));
+        if (!mineWentUp && !theirsWentUp)
+            return;
+
+        bool byLocalPlayer = localViewPlayerSide == (mineWentUp ? 1 : 2);
+
+        MatchSounds.PlayScored(byLocalPlayer);
+        FlashScore(mineWentUp ? team1ScoreText : team2ScoreText, byLocalPlayer);
     }
 
     public void ApplyNetworkedRoundState(int newRoundState)
@@ -1331,6 +1336,60 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         return Mathf.Clamp(playerSide, 1, 2);
     }
 
+    // The number that changed pulses once, in the colour of whoever it belongs to. Once, not
+    // repeatedly: the tutorial pulses five times because it is pointing something out, and a
+    // score that keeps flashing during a match is a warning light rather than a reward.
+    //
+    // Blue for you, red for them -- the same two colours the board and the solo rings already use,
+    // so nothing here introduces a third meaning.
+    internal void FlashScore(TMP_Text score, bool byLocalPlayer)
+    {
+        if (score == null)
+            return;
+
+        if (scoreFlashCoroutine != null)
+            StopCoroutine(scoreFlashCoroutine);
+
+        scoreFlashCoroutine = StartCoroutine(FlashScoreRoutine(
+            score, byLocalPlayer ? localPlayerOutlineColor : otherSoloDonutColor));
+    }
+
+    private Coroutine scoreFlashCoroutine;
+
+    private IEnumerator FlashScoreRoutine(TMP_Text score, Color flash)
+    {
+        // Read now rather than caching it: ApplyStateBackground recolours the labels whenever the
+        // round state changes, so whatever it is at this moment is what it should return to.
+        Color original = score.color;
+
+        const float frameRate = 24f;
+        const float seconds = 0.55f;
+
+        float elapsed = 0f;
+        int lastStep = -1;
+
+        while (elapsed < seconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            // Stepped at 24 fps to match the exported transitions. A smooth per-frame fade beside
+            // hand-drawn 24 fps artwork reads as belonging to different software.
+            int step = Mathf.FloorToInt(elapsed * frameRate);
+
+            if (step != lastStep)
+            {
+                lastStep = step;
+                float t = Mathf.Sin(Mathf.Clamp01(step / frameRate / seconds) * Mathf.PI);
+                score.color = Color.Lerp(original, flash, t);
+            }
+
+            yield return null;
+        }
+
+        score.color = original;
+        scoreFlashCoroutine = null;
+    }
+
     private void UpdateScoreUI()
     {
         if (team1ScoreText != null)
@@ -1467,27 +1526,34 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         }
     }
 
-    internal void MarkAnswerRight(int answerIndex)
+    // byLocalPlayer decides whether this device makes a noise about it. The button turning green
+    // is news for everyone in the match; the sound is only for the person who answered.
+    internal void MarkAnswerRight(int answerIndex, bool byLocalPlayer = true)
     {
         if (answerButtonVisuals == null || answerIndex < 0 || answerIndex >= answerButtonVisuals.Length)
             return;
 
         // Opposite the C that plays on a wrong one. This lands a moment after the tap that caused
         // it, so the two together read as a question and its answer rather than as two clicks.
-        MatchSounds.PlayCorrect();
+        if (byLocalPlayer)
+            MatchSounds.PlayCorrect();
 
         if (answerButtonVisuals[answerIndex] != null)
             answerButtonVisuals[answerIndex].SetPressedRightState();
     }
 
-    internal void MarkAnswerWrong(int answerIndex)
+    internal void MarkAnswerWrong(int answerIndex, bool byLocalPlayer = true)
     {
         if (answerButtonVisuals == null || answerIndex < 0 || answerIndex >= answerButtonVisuals.Length)
             return;
 
         // The root of the scale: settled and final, nothing owed. It lands a moment after the tap
         // that caused it, so the pair reads as a question and its answer rather than two clicks.
-        ButtonClickSound.Play(ButtonClickSound.Note.C);
+        if (byLocalPlayer)
+        {
+            DeviceFeedback.Vibrate(DeviceFeedback.Strength.Bump);
+            ButtonClickSound.Play(ButtonClickSound.Note.C);
+        }
 
         if (answerButtonVisuals[answerIndex] != null)
             answerButtonVisuals[answerIndex].SetPressedWrongState();

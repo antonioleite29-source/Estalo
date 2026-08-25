@@ -20,7 +20,11 @@ public static class MatchSounds
 
     // Three notes up the chord. It climbs because the wrong answer resolves downward onto the
     // root, and the pair only reads as opposites if one of them goes the other way.
-    public static void PlayCorrect() => Play(correct);
+    public static void PlayCorrect()
+    {
+        DeviceFeedback.Vibrate(DeviceFeedback.Strength.Bump);
+        Play(correct);
+    }
 
     public static void PlayPoint() => Play(point);
     public static void PlayAgainst() => Play(against);
@@ -39,6 +43,9 @@ public static class MatchSounds
 
     public static void PlayEnded(bool localPlayerWon)
     {
+        // The only one heavy enough to feel across a desk, and the only one iOS gets at all.
+        DeviceFeedback.Vibrate(DeviceFeedback.Strength.Thud);
+
         if (localPlayerWon)
             PlayWin();
         else
@@ -47,7 +54,7 @@ public static class MatchSounds
 
     private static void Play(AudioClip clip)
     {
-        if (!Prepare() || clip == null)
+        if (!DeviceFeedback.SoundAllowed || !Prepare() || clip == null)
             return;
 
         // PlayOneShot rather than Play: a point landing while the previous one is still ringing

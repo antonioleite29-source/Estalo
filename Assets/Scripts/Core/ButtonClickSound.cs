@@ -43,7 +43,11 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
     // an answer tile -- can make the same noise.
     public static void Play(Note which = Note.E)
     {
-        if (!Prepare())
+        // The vibration happens whether or not the phone is allowed to make noise -- a phone on
+        // silent is exactly the case where the buzz is doing the work on its own.
+        DeviceFeedback.Vibrate(DeviceFeedback.Strength.Tap);
+
+        if (!DeviceFeedback.SoundAllowed || !Prepare())
             return;
 
         AudioClip clip = NextClip(which);

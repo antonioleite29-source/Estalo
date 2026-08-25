@@ -445,15 +445,32 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     private void MatchAnswerMarkedTargetedClientRpc(int mode, int answerIndex, bool wasCorrect,
         int answeringSeat, ClientRpcParams _ = default)
     {
+        // answeringSeat was arriving and being dropped, so every player heard the sound for
+        // their OWN right or wrong answer whenever anybody in the match answered. The seat is the
+        // only thing in the message that says whose result this is.
         if ((MatchMode)mode == MatchMode.TeamFour)
         {
-            if (wasCorrect) TeamDuelManager.Instance?.MarkAnswerRight(answerIndex);
-            else TeamDuelManager.Instance?.MarkAnswerWrong(answerIndex);
+            TeamDuelManager team = TeamDuelManager.Instance;
+
+            if (team == null)
+                return;
+
+            bool mineTeam = answeringSeat == team.LocalAssignedSlot;
+
+            if (wasCorrect) team.MarkAnswerRight(answerIndex, mineTeam);
+            else team.MarkAnswerWrong(answerIndex, mineTeam);
             return;
         }
 
-        if (wasCorrect) TriviaDuelManager.Instance?.MarkAnswerRight(answerIndex);
-        else TriviaDuelManager.Instance?.MarkAnswerWrong(answerIndex);
+        TriviaDuelManager duel = TriviaDuelManager.Instance;
+
+        if (duel == null)
+            return;
+
+        bool mine = answeringSeat == duel.LocalAssignedSide;
+
+        if (wasCorrect) duel.MarkAnswerRight(answerIndex, mine);
+        else duel.MarkAnswerWrong(answerIndex, mine);
     }
 
     [ClientRpc]
