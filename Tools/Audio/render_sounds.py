@@ -163,11 +163,14 @@ def click(frames, v):
     """
     note = v["note"]
 
+    # Longer than a click strictly needs to be. At 75ms the note was over before the ear had
+    # placed it and the button read as a tick that happened to be pitched; letting it ring is what
+    # makes it a note. The transient is untouched -- lengthening that would only add hiss.
     return (
         transient(frames, v, centre=6000, q=0.8, decay=0.012, level=0.30)
-        + body(frames, v, "triangle", note, 0, 0, 0.002, 0.075, 0.40, lp=note * 3.2)
-        + body(frames, v, "sine", note * 2, 0, 0, 0.002, 0.045, 0.14)
-        + body(frames, v, "sine", note / 4, 0, 0, 0.004, 0.07, 0.16)
+        + body(frames, v, "triangle", note, 0, 0, 0.002, 0.145, 0.40, lp=note * 3.2)
+        + body(frames, v, "sine", note * 2, 0, 0, 0.002, 0.085, 0.14)
+        + body(frames, v, "sine", note / 4, 0, 0, 0.004, 0.125, 0.16)
     )
 
 
