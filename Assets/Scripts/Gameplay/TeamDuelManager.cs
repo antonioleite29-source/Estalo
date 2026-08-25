@@ -220,9 +220,20 @@ public class TeamDuelManager : MonoBehaviour
 
     public void ApplyNetworkedScore(int newTeamAScore, int newTeamBScore)
     {
+        // Same reasoning as the 1v1 board: the server sends both scores, so only the rise says
+        // who scored, and only a rise is a point at all.
+        bool teamAScored = newTeamAScore > teamAScore;
+        bool teamBScored = newTeamBScore > teamBScore;
+
         teamAScore = newTeamAScore;
         teamBScore = newTeamBScore;
         UpdateScoreUI();
+
+        if (teamAScored || teamBScored)
+        {
+            int scoringTeam = teamAScored ? 1 : 2;
+            MatchSounds.PlayScored(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == scoringTeam);
+        }
     }
 
     public void ApplyNetworkedRoundState(int newRoundState)
@@ -425,6 +436,9 @@ public class TeamDuelManager : MonoBehaviour
 
         if (questionText != null)
             questionText.text = message;
+
+        if (hasWinner)
+            MatchSounds.PlayEnded(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == winningTeam);
 
         if (hasWinner && PlayerIQManager.Instance != null)
             PlayerIQManager.Instance.AdjustLocalIQAfterMatch(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == winningTeam);

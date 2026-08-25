@@ -839,9 +839,21 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     public void ApplyNetworkedScore(int newTeam1Score, int newTeam2Score)
     {
+        // Which number went up decides which sound plays. Comparing against what was on screen a
+        // moment ago is the only way to tell: the server sends both scores every time, so the
+        // message itself does not say who scored.
+        //
+        // Only ever a rise. A match starting, or the board being caught up after a reconnection,
+        // sets these to values that are not a point being won by anyone.
+        bool mineWentUp = newTeam1Score > team1Score;
+        bool theirsWentUp = newTeam2Score > team2Score;
+
         team1Score = newTeam1Score;
         team2Score = newTeam2Score;
         UpdateScoreUI();
+
+        if (mineWentUp || theirsWentUp)
+            MatchSounds.PlayScored(localViewPlayerSide == (mineWentUp ? 1 : 2));
     }
 
     public void ApplyNetworkedRoundState(int newRoundState)
@@ -1566,6 +1578,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     public void ApplyNetworkedMatchEnd(string message, bool hasWinner, int winnerSide)
     {
         lastWinnerSide = hasWinner ? winnerSide : 0;
+
+        // Nothing on a match that simply ran out of players or time: there is no result to
+        // announce, and a defeat sting for somebody's Wi-Fi dropping is a lie.
+        if (hasWinner)
+            MatchSounds.PlayEnded(winnerSide == localViewPlayerSide);
 
         if (questionText != null)
             questionText.text = message;
