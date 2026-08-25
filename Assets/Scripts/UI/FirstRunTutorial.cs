@@ -26,6 +26,10 @@ public class FirstRunTutorial : MonoBehaviour
     private const float CardSeconds = 7f;
     private const int TestQuestions = 7;
 
+    // Read by ConnectPageController, which otherwise drops the lobby back over the tutorial the
+    // moment the server connection lands.
+    public static bool IsRunning { get; private set; }
+
     private TriviaDuelManager duel;
     private int opponentAvatarIndex;
     private int answeredCorrectlyRaw;
@@ -46,6 +50,8 @@ public class FirstRunTutorial : MonoBehaviour
 
         GameObject host = new GameObject("FirstRunTutorial");
         DontDestroyOnLoad(host);
+
+        IsRunning = true;
 
         FirstRunTutorial tutorial = host.AddComponent<FirstRunTutorial>();
         tutorial.StartCoroutine(tutorial.Run());
@@ -112,6 +118,11 @@ public class FirstRunTutorial : MonoBehaviour
         // Side 1 is the left of the board and the side the blue ring marks as yours. Card two tells
         // them they are always blue, so this has to be true before that card appears.
         duel.RegisterLocalPlayerSide(1);
+
+        // Every page off, not lobbyRootObject: that field is empty in this scene, so the call
+        // that was here did nothing and the lobby stayed drawn on top of the board.
+        if (duel.lobbyPageSwitcher != null)
+            duel.lobbyPageSwitcher.HideAllPages();
 
         if (duel.lobbyRootObject != null)
             duel.lobbyRootObject.SetActive(false);
@@ -343,6 +354,8 @@ public class FirstRunTutorial : MonoBehaviour
 
     private void Finish()
     {
+        IsRunning = false;
+
         PlayerPrefs.SetInt(SeenKey, 1);
         PlayerPrefs.Save();
 

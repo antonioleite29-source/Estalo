@@ -234,6 +234,12 @@ public class ConnectPageController : MonoBehaviour
     {
         RefreshMyAddress();
 
+        // Not while the first-run tutorial owns the screen. Connecting to the server takes a
+        // second or two, which lands in the middle of the intro cards -- and this would put the
+        // lobby straight back over the top of them.
+        if (FirstRunTutorial.IsRunning)
+            return;
+
         if (openLobbyOnConnect && lobbyPageSwitcher != null)
             lobbyPageSwitcher.ShowLobbyPage();
     }

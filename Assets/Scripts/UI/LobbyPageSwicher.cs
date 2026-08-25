@@ -136,12 +136,7 @@ public class LobbyPageSwitcher : MonoBehaviour
     // ---------------------------------------------------------------
     public void StartGame()
     {
-        // Hide every lobby page so nothing bleeds through into the game screen
-        SetPageActive(profilePage,  false);
-        SetPageActive(learningPage, false);
-        SetPageActive(lobbyPage,    false);
-        SetPageActive(morePage,     false);
-        SetPageActive(connectPage,  false);
+        HideAllPages();
 
         // This device's own choice, and only this device's. The mode was briefly server-wide so
         // that clients could change it at all — but that made one phone tapping 2v2 switch every
@@ -167,6 +162,20 @@ public class LobbyPageSwitcher : MonoBehaviour
             else
                 Debug.LogWarning("LobbyPageSwitcher: No TriviaDuelManager assigned! Drag it into the 'Trivia Manager' slot in the Inspector.");
         }
+    }
+
+    // Switches off every lobby page, which is what actually makes the lobby disappear.
+    //
+    // Not lobbyRootObject: that field is empty in this scene and always has been, so anything
+    // relying on it to clear the lobby silently does nothing and leaves the pages drawn on top of
+    // whatever was revealed underneath.
+    public void HideAllPages()
+    {
+        SetPageActive(profilePage,  false);
+        SetPageActive(learningPage, false);
+        SetPageActive(lobbyPage,    false);
+        SetPageActive(morePage,     false);
+        SetPageActive(connectPage,  false);
     }
 
     // ---------------------------------------------------------------
