@@ -602,6 +602,12 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         BindAnswerButtons();
 
+        // Cleared before the board is shown. ApplyNetworkedScore decides who scored by comparing
+        // against these, so a 7 left over from the last match would swallow the first six points
+        // of this one -- they would show on screen and make no sound at all.
+        team1Score = 0;
+        team2Score = 0;
+
         if (matchStartCoroutine != null)
             StopCoroutine(matchStartCoroutine);
 

@@ -14,48 +14,53 @@ public static class MatchSounds
 
     public static float Volume = 0.8f;
 
-    private static AudioSource source;
-    private static AudioClip correct, point, against, win, lose;
-    private static bool ready;
+    // Named rather than passed as an AudioClip, because the clips do not exist until Prepare has
+    // run -- and an argument is evaluated before the method it is being passed to. Play(against)
+    // therefore handed over a null on the very first call of a session and dropped the sound
+    // without a word. Asking for a clip by name means it is looked up AFTER loading.
+    private enum Cue { Correct, Point, Against, Win, Lose }
 
-    // Three notes up the chord. It climbs because the wrong answer resolves downward onto the
-    // root, and the pair only reads as opposites if one of them goes the other way.
     public static void PlayCorrect()
     {
         DeviceFeedback.Vibrate(DeviceFeedback.Strength.Bump);
-        Play(correct);
+        Play(Cue.Correct);
     }
 
-    public static void PlayPoint() => Play(point);
-    public static void PlayAgainst() => Play(against);
-    public static void PlayWin() => Play(win);
-    public static void PlayLose() => Play(lose);
+    public static void PlayPoint() => Play(Cue.Point);
+    public static void PlayAgainst() => Play(Cue.Against);
+    public static void PlayWin() => Play(Cue.Win);
+    public static void PlayLose() => Play(Cue.Lose);
 
     // Everything routes through here so that "which side am I" is answered once rather than at
     // each of the several places a score can change.
     public static void PlayScored(bool byLocalPlayer)
     {
-        if (byLocalPlayer)
-            PlayPoint();
-        else
-            PlayAgainst();
+        Play(byLocalPlayer ? Cue.Point : Cue.Against);
     }
 
     public static void PlayEnded(bool localPlayerWon)
     {
         // The only one heavy enough to feel across a desk, and the only one iOS gets at all.
         DeviceFeedback.Vibrate(DeviceFeedback.Strength.Thud);
-
-        if (localPlayerWon)
-            PlayWin();
-        else
-            PlayLose();
+        Play(localPlayerWon ? Cue.Win : Cue.Lose);
     }
 
-    private static void Play(AudioClip clip)
+    private static AudioSource source;
+    private static readonly System.Collections.Generic.Dictionary<Cue, AudioClip> clips =
+        new System.Collections.Generic.Dictionary<Cue, AudioClip>();
+    private static bool ready;
+
+    private static void Play(Cue cue)
     {
-        if (!DeviceFeedback.SoundAllowed || !Prepare() || clip == null)
+        if (!DeviceFeedback.SoundAllowed || !Prepare())
             return;
+
+        if (!clips.TryGetValue(cue, out AudioClip clip) || clip == null)
+        {
+            Debug.LogWarning($"MatchSounds: no clip for {cue} in Resources/{ClipFolder}, so that " +
+                             "moment is silent.");
+            return;
+        }
 
         // PlayOneShot rather than Play: a point landing while the previous one is still ringing
         // should overlap, not cut it off.
@@ -72,13 +77,14 @@ public static class MatchSounds
         if (NetworkBootstrap.IsDedicatedServerBuild)
             return false;
 
-        correct = Resources.Load<AudioClip>(ClipFolder + "/Correct");
-        point = Resources.Load<AudioClip>(ClipFolder + "/Point");
-        against = Resources.Load<AudioClip>(ClipFolder + "/Against");
-        win = Resources.Load<AudioClip>(ClipFolder + "/Win");
-        lose = Resources.Load<AudioClip>(ClipFolder + "/Lose");
+        foreach (Cue cue in System.Enum.GetValues(typeof(Cue)))
+            clips[cue] = Resources.Load<AudioClip>(ClipFolder + "/" + cue);
 
-        if (correct == null && point == null && against == null && win == null && lose == null)
+        bool anyFound = false;
+        foreach (AudioClip clip in clips.Values)
+            anyFound |= clip != null;
+
+        if (!anyFound)
         {
             Debug.LogWarning("MatchSounds: nothing in Resources/" + ClipFolder + ", so the match is silent.");
             return false;

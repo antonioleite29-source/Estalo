@@ -194,6 +194,10 @@ public class TeamDuelManager : MonoBehaviour
 
     public void ApplyNetworkedMatchStarted()
     {
+        // Same reasoning as the 1v1 board: ApplyNetworkedScore reads a rise off these, so leftovers
+        // from the last match would swallow the first points of this one.
+        teamAScore = 0;
+        teamBScore = 0;
         // Match has formed — take down the queue/waiting screen before showing the gameplay UI.
         if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
             lobbyPageSwitcher.waitingScreen.HideWaiting();
