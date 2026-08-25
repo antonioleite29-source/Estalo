@@ -3242,7 +3242,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Players:'
+  m_text: 'Jogadores:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
   m_sharedMaterial: {fileID: 5165438157745338668, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
@@ -6809,7 +6809,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Cancel
+  m_text: Cancelar
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
   m_sharedMaterial: {fileID: 5165438157745338668, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
@@ -14575,7 +14575,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Start
+  m_text: Jogar
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
   m_sharedMaterial: {fileID: 5165438157745338668, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
@@ -15372,7 +15372,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Live games:'
+  m_text: 'Partidas em andamento:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
   m_sharedMaterial: {fileID: 5165438157745338668, guid: 7ab930724463c4ffba6029354faad75a, type: 2}
@@ -17154,8 +17154,8 @@ MonoBehaviour:
   waitingRoot: {fileID: 1900057187}
   playersText: {fileID: 380926594}
   liveGamesText: {fileID: 1739184084}
-  playersPrefix: 'Players: '
-  liveGamesPrefix: 'Live games: '
+  playersPrefix: 'Jogadores: '
+  liveGamesPrefix: 'Partidas em andamento: '
   playersSeparator: ' / '
   cancelButton: {fileID: 967185785}
   lobbyPageSwitcher: {fileID: 2119174437}
