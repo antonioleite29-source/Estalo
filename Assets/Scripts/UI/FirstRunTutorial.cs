@@ -264,6 +264,10 @@ public class FirstRunTutorial : MonoBehaviour
 
     // Card two: the player's own score pulses while the card explains that their points live on
     // their side of the board. Pointing at it is the whole reason the sentence works.
+    //
+    // Stepped at 24 fps rather than drawn every frame, to sit at the same rate as the exported
+    // transitions. A smooth per-frame fade beside hand-drawn 24 fps artwork reads as belonging to
+    // a different piece of software.
     private IEnumerator FlashMyScore()
     {
         TMP_Text score = duel.team1ScoreText;
@@ -271,30 +275,41 @@ public class FirstRunTutorial : MonoBehaviour
         if (score == null)
             yield break;
 
+        const float frameRate = 24f;
+        const float pulseSeconds = 0.7f;
+
         Color original = score.color;
-        Vector3 restingScale = score.rectTransform.localScale;
 
         yield return new WaitForSecondsRealtime(1f);
 
         for (int pulse = 0; pulse < 5; pulse++)
         {
             float elapsed = 0f;
+            int lastStep = -1;
 
-            while (elapsed < 0.7f)
+            while (elapsed < pulseSeconds)
             {
                 elapsed += Time.unscaledDeltaTime;
 
-                // One sine hump per pulse: up and back down with no jump at either end.
-                float t = Mathf.Sin(Mathf.Clamp01(elapsed / 0.7f) * Mathf.PI);
+                // Only redraw when the 24 fps clock has actually moved on. Writing the colour every
+                // frame would dirty the canvas 60 times a second to show 24 distinct values.
+                int step = Mathf.FloorToInt(elapsed * frameRate);
 
-                score.color = Color.Lerp(original, duel.localPlayerOutlineColor, t);
-                score.rectTransform.localScale = restingScale * (1f + 0.25f * t);
+                if (step != lastStep)
+                {
+                    lastStep = step;
+
+                    // One sine hump per pulse: up and back down, no jump at either end. Colour
+                    // only — the number never changes size, so nothing around it shifts.
+                    float t = Mathf.Sin(Mathf.Clamp01(step / frameRate / pulseSeconds) * Mathf.PI);
+                    score.color = Color.Lerp(original, duel.localPlayerOutlineColor, t);
+                }
+
                 yield return null;
             }
         }
 
         score.color = original;
-        score.rectTransform.localScale = restingScale;
     }
 
     // --- the seven questions --------------------------------------------
