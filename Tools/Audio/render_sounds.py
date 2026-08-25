@@ -8,7 +8,7 @@ library, so no licence is attached to any of it.
 
     python3 render_sounds.py
 
-    Assets/Resources/Click/Click01..10.wav   the button, one pentatonic note per tap
+    Assets/Resources/Click/<note>/01..05.wav the button, one folder per pentatonic note
     Assets/Resources/Match/Point.wav         you scored
     Assets/Resources/Match/Against.wav       they scored
     Assets/Resources/Match/Win.wav           you won
@@ -37,22 +37,29 @@ C5, D5, E5, G5, A5 = 523.25, 587.33, 659.25, 783.99, 880.00
 C6, D6, E6, G6 = 1046.50, 1174.66, 1318.51, 1567.98
 C4, E4, G4, A4 = 261.63, 329.63, 392.00, 440.00
 
-# The button plays a note now rather than a pitch-shifted thud, and every note is from the same
-# octave, so tapping around the interface is a melody in one register instead of a slide whistle.
-CLICK_NOTES = [C5, D5, E5, G5, A5]
+# Every note in the scale gets its own folder, so which note a button plays is decided in the
+# game rather than baked into one shuffled pile. C is the neutral tap; the others are there for
+# the buttons that mean something -- Jogar is E, the third.
+CLICK_NOTES = {"C": C5, "D": D5, "E": E5, "G": G5, "A": A5}
 
-# Ten files from five notes: each note twice, with the level and length nudged so the two copies
-# are not identical. The shuffle bag in ButtonClickSound then hands out all ten before repeating,
-# which means all five notes are heard before any of them comes round again.
-LEVEL_SPREAD = 0.14
-DECAY_SPREAD = 0.20
+# Five files per note. With the pitch now fixed per button, the level and length are doing all
+# the work of stopping five taps in a row sounding like one recording, so they move further than
+# they did when the note itself was changing.
+VARIATIONS = 5
+LEVEL_SPREAD = 0.18
+DECAY_SPREAD = 0.25
+
+# And a hair of pitch on top. Fifteen hundredths of a semitone is far too small to hear as being
+# out of tune and just enough to stop the ear recognising a loop -- a real object struck twice is
+# never quite the same pitch either.
+PITCH_JITTER_SEMITONES = 0.15
 
 
-def variant(n):
-    """Which note this file is, and how it sits against its twin."""
-    spread = 1.0 if n >= len(CLICK_NOTES) else -1.0
+def variant(n, freq):
+    """One of the five files for a given note."""
+    spread = (n - (VARIATIONS - 1) / 2) / ((VARIATIONS - 1) / 2)      # -1 .. 1
     return dict(
-        note=CLICK_NOTES[n % len(CLICK_NOTES)],
+        note=freq * 2.0 ** (spread * PITCH_JITTER_SEMITONES / 12.0),
         level=1.0 + spread * LEVEL_SPREAD,
         decay=1.0 + spread * DECAY_SPREAD,
     )
@@ -276,9 +283,9 @@ def room(x):
     return 0.92 * x + 0.16 * wet
 
 
-def render(n, gain):
+def render(n, freq, gain):
     frames = int(RATE * SECONDS)
-    signal = room(saturate(click(frames, variant(n)))) * gain
+    signal = room(saturate(click(frames, variant(n, freq)))) * gain
 
     # Trailing silence trimmed so the AudioSource is not holding samples nobody hears.
     loud = np.abs(signal) > 3e-4
@@ -293,17 +300,19 @@ def render(n, gain):
 
 
 def common_gain():
-    """One gain for all ten, set by the LOUDEST of them.
+    """One gain across every note and every variation, set by the loudest of them all.
 
-    Normalising each file separately would undo a third of the work -- the level difference
-    between variations is deliberate, and per-file normalisation is exactly the operation that
-    removes it. But the reference has to be the loudest note rather than the first, or the higher
-    notes come out hotter than everything else in the game: the same envelope on a higher
-    frequency simply peaks higher once it has been through saturation.
+    Normalising each file separately would undo the level variation, which is most of what stops
+    repeated taps sounding identical now that the pitch is fixed. And the reference has to be the
+    loudest of the whole set rather than of one note: the same envelope on a higher frequency
+    peaks higher once it has been through saturation, so keying off C would ship A far too hot.
     """
     frames = int(RATE * SECONDS)
-    peak = max(np.max(np.abs(room(saturate(click(frames, variant(n))))))
-               for n in range(COUNT))
+    peak = max(
+        np.max(np.abs(room(saturate(click(frames, variant(n, freq))))))
+        for freq in CLICK_NOTES.values()
+        for n in range(VARIATIONS)
+    )
     return 0.5 / peak if peak > 0 else 1.0
 
 
@@ -343,13 +352,17 @@ def main():
 
     gain = common_gain()
 
-    for n in range(COUNT):
-        signal = render(n, gain)
-        path = os.path.join(target, f"Click{n + 1:02d}.wav")
-        write(path, signal)
-        print(f"  {os.path.basename(path)}  {len(signal) / RATE * 1000:5.0f} ms  peak {np.max(np.abs(signal)):.2f}")
+    for name, freq in CLICK_NOTES.items():
+        folder = os.path.join(target, name)
+        os.makedirs(folder, exist_ok=True)
 
-    print(f"\n{COUNT} click variations written to {target}")
+        for n in range(VARIATIONS):
+            signal = render(n, freq, gain)
+            write(os.path.join(folder, f"{n + 1:02d}.wav"), signal)
+
+        print(f"  Click/{name}  {VARIATIONS} files  {freq:6.1f} Hz")
+
+    print(f"\n{len(CLICK_NOTES) * VARIATIONS} click files written to {target}")
 
     # The match sounds. Quieter than their own ceiling on purpose: they land on top of whatever
     # else is happening, and a win that startles is a win nobody hears twice.

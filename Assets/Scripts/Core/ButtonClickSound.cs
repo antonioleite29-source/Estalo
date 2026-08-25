@@ -15,43 +15,55 @@ using UnityEngine.UI;
 // one on a page nobody thought to check.
 public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
 {
-    // Loaded by folder, so adding an eleventh variation is a matter of dropping a file in.
+    // Which note this particular button plays. Every note is from C major pentatonic, so any
+    // combination of buttons pressed in any order stays in key -- and in key with the match
+    // sounds, which are drawn from the same five notes.
+    public enum Note { C, D, E, G, A }
+
+    [Tooltip("The note this button plays. C is the neutral tap; give a button a different note " +
+             "when pressing it means something.")]
+    public Note note = Note.C;
+
+    // One folder per note, five variations inside each.
     private const string ClipFolder = "Click";
 
     // On press, not on release. A sound that waits for the finger to lift feels like a delay even
     // when it is only a hundred milliseconds, and every real game plays it on the way down.
-    public void OnPointerDown(PointerEventData eventData) => Play();
+    public void OnPointerDown(PointerEventData eventData) => Play(note);
 
     // Public so anything that acts like a button without being one -- the avatar on the lobby,
     // an answer tile -- can make the same noise.
-    public static void Play()
+    public static void Play(Note which = Note.C)
     {
-        if (bag == null && !Prepare())
+        if (!Prepare())
             return;
 
-        source.pitch = 1f;
-        source.PlayOneShot(NextClip(), Volume);
+        AudioClip clip = NextClip(which);
+
+        if (clip != null)
+            source.PlayOneShot(clip, Volume);
     }
 
     [Range(0f, 1f)]
     public static float Volume = 0.6f;
 
     private static AudioSource source;
-    private static AudioClip[] clips;
-    private static List<int> bag;
+    private static bool ready;
+
+    // Per note, because each has its own five files and its own place in its own shuffle.
+    private static readonly Dictionary<Note, AudioClip[]> clips = new Dictionary<Note, AudioClip[]>();
+    private static readonly Dictionary<Note, List<int>> bags = new Dictionary<Note, List<int>>();
+    private static readonly Dictionary<Note, int> lastPlayed = new Dictionary<Note, int>();
 
     private static bool Prepare()
     {
+        if (ready)
+            return source != null;
+
+        ready = true;
+
         if (NetworkBootstrap.IsDedicatedServerBuild)
             return false;
-
-        clips = Resources.LoadAll<AudioClip>(ClipFolder);
-
-        if (clips == null || clips.Length == 0)
-        {
-            Debug.LogWarning("ButtonClickSound: no clips in Resources/" + ClipFolder + ", so buttons stay silent.");
-            return false;
-        }
 
         GameObject host = new GameObject("ButtonClickSound");
         DontDestroyOnLoad(host);
@@ -60,42 +72,62 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
         source.playOnAwake = false;
 
         // 2D. A UI sound has no position, and leaving it 3D makes it quieter the further the
-        // camera happens to be from the origin -- which is a bug that only shows up on one scene.
+        // camera happens to be from the origin -- a bug that only shows up on one scene.
         source.spatialBlend = 0f;
 
-        bag = new List<int>();
         return true;
     }
 
-    // A shuffle bag, not a random pick. Random repeats itself roughly one press in ten and
-    // sometimes three times running, which is exactly the machine-noise effect the ten variations
-    // exist to avoid. Drawing without replacement guarantees all ten before any repeats.
-    private static AudioClip NextClip()
+    private static AudioClip[] ClipsFor(Note which)
     {
+        if (clips.TryGetValue(which, out AudioClip[] found))
+            return found;
+
+        found = Resources.LoadAll<AudioClip>(ClipFolder + "/" + which);
+
+        if (found == null || found.Length == 0)
+            Debug.LogWarning($"ButtonClickSound: nothing in Resources/{ClipFolder}/{which}, so those buttons are silent.");
+
+        clips[which] = found;
+        return found;
+    }
+
+    // A shuffle bag per note, not a random pick. Random repeats itself roughly one press in five
+    // and sometimes twice running, which is exactly the machine-noise effect the variations exist
+    // to avoid. Drawing without replacement guarantees all five before any repeats.
+    private static AudioClip NextClip(Note which)
+    {
+        AudioClip[] pool = ClipsFor(which);
+
+        if (pool == null || pool.Length == 0)
+            return null;
+
+        if (!bags.TryGetValue(which, out List<int> bag))
+            bags[which] = bag = new List<int>();
+
         if (bag.Count == 0)
         {
-            for (int i = 0; i < clips.Length; i++)
+            for (int i = 0; i < pool.Length; i++)
                 bag.Add(i);
 
-            // Fisher-Yates, then one guard: if the refilled bag would hand back the clip that just
-            // played, swap it away from the front. Otherwise a repeat can still land across the
-            // seam between two bags.
             for (int i = bag.Count - 1; i > 0; i--)
             {
                 int j = Random.Range(0, i + 1);
                 (bag[i], bag[j]) = (bag[j], bag[i]);
             }
 
-            if (bag.Count > 1 && bag[bag.Count - 1] == lastPlayed)
+            // One guard on the seam: a refilled bag whose first draw is the clip that just played
+            // would let a repeat straddle two bags, which is the one case shuffling misses.
+            if (bag.Count > 1 && lastPlayed.TryGetValue(which, out int previous) && bag[bag.Count - 1] == previous)
                 (bag[bag.Count - 1], bag[0]) = (bag[0], bag[bag.Count - 1]);
         }
 
-        lastPlayed = bag[bag.Count - 1];
+        int index = bag[bag.Count - 1];
         bag.RemoveAt(bag.Count - 1);
-        return clips[lastPlayed];
-    }
+        lastPlayed[which] = index;
 
-    private static int lastPlayed = -1;
+        return pool[index];
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AttachToEveryButton()
@@ -119,11 +151,29 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
             if (selectable.GetComponent<ButtonClickSound>() != null)
                 continue;
 
-            selectable.gameObject.AddComponent<ButtonClickSound>();
+            ButtonClickSound click = selectable.gameObject.AddComponent<ButtonClickSound>();
+
+            // Everything is C except the one button that starts a game. Found by the word on it
+            // rather than by which object it is: the Start button is called "Button" in the
+            // hierarchy, and what it says is the one unambiguous fact about it.
+            if (IsPlayButton(selectable))
+                click.note = Note.E;
+
             attached++;
         }
 
         if (attached > 0)
             Debug.Log($"ButtonClickSound: {attached} button(s) will click when pressed.");
+    }
+
+    private static bool IsPlayButton(Selectable selectable)
+    {
+        TMPro.TMP_Text label = selectable.GetComponentInChildren<TMPro.TMP_Text>(true);
+
+        if (label == null)
+            return false;
+
+        string written = label.text.Trim();
+        return written == "Jogar" || written == "Start";
     }
 }
