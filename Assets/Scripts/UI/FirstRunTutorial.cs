@@ -142,6 +142,11 @@ public class FirstRunTutorial : MonoBehaviour
         if (duel.gameBackground != null)
             duel.gameBackground.enabled = true;
 
+        // The individual labels, avatars, rings and buttons -- not just the root they hang off.
+        // PrepareForLobby switches every one of them off on startup, so turning the root back on
+        // gives you the board art and nothing whatsoever on it.
+        duel.SetTriviaUiVisible(true);
+
         PlayerProfileManager profile = PlayerProfileManager.Instance;
 
         SetName(duel.leftPlayerNameText, profile != null ? profile.GetLocalName() : PlayerName);

@@ -1386,7 +1386,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         }
     }
 
-    private void SetTriviaUiVisible(bool isVisible)
+    // Internal rather than private: the first-run tutorial dresses this same board without going
+    // through the match state machine, and duplicating the list of things to switch on is how one
+    // of them gets forgotten and a board comes up half empty.
+    internal void SetTriviaUiVisible(bool isVisible)
     {
         SetGraphicVisible(questionText, isVisible);
         SetGraphicVisible(leftPlayerNameText, isVisible);
