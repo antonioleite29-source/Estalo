@@ -24,6 +24,10 @@ COUNT = 10
 
 # The spread across the ten. Doubled from the first pass: a third of a semitone was too subtle to
 # do its job, which is to stop ten taps in a row sounding like one recording on a loop.
+# How high the whole sound sits, as a frequency multiplier. 1.0 is the stone as first designed;
+# 1.33 is a fourth above it. One number, so "higher" or "lower" is one edit and a re-render.
+BASE_PITCH = 1.33
+
 PITCH_SEMITONES = 0.66
 LEVEL_SPREAD = 0.20
 DECAY_SPREAD = 0.28
@@ -132,11 +136,20 @@ def body(frames, v, wave_type, start, end, glide, attack, decay, level, lp=0):
 
 
 def stone(frames, v):
-    """Two hard surfaces meeting: bright transient, dense body, a little weight underneath."""
+    """Two hard surfaces meeting: bright transient, dense body, a little weight underneath.
+
+    BASE_PITCH lifts the tonal layers in full but the noise transient only by its square root.
+    Noise has no pitch to raise -- shifting its band up just moves it towards hiss -- so treating
+    it like the body is how a click stops sounding like stone and starts sounding like static.
+    """
+    tonal = BASE_PITCH
+    airy = math.sqrt(BASE_PITCH)
+
     return (
-        transient(frames, v, centre=5200, q=0.8, decay=0.013, level=0.32)
-        + body(frames, v, "triangle", 620, 260, 0.025, 0.003, 0.06, 0.44, lp=2200)
-        + body(frames, v, "sine", 110, 0, 0, 0.004, 0.09, 0.22)
+        transient(frames, v, centre=5200 * airy, q=0.8, decay=0.013, level=0.32)
+        + body(frames, v, "triangle", 620 * tonal, 260 * tonal, 0.025, 0.003, 0.06, 0.44,
+               lp=2200 * tonal)
+        + body(frames, v, "sine", 110 * tonal, 0, 0, 0.004, 0.09, 0.22)
     )
 
 
