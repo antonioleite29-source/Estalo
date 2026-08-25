@@ -55,6 +55,11 @@ DECAY_SPREAD = 0.25
 # never quite the same pitch either.
 PITCH_JITTER_SEMITONES = 0.15
 
+# Which octave the button sits in, relative to the written note. 0 is the note itself; -2 was the
+# warm bass register where C landed on 128 Hz. One number, so moving the whole set is one edit and
+# a re-render rather than three frequencies chased by hand.
+CLICK_OCTAVE = 0
+
 
 def variant(n, freq):
     """One of the five files for a given note."""
@@ -162,13 +167,13 @@ def click(frames, v):
     4.3 is what stops it being an organ: a whole-number ratio would fuse into one tone, while
     something slightly off sits beside the fundamental and reads as an instrument with a body.
 
-    Two octaves below the written note, which puts C on 131 Hz. That is the register the whole
-    thing depends on -- there is very little energy up top to become fatiguing, which is why a low
-    click survives being pressed forty times and a bright one does not.
+    Which octave it sits in is CLICK_OCTAVE. The register matters more than the timbre does:
+    there is far less energy up top down low, and that is what lets a click survive being pressed
+    forty times. Every version that wore out was a bright one.
 
     No noise transient anywhere. That was what made every earlier version read as harsh.
     """
-    root = v["note"] / 4
+    root = v["note"] * (2.0 ** CLICK_OCTAVE)
 
     # Scaled with the note rather than fixed. A fixed corner would let the top partial through on
     # C and cut it on A, so the scale would get duller as it went up -- backwards.
