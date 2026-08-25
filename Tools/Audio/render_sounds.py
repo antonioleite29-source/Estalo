@@ -155,23 +155,57 @@ def body(frames, v, wave_type, start, end, glide, attack, decay, level, lp=0):
     return out
 
 
-def click(frames, v):
-    """The stone, tuned.
+def fm_tone(frames, carrier_hz, ratio, depth, attack, decay, level):
+    """One oscillator bending another's pitch.
 
-    The noise transient is left alone -- it has no pitch to tune, and it is what makes this read
-    as something being struck rather than a note being played. Underneath it the body now holds a
-    steady pentatonic note instead of bending, which is the difference between a thud and a pitch.
+    The only way to get inharmonic partials -- the ones a bell or a struck glass has, sitting at
+    ratios like 2.83 rather than 2 or 3. Stacking whole-number harmonics can never produce them,
+    which is why additive synthesis always sounds like an organ and never like glass.
+
+    The bending depth collapses as the note decays, so it starts bright and clangy and settles
+    into something close to a pure tone. That collapse is the whole character.
     """
-    note = v["note"]
+    n = min(int(RATE * (attack + decay + 0.3)), frames)
+    t = np.arange(n) / RATE
 
-    # Longer than a click strictly needs to be. At 75ms the note was over before the ear had
-    # placed it and the button read as a tick that happened to be pitched; letting it ring is what
-    # makes it a note. The transient is untouched -- lengthening that would only add hiss.
-    return (
-        transient(frames, v, centre=6000, q=0.8, decay=0.012, level=0.30)
-        + body(frames, v, "triangle", note, 0, 0, 0.002, 0.145, 0.40, lp=note * 3.2)
-        + body(frames, v, "sine", note * 2, 0, 0, 0.002, 0.085, 0.14)
-        + body(frames, v, "sine", note / 4, 0, 0, 0.004, 0.125, 0.16)
+    start_depth = carrier_hz * depth
+    end_depth = start_depth * 0.02
+    span = max(decay * 0.6, 1e-4)
+
+    swing = np.where(t < span, start_depth * (end_depth / start_depth) ** (t / span), end_depth)
+    modulator = np.sin(2 * np.pi * carrier_hz * ratio * t)
+
+    # Integrating the instantaneous frequency rather than modulating a phase directly: anything
+    # else drifts out of tune as the depth changes.
+    instantaneous = carrier_hz + swing * modulator
+    phase = 2 * np.pi * np.cumsum(instantaneous) / RATE
+
+    tone = np.sin(phase) * envelope(n, attack, level, decay)
+
+    out = np.zeros(frames)
+    out[:n] = tone
+    return out
+
+
+def click(frames, v):
+    """Glass: a tapped rim.
+
+    No noise transient at all, which is the whole point. The click this replaced fired a burst of
+    noise on top of a triangle wave, so it was a click and a tone at the same time and the ear had
+    to deal with both -- that is what made it read as harsh rather than as a note.
+
+    The carrier sits a fifth above the written note. Every button moves together, so the intervals
+    between them are unchanged and the scale still works; it simply sounds a fifth higher than the
+    name suggests.
+    """
+    return fm_tone(
+        frames,
+        carrier_hz=v["note"] * 1.5,
+        ratio=2.83,
+        depth=1.1,
+        attack=0.003,
+        decay=0.26 * v["decay"],
+        level=0.20 * v["level"],
     )
 
 
