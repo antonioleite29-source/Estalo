@@ -73,7 +73,19 @@ public class FirstRunTutorial : MonoBehaviour
         }
 
         GiveThemAName();
-        OpenBoard();
+
+        // Every lobby page off first. The reveal inside MatchStartSequence relies on
+        // lobbyRootObject, which is empty in this scene, so without this the animation plays over
+        // a lobby that never left.
+        if (duel.lobbyPageSwitcher != null)
+            duel.lobbyPageSwitcher.HideAllPages();
+
+        // The real way in: the exported frames, the board revealed underneath them, then the names
+        // and buttons fading up. Borrowed rather than imitated, so the first match anyone ever sees
+        // opens exactly like every one after it.
+        yield return duel.MatchStartSequence();
+
+        DressBoard();
 
         yield return PlayIntroCards();
         yield return PlayTestRound();
@@ -113,43 +125,18 @@ public class FirstRunTutorial : MonoBehaviour
         }
     }
 
-    private void OpenBoard()
+    // Names, faces and a clean scoreboard. MatchStartSequence has already switched the board on,
+    // put the configured background up and faded the pieces in, so this only fills them.
+    private void DressBoard()
     {
-        // Side 1 is the left of the board and the side the blue ring marks as yours. Card two tells
-        // them they are always blue, so this has to be true before that card appears.
+        // Side 1 is the left of the board and the side the blue ring marks as yours. Card two says
+        // they are always blue, so this has to be true before that card appears.
         duel.RegisterLocalPlayerSide(1);
 
-        // Every page off, not lobbyRootObject: that field is empty in this scene, so the call
-        // that was here did nothing and the lobby stayed drawn on top of the board.
-        if (duel.lobbyPageSwitcher != null)
-            duel.lobbyPageSwitcher.HideAllPages();
-
-        if (duel.lobbyRootObject != null)
-            duel.lobbyRootObject.SetActive(false);
-
-        if (duel.lobbyPageSwitcher != null && duel.lobbyPageSwitcher.waitingScreen != null)
-            duel.lobbyPageSwitcher.waitingScreen.HideWaiting();
-
-        if (LobbyScreenController.Instance != null)
-            LobbyScreenController.Instance.HideLobby();
-
-        if (duel.triviaGameplayRoot != null)
-            duel.triviaGameplayRoot.SetActive(true);
-
+        // HideWaiting inside the reveal puts the navigation bar back up, and there is nowhere for
+        // it to go from a match.
         if (duel.bottomBar != null)
             duel.bottomBar.SetActive(false);
-
-        if (duel.gameBackground != null)
-            duel.gameBackground.enabled = true;
-
-        // The individual labels, avatars, rings and buttons -- not just the root they hang off.
-        // PrepareForLobby switches every one of them off on startup, so turning the root back on
-        // gives you the board art and nothing whatsoever on it.
-        duel.SetTriviaUiVisible(true);
-
-        // The configured Open Buzz background, not whatever sprite happens to be on the Image in
-        // the scene. Applied after the labels are live, because setting it also recolours them.
-        duel.ShowOpenBuzzBackground();
 
         PlayerProfileManager profile = PlayerProfileManager.Instance;
 
@@ -180,7 +167,8 @@ public class FirstRunTutorial : MonoBehaviour
         yield return Card("Bem-vindo ao Estalo! Um jogo de trivia que torna o aprendizado " +
                           "realmente legal e competitivo. Preste muita atenção nas instruções.");
 
-        yield return Card("Você sempre será do time azul, e os pontos do seu time são os do seu lado.");
+        yield return Card("Você sempre será do time azul, e os pontos do seu time são os do seu lado.",
+                          FlashMyScore());
 
         yield return Card("Seu objetivo é acertar as perguntas antes do seu oponente. " +
                           "Quem fizer " + duel.pointsToWin + " pontos primeiro ganha!", ShowScoreClimb());
@@ -241,7 +229,11 @@ public class FirstRunTutorial : MonoBehaviour
     // Card four: the opponent's ring, counting down exactly as it will in a real solo turn.
     private IEnumerator ShowOpponentSolo()
     {
-        yield return new WaitForSecondsRealtime(1.5f);
+        yield return new WaitForSecondsRealtime(1.2f);
+
+        // The board changes hands as well — the same transition frames a real solo turn plays, so
+        // this shows the whole event rather than half of it.
+        duel.ShowOpponentSoloBackground();
 
         Image ring = duel.rightSoloDonut;
 
@@ -265,6 +257,44 @@ public class FirstRunTutorial : MonoBehaviour
         }
 
         ring.gameObject.SetActive(false);
+
+        // And back, which unwinds the solo frames the way finishing a real solo turn does.
+        duel.ShowOpenBuzzBackground(animateExit: true);
+    }
+
+    // Card two: the player's own score pulses while the card explains that their points live on
+    // their side of the board. Pointing at it is the whole reason the sentence works.
+    private IEnumerator FlashMyScore()
+    {
+        TMP_Text score = duel.team1ScoreText;
+
+        if (score == null)
+            yield break;
+
+        Color original = score.color;
+        Vector3 restingScale = score.rectTransform.localScale;
+
+        yield return new WaitForSecondsRealtime(1f);
+
+        for (int pulse = 0; pulse < 5; pulse++)
+        {
+            float elapsed = 0f;
+
+            while (elapsed < 0.7f)
+            {
+                elapsed += Time.unscaledDeltaTime;
+
+                // One sine hump per pulse: up and back down with no jump at either end.
+                float t = Mathf.Sin(Mathf.Clamp01(elapsed / 0.7f) * Mathf.PI);
+
+                score.color = Color.Lerp(original, duel.localPlayerOutlineColor, t);
+                score.rectTransform.localScale = restingScale * (1f + 0.25f * t);
+                yield return null;
+            }
+        }
+
+        score.color = original;
+        score.rectTransform.localScale = restingScale;
     }
 
     // --- the seven questions --------------------------------------------
@@ -373,7 +403,7 @@ public class FirstRunTutorial : MonoBehaviour
         // Back through the manager, so the lobby is restored exactly the way it is after a real
         // match rather than by this class guessing which objects to switch on.
         if (duel != null)
-            duel.PrepareForLobby(true);
+            duel.PlayReturnToLobbyTransition(() => duel.PrepareForLobby(true));
 
         Destroy(gameObject);
     }

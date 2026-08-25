@@ -612,7 +612,9 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     // and only then swaps to the gameplay page. The reveal is deliberately last: doing it first and
     // animating afterwards would show the board for a frame before the animation covered it, which
     // is the flicker this sequence exists to avoid.
-    private IEnumerator MatchStartSequence()
+    // Internal so the first-run tutorial can open on the same animation a real match does, and
+    // wait for it, instead of keeping a second copy that drifts.
+    internal IEnumerator MatchStartSequence()
     {
         // Pin the waiting screen at "found" before anything else. The queue these players came from
         // is already empty, so left live it would count itself down to 0 / 2 while the start
@@ -1809,9 +1811,17 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     // The tutorial dresses this board itself, and the sprite sitting on the Image in the scene is
     // whatever was last dragged onto it -- not necessarily the one Open Buzz is configured with.
     // Left alone, the first thing a new player ever sees is an out-of-date background.
-    internal void ShowOpenBuzzBackground()
+    internal void ShowOpenBuzzBackground(bool animateExit = false)
     {
-        ApplyStateBackground(openBuzzBackground, openBuzzColor, animateExit: false);
+        ApplyStateBackground(openBuzzBackground, openBuzzColor, animateExit);
+    }
+
+    // The board as it looks while the OTHER player is taking a solo turn: their transition frames
+    // play in, and leaving it plays them back out. Which visual that is depends on which side the
+    // local player is on, exactly as RefreshBackgroundForCurrentState decides it.
+    internal void ShowOpponentSoloBackground()
+    {
+        ApplyStateBackground(otherPlayerSoloBackground, otherPlayerSoloColor);
     }
 
     private static bool HasFrames(StateBackgroundVisual visual)
