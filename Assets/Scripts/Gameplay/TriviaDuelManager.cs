@@ -1804,6 +1804,16 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         backgroundTransitionCoroutine = StartCoroutine(AnimateStaticBackground(visual, outgoing));
     }
 
+    // The background a round opens on, applied without going through the round state machine.
+    //
+    // The tutorial dresses this board itself, and the sprite sitting on the Image in the scene is
+    // whatever was last dragged onto it -- not necessarily the one Open Buzz is configured with.
+    // Left alone, the first thing a new player ever sees is an out-of-date background.
+    internal void ShowOpenBuzzBackground()
+    {
+        ApplyStateBackground(openBuzzBackground, openBuzzColor, animateExit: false);
+    }
+
     private static bool HasFrames(StateBackgroundVisual visual)
     {
         return visual != null && visual.frames != null && visual.frames.Length > 0;

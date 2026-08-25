@@ -147,6 +147,10 @@ public class FirstRunTutorial : MonoBehaviour
         // gives you the board art and nothing whatsoever on it.
         duel.SetTriviaUiVisible(true);
 
+        // The configured Open Buzz background, not whatever sprite happens to be on the Image in
+        // the scene. Applied after the labels are live, because setting it also recolours them.
+        duel.ShowOpenBuzzBackground();
+
         PlayerProfileManager profile = PlayerProfileManager.Instance;
 
         SetName(duel.leftPlayerNameText, profile != null ? profile.GetLocalName() : PlayerName);
