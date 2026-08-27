@@ -45,6 +45,10 @@ public class TeamDuelManager : MonoBehaviour
 
     [Header("--- QUESTION & ANSWER BUTTONS ---")]
     public TMP_Text questionText;
+
+    [Tooltip("Colour of the question on the 2v2 board. Applied every time a match opens, so it " +
+             "cannot be lost to whatever the label happened to be left at in the scene.")]
+    public Color questionColor = Color.white;
     public Button[] answerButtons;
     public AnswerButtonVisual[] answerButtonVisuals;
 
@@ -393,6 +397,9 @@ public class TeamDuelManager : MonoBehaviour
         // Re-applied rather than merely left alone: it landed while teamGameplayRoot was still
         // inactive, and TMP components on an inactive object are not guaranteed to have taken the
         // value.
+        if (questionText != null)
+            questionText.color = questionColor;
+
         if (currentQuestion != null)
             TriviaDuelManager.Instance?.ApplyQuestionVisualsTo(questionText, answerButtonVisuals, currentQuestion);
         else if (questionText != null)
@@ -613,9 +620,35 @@ public class TeamDuelManager : MonoBehaviour
 
         for (int i = 0; i < slotActiveIndicators.Length; i++)
         {
-            if (slotActiveIndicators[i] != null)
-                slotActiveIndicators[i].SetActive(i == activeSlotA - 1 || i == activeSlotB - 1);
+            if (slotActiveIndicators[i] == null)
+                continue;
+
+            slotActiveIndicators[i].SetActive(i == activeSlotA - 1 || i == activeSlotB - 1);
+            TintForTeam(slotActiveIndicators[i].GetComponent<Image>(), i + 1);
         }
+    }
+
+    // The square behind a picture says which side that player is on. Blue for your team, red for
+    // theirs -- the same two colours the solo animations, the solo rings and the score flash
+    // already use, so there is one thing to learn rather than four.
+    private void TintForTeam(Image square, int slot)
+    {
+        if (square == null)
+            return;
+
+        square.color = ColourForTeam(PlayerSideIdentity.TeamForSlot(slot));
+    }
+
+    private Color ColourForTeam(int team)
+    {
+        TriviaDuelManager duel = TriviaDuelManager.Instance;
+
+        // Borrowed rather than duplicated: these are Inspector fields on the 1v1 manager and
+        // tuning them there should move every use of them at once.
+        Color mine = duel != null ? duel.localPlayerOutlineColor : new Color32(128, 179, 200, 255);
+        Color theirs = duel != null ? duel.otherSoloDonutColor : new Color32(248, 113, 113, 255);
+
+        return team == PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) ? mine : theirs;
     }
 
     private void ResetDonuts()
@@ -655,8 +688,41 @@ public class TeamDuelManager : MonoBehaviour
             slotSoloDonuts[i].gameObject.SetActive(isVisible);
 
             if (isVisible)
-                slotSoloDonuts[i].fillAmount = fill;
+                ApplySoloRing(slotSoloDonuts[i], i + 1, fill);
         }
+    }
+
+    // The ring, not a square that happens to have a fill value on it.
+    //
+    // Setting fillAmount on an Image does nothing at all unless its type is Filled and it has been
+    // given a fill method -- which is why this was drawing as a plain square while counting down
+    // perfectly underneath. The 1v1 rings get this from the scene; the 2v2 ones never did, so it
+    // is done here where it cannot be lost.
+    private void ApplySoloRing(Image ring, int slot, float fill)
+    {
+        TriviaDuelManager duel = TriviaDuelManager.Instance;
+        bool mine = PlayerSideIdentity.TeamForSlot(slot) == PlayerSideIdentity.TeamForSlot(LocalAssignedSlot);
+
+        if (duel != null)
+        {
+            Sprite sprite = mine ? duel.mySoloDonutSprite : duel.otherSoloDonutSprite;
+
+            if (sprite != null)
+                ring.sprite = sprite;
+        }
+
+        ring.color = ColourForTeam(PlayerSideIdentity.TeamForSlot(slot));
+
+        ring.type = Image.Type.Filled;
+        ring.fillMethod = Image.FillMethod.Radial360;
+        ring.fillOrigin = (int)Image.Origin360.Top;
+
+        // Anticlockwise, matching the 1v1 rings. Two timers unwinding in opposite directions in
+        // the same game reads as a bug even when nobody can say why.
+        ring.fillClockwise = false;
+        ring.preserveAspect = true;
+
+        ring.fillAmount = fill;
     }
 
     internal void SetButtonsAvailableNormal()
