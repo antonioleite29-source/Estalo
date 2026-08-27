@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -92,6 +93,11 @@ public class TeamDuelManager : MonoBehaviour
 
     [Tooltip("Playback rate for the solo frames.")]
     public float soloFramesPerSecond = 24f;
+
+    [Tooltip("How long the names, avatars, question and answer buttons take to fade up once the " +
+             "opening has finished. The board itself is already there — only the pieces on top of " +
+             "it fade. Set to 0 for an instant appearance.")]
+    public float matchStartUiFadeSeconds = 0.5f;
 
     public int LocalAssignedSlot { get; private set; }
 
@@ -253,11 +259,99 @@ public class TeamDuelManager : MonoBehaviour
 
         RevealBoard();
 
+        // Alpha dropped BEFORE the overlay comes down, so the board is never visible at full
+        // opacity for even one frame. Reveal makes the objects active; this makes them invisible
+        // again immediately, and the fade below is the only thing that brings them up.
+        if (matchStartUiFadeSeconds > 0f)
+            SetBoardAlpha(0f);
+
         // Taken down after the reveal, not before: hiding it first would uncover the board while
         // this frame is still on screen, which is the same flicker in the other direction.
         overlay?.HideOverlay();
 
+        if (matchStartUiFadeSeconds > 0f)
+            yield return FadeBoard(1f, matchStartUiFadeSeconds);
+
         matchStartCoroutine = null;
+    }
+
+    // A CanvasGroup per element rather than one on the gameplay root, because the root also holds
+    // the board artwork -- and the board is the thing the opening animation just finished drawing.
+    // Fading it would undo the transition instead of completing it.
+    private readonly List<CanvasGroup> boardGroups = new List<CanvasGroup>();
+
+    private List<CanvasGroup> BoardGroups()
+    {
+        boardGroups.Clear();
+
+        AddGroup(questionText);
+        AddGroup(teamAScoreText);
+        AddGroup(teamBScoreText);
+
+        foreach (TMP_Text label in slotNameTexts) AddGroup(label);
+        foreach (Image pfp in slotPfpImages) AddGroup(pfp);
+        foreach (Image donut in slotSoloDonuts) AddGroup(donut);
+
+        if (answerButtons != null)
+            foreach (Button button in answerButtons)
+                if (button != null)
+                    AddGroup(button.gameObject);
+
+        return boardGroups;
+    }
+
+    private void AddGroup(Graphic graphic)
+    {
+        if (graphic != null)
+            AddGroup(graphic.gameObject);
+    }
+
+    private void AddGroup(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        CanvasGroup group = target.GetComponent<CanvasGroup>();
+
+        // Explicit null check rather than ??: GetComponent returns a fake null that the null
+        // coalescing operator does not recognise, so ?? would leave the component unadded.
+        if (group == null)
+            group = target.AddComponent<CanvasGroup>();
+
+        boardGroups.Add(group);
+    }
+
+    private void SetBoardAlpha(float alpha)
+    {
+        foreach (CanvasGroup group in BoardGroups())
+        {
+            if (group == null)
+                continue;
+
+            group.alpha = alpha;
+
+            // Nothing half-faded should be clickable. An answer button at 20% opacity still takes
+            // a press otherwise, and the round has not visually started yet.
+            group.blocksRaycasts = alpha >= 1f;
+        }
+    }
+
+    private IEnumerator FadeBoard(float target, float seconds)
+    {
+        List<CanvasGroup> groups = BoardGroups();
+        float from = groups.Count > 0 && groups[0] != null ? groups[0].alpha : 1f - target;
+        float elapsed = 0f;
+
+        // Unscaled, to match the rest of the sequence -- the delay and the frame playback are both
+        // unscaled, so a timeScale change cannot desynchronise one part of it from another.
+        while (elapsed < seconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            SetBoardAlpha(Mathf.Lerp(from, target, Mathf.Clamp01(elapsed / seconds)));
+            yield return null;
+        }
+
+        SetBoardAlpha(target);
     }
 
     private void RevealBoard()
@@ -291,7 +385,17 @@ public class TeamDuelManager : MonoBehaviour
         if (bottomBar != null)
             bottomBar.SetActive(false);
 
-        if (questionText != null)
+        // Deliberately NOT blanked. The server publishes the first question as the match forms,
+        // which is now around a second before this runs -- the delay and the opening animation sit
+        // in between. Clearing it here wiped a question that had already been delivered, and
+        // nothing sends it again, so the board stayed empty for the whole round.
+        //
+        // Re-applied rather than merely left alone: it landed while teamGameplayRoot was still
+        // inactive, and TMP components on an inactive object are not guaranteed to have taken the
+        // value.
+        if (currentQuestion != null)
+            TriviaDuelManager.Instance?.ApplyQuestionVisualsTo(questionText, answerButtonVisuals, currentQuestion);
+        else if (questionText != null)
             questionText.text = string.Empty;
 
         ApplyNetworkedRoundState((int)RoundState.OpenBuzz);
@@ -407,7 +511,15 @@ public class TeamDuelManager : MonoBehaviour
             yield return null;
         }
 
-        board.sprite = restingBoard;
+        // Entering a solo HOLDS on the last frame for as long as the solo lasts -- that frame is
+        // what the board looks like while somebody is answering alone, and settling straight back
+        // to the ordinary board would throw the state away the instant it arrived.
+        //
+        // Leaving unwinds and settles, because the state being returned to is the ordinary board.
+        board.sprite = reversed
+            ? restingBoard
+            : frames[frames.Length - 1];
+
         soloTransition = null;
     }
 
@@ -628,7 +740,37 @@ public class TeamDuelManager : MonoBehaviour
     private IEnumerator ReturnToLobbyAfterDelay()
     {
         yield return new WaitForSeconds(Mathf.Max(0f, returnToLobbyDelaySeconds));
-        ReturnToLobby();
+
+        // The pieces on the board fade away first, then the opening animation unwinds with the
+        // lobby already behind it. Same order as a finished 1v1, which is what stops the lobby
+        // ever snapping in.
+        if (matchStartUiFadeSeconds > 0f)
+            yield return FadeBoard(0f, matchStartUiFadeSeconds);
+
+        yield return ReturnToLobbyTransition();
+
+        // Put the alpha back for the next match, or the following round reveals itself into
+        // invisible text.
+        SetBoardAlpha(1f);
+    }
+
+    // The way out is the way in, backwards: the last frame covers the screen, the lobby is swapped
+    // in underneath it, and only then do the frames run. Switching afterwards would spend the whole
+    // animation uncovering a finished match instead.
+    private IEnumerator ReturnToLobbyTransition()
+    {
+        TriviaDuelManager overlay = TriviaDuelManager.Instance;
+
+        if (overlay == null || matchStartFrames == null || matchStartFrames.Length == 0)
+        {
+            ReturnToLobby();
+            yield break;
+        }
+
+        yield return overlay.PlayOverlayFrames(matchStartFrames, matchStartFramesPerSecond, true,
+                                               ReturnToLobby);
+
+        overlay.HideOverlay();
     }
 
     private void ReturnToLobby()

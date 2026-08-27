@@ -2002,10 +2002,17 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     // The overlay sits above the waiting screen and is switched off the rest of the time, which is
     // what lets an animation play while the board behind it is still hidden. Team mode has its own
     // export but no reason to own a second copy of the machinery that plays one.
-    internal IEnumerator PlayOverlayFrames(Sprite[] frames, float framesPerSecond, bool reversed)
+    // onceCovered runs after the overlay is up and before the frames play, which is the only
+    // moment the screen is completely hidden. Swapping the lobby in there means the animation
+    // opens onto it rather than spending its whole length uncovering a finished match.
+    internal IEnumerator PlayOverlayFrames(Sprite[] frames, float framesPerSecond, bool reversed,
+                                           System.Action onceCovered = null)
     {
         if (matchStartOverlay == null || frames == null || frames.Length == 0)
+        {
+            onceCovered?.Invoke();
             yield break;
+        }
 
         // Configured while still INACTIVE, then switched on. Setting up an object that is already
         // visible lets it render once in whatever state it was left in, which is what produced the
@@ -2013,6 +2020,12 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         PrepareFrameSurface(matchStartOverlay, frames[reversed ? frames.Length - 1 : 0]);
 
         matchStartOverlay.gameObject.SetActive(true);
+        matchStartOverlay.transform.SetAsLastSibling();
+
+        onceCovered?.Invoke();
+
+        // Re-asserted: showing the lobby activates its root, which can put it above the overlay in
+        // the draw order.
         matchStartOverlay.transform.SetAsLastSibling();
 
         yield return PlayFramesOn(matchStartOverlay, frames, framesPerSecond, reversed);
