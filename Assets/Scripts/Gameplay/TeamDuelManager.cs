@@ -387,6 +387,10 @@ public class TeamDuelManager : MonoBehaviour
         if (teamGameplayRoot != null)
             teamGameplayRoot.SetActive(true);
 
+        // And the 1v1 board away, for the same reason in the other direction.
+        if (TriviaDuelManager.Instance != null && TriviaDuelManager.Instance.triviaGameplayRoot != null)
+            TriviaDuelManager.Instance.triviaGameplayRoot.SetActive(false);
+
         if (bottomBar != null)
             bottomBar.SetActive(false);
 

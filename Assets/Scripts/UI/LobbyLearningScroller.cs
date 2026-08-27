@@ -99,8 +99,11 @@ public class LobbyLearningScroller : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
         viewH = panel.rect.height > 0f ? panel.rect.height : Screen.height;
-        // Slots are 6px taller than the step so seams always overlap regardless of float drift
-        slotH = viewH + 6f;
+        // Slots overlap the step rather than meeting it exactly, so float drift and per-slot
+        // rounding can never open a hairline between two of them. Six pixels was fine at the
+        // authored size and is nothing once a 316px-tall image is stretched across a phone, so it
+        // scales with the view instead of being a constant.
+        slotH = viewH + Mathf.Max(12f, viewH * 0.02f);
 
         slotRTs = new RectTransform[SlotCount];
         slotImgs = new Image[SlotCount];

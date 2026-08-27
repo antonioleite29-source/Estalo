@@ -486,6 +486,9 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (triviaGameplayRoot != null)
             triviaGameplayRoot.SetActive(false);
 
+        // Both boards off on the way back to the lobby, not just this one.
+        HideTeamBoard();
+
         if (bottomBar != null)
             bottomBar.SetActive(true);
 
@@ -762,6 +765,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         if (triviaGameplayRoot != null)
             triviaGameplayRoot.SetActive(true);
+
+        // And the 2v2 board away. The two share a screen and neither used to know about the other,
+        // so a team root left switched on drew straight over the top of this one.
+        HideTeamBoard();
 
         if (bottomBar != null)
             bottomBar.SetActive(false);
@@ -1468,6 +1475,16 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     // Internal rather than private: the first-run tutorial dresses this same board without going
     // through the match state machine, and duplicating the list of things to switch on is how one
     // of them gets forgotten and a board comes up half empty.
+    // Whichever board is being shown, the other one has to go. Neither manager owns the other's
+    // root, so this is the one place that can say so without either of them holding a reference.
+    internal static void HideTeamBoard()
+    {
+        TeamDuelManager team = TeamDuelManager.Instance;
+
+        if (team != null && team.teamGameplayRoot != null)
+            team.teamGameplayRoot.SetActive(false);
+    }
+
     internal void SetTriviaUiVisible(bool isVisible)
     {
         SetGraphicVisible(questionText, isVisible);

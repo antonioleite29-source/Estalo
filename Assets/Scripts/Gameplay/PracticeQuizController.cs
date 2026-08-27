@@ -235,6 +235,7 @@ public class PracticeQuizController : MonoBehaviour
         // Every lobby page off. lobbyRootObject is empty in this scene, so relying on it would
         // leave the lobby drawn on top of the board.
         duel.lobbyPageSwitcher?.HideAllPages();
+        TriviaDuelManager.HideTeamBoard();
 
         yield return duel.MatchStartSequence();
 
