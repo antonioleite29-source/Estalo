@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -52,6 +53,9 @@ public class PracticeQuizController : MonoBehaviour
 
     [Tooltip("How long a wrong answer stays highlighted before moving on.")]
     public float wrongAnswerPauseSeconds = 1.2f;
+
+    [Tooltip("How long the summary stays on the board before it returns to the lobby.")]
+    public float resultsSeconds = 5f;
 
     [Tooltip("Colours matching the duel screen, so practice looks like the real game.")]
     public Color correctColor = new Color(0.30f, 0.75f, 0.38f);
@@ -197,13 +201,116 @@ public class PracticeQuizController : MonoBehaviour
         index = 0;
         score = 0;
         waitingToAdvance = false;
+        answering = false;
 
+        // The old practice page stays switched off. Everything below draws on the duel board
+        // instead, so practice looks like the game it is practice for.
+        SetActive(resultsRoot, false);
+        SetActive(quizRoot, false);
+
+        StartCoroutine(RunOnTheBoard());
+    }
+
+    private const string CoachName = "Treinador";
+
+    // Practice on the real board, against the coach.
+    //
+    // A practice screen that looks nothing like the game teaches the answers and none of the
+    // reading — where the question sits, where the buttons are, what right and wrong look like.
+    // The first-run tutorial already runs on this board for exactly that reason; this is the same
+    // idea for the same reason.
+    private IEnumerator RunOnTheBoard()
+    {
+        TriviaDuelManager duel = TriviaDuelManager.Instance;
+
+        if (duel == null)
+        {
+            Debug.LogError("PracticeQuizController: no TriviaDuelManager, so there is no board to " +
+                           "practise on.");
+            yield break;
+        }
+
+        BorrowTheBoard(duel);
+
+        // Every lobby page off. lobbyRootObject is empty in this scene, so relying on it would
+        // leave the lobby drawn on top of the board.
+        duel.lobbyPageSwitcher?.HideAllPages();
+
+        yield return duel.MatchStartSequence();
+
+        DressTheBoard(duel);
         ApplyDuelButtonTheme();
 
-        SetActive(resultsRoot, false);
-        SetActive(quizRoot, true);
-
         ShowCurrentQuestion();
+    }
+
+    // The practice screen's own widget slots are pointed at the duel board's widgets, so the whole
+    // existing flow -- showing a question, painting an answer, locking the rest -- runs unchanged
+    // against a different set of objects. Far less to go wrong than a second copy of it.
+    private void BorrowTheBoard(TriviaDuelManager duel)
+    {
+        questionText = duel.questionText;
+        answerButtons = duel.answerButtons;
+        answerVisuals = duel.answerButtonVisuals;
+
+        answerLabels = new TMP_Text[answerVisuals.Length];
+
+        for (int i = 0; i < answerVisuals.Length; i++)
+            answerLabels[i] = answerVisuals[i] != null ? answerVisuals[i].labelText : null;
+
+        // The board has no progress label, and the two score numbers say the same thing better.
+        progressText = null;
+
+        for (int i = 0; i < answerButtons.Length; i++)
+        {
+            if (answerButtons[i] == null)
+                continue;
+
+            int answerIndex = i;
+            answerButtons[i].onClick.RemoveAllListeners();
+            answerButtons[i].onClick.AddListener(() => OnAnswerClicked(answerIndex));
+        }
+    }
+
+    private void DressTheBoard(TriviaDuelManager duel)
+    {
+        duel.SetTriviaUiVisible(true);
+        duel.ShowOpenBuzzBackground();
+
+        // Side 1, the same side the tutorial seats you on, so the blue ring is around your own
+        // avatar rather than the coach's.
+        duel.RegisterLocalPlayerSide(1);
+
+        if (duel.bottomBar != null)
+            duel.bottomBar.SetActive(false);
+
+        PlayerProfileManager profile = PlayerProfileManager.Instance;
+
+        if (profile != null)
+        {
+            int mine = profile.GetLocalAvatarIndex();
+            int avatars = profile.availableAvatars != null ? profile.availableAvatars.Length : 0;
+
+            duel.ApplyNetworkedPlayerIdentity(1, profile.GetLocalName(), profile.GetAvatarSprite(mine));
+
+            // The coach must not be wearing your face. With one avatar in the gallery there is no
+            // other choice, and matching beats an empty slot.
+            int coach = avatars > 1 ? (mine + 1 + Random.Range(0, avatars - 1)) % avatars : mine;
+            duel.ApplyNetworkedPlayerIdentity(2, CoachName, profile.GetAvatarSprite(coach));
+        }
+
+        UpdateBoardScores(duel);
+    }
+
+    // Right on your side, wrong on the coach's. Nobody is really competing, but the two numbers
+    // are the clearest thing the board can say about how a set is going.
+    private void UpdateBoardScores(TriviaDuelManager duel)
+    {
+        if (duel.team1ScoreText != null)
+            duel.team1ScoreText.text = score.ToString();
+
+        if (duel.team2ScoreText != null)
+            duel.team2ScoreText.text = (index - score).ToString();
     }
 
     // Practice deliberately borrows the duel screen's theme rather than owning one. Without a theme
@@ -322,6 +429,9 @@ public class PracticeQuizController : MonoBehaviour
                 answerVisuals[i].SetLockedPressedState();
         }
 
+        if (TriviaDuelManager.Instance != null)
+            UpdateBoardScores(TriviaDuelManager.Instance);
+
         advanceAt = Time.unscaledTime + (wasCorrect ? wrongAnswerPauseSeconds * 0.5f : wrongAnswerPauseSeconds);
         waitingToAdvance = true;
     }
@@ -350,11 +460,41 @@ public class PracticeQuizController : MonoBehaviour
     private void ShowResults()
     {
         SetActive(quizRoot, false);
-        SetActive(resultsRoot, true);
+        SetActive(resultsRoot, false);
 
+        // Kept up to date even though the page is hidden: they are still the place these numbers
+        // belong if the results screen is ever shown again.
         SetText(scoreText, score + " / " + set.Count);
         SetText(weakestTopicText, BuildWeakestLine());
         SetText(breakdownText, BuildBreakdown());
+
+        StartCoroutine(FinishOnTheBoard());
+    }
+
+    private IEnumerator FinishOnTheBoard()
+    {
+        TriviaDuelManager duel = TriviaDuelManager.Instance;
+
+        if (duel == null)
+            yield break;
+
+        // The summary goes where the question was, which is where the player is already looking.
+        if (duel.questionText != null)
+            duel.questionText.text = $"Você acertou {score} de {set.Count}.\n{BuildWeakestLine()}";
+
+        foreach (AnswerButtonVisual visual in answerVisuals)
+            visual?.SetDisabledState();
+
+        yield return new WaitForSecondsRealtime(resultsSeconds);
+
+        // Out the same door a finished match leaves by, so practice ends the way a game does.
+        duel.PlayReturnToLobbyTransition(() =>
+        {
+            foreach (Button button in answerButtons)
+                button?.onClick.RemoveAllListeners();
+
+            duel.PrepareForLobby(true);
+        });
     }
 
     private string BuildWeakestLine()
