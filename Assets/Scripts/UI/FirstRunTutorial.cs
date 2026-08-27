@@ -45,6 +45,22 @@ public class FirstRunTutorial : MonoBehaviour
         if (NetworkBootstrap.IsDedicatedServerBuild)
             return;
 
+        // Never on a Multiplayer Play Mode clone.
+        //
+        // The tutorial ends with seven questions that wait for a tap, and nobody ever taps on a
+        // virtual player -- so it sits in the test round forever, never reaches the end, never
+        // writes the flag, and starts again on the next Play. It also never reaches the lobby,
+        // which means the clone cannot join the match it was launched to test.
+        //
+        // A clone is a second client, not a second person. The main Editor still gets it, and
+        // Trivia Duel > Setup > Replay First Run Tutorial is there to see it on purpose.
+        if (NetworkBootstrap.IsClonedVirtualPlayer())
+        {
+            Debug.Log("FirstRunTutorial: skipped on a virtual player — it would wait forever for " +
+                      "a tap that is never coming.");
+            return;
+        }
+
         if (PlayerPrefs.GetInt(SeenKey, 0) == 1)
             return;
 
@@ -88,6 +104,13 @@ public class FirstRunTutorial : MonoBehaviour
         DressBoard();
 
         yield return PlayIntroCards();
+
+        // Written before the test round rather than after it. The round waits for seven taps, and
+        // anyone who closes the app partway through has already sat through the whole explanation
+        // -- making them watch it again is a punishment for stopping, not a second chance to
+        // learn. Finish() writes it too, so a completed run is covered either way.
+        MarkSeen();
+
         yield return PlayTestRound();
 
         ShowResult();
@@ -409,9 +432,7 @@ public class FirstRunTutorial : MonoBehaviour
     private void Finish()
     {
         IsRunning = false;
-
-        PlayerPrefs.SetInt(SeenKey, 1);
-        PlayerPrefs.Save();
+        MarkSeen();
 
         UnbindButtons();
 
@@ -421,6 +442,12 @@ public class FirstRunTutorial : MonoBehaviour
             duel.PlayReturnToLobbyTransition(() => duel.PrepareForLobby(true));
 
         Destroy(gameObject);
+    }
+
+    private static void MarkSeen()
+    {
+        PlayerPrefs.SetInt(SeenKey, 1);
+        PlayerPrefs.Save();
     }
 
     // --- driving the shared board ---------------------------------------
