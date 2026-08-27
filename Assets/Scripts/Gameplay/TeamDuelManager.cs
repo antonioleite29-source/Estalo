@@ -376,6 +376,7 @@ public class TeamDuelManager : MonoBehaviour
             lobbyPageSwitcher.waitingScreen.HideWaiting();
 
         BindAnswerButtons();
+        ApplyDuelButtonTheme();
 
         if (lobbyRootObject != null)
             lobbyRootObject.SetActive(false);
@@ -857,6 +858,33 @@ public class TeamDuelManager : MonoBehaviour
 
         if (LobbyScreenController.Instance != null)
             LobbyScreenController.Instance.ShowLobby();
+    }
+
+    // Borrowed from the 1v1 board rather than owned, the same way the practice screen borrows it.
+    //
+    // Without a theme an AnswerButtonVisual keeps whatever sprite it already had for every state,
+    // so a right answer and a wrong one looked identical here -- all twelve of these visuals have
+    // an empty theme in the scene and nothing was ever filling it in. Taken at the start of each
+    // match so the two boards cannot drift apart.
+    private void ApplyDuelButtonTheme()
+    {
+        if (answerButtonVisuals == null)
+            return;
+
+        ButtonTheme theme = TriviaDuelManager.Instance != null
+            ? TriviaDuelManager.Instance.buttonTheme
+            : null;
+
+        if (theme == null)
+        {
+            Debug.LogWarning("TeamDuelManager: no ButtonTheme on the duel manager, so the 2v2 " +
+                             "answers cannot show right or wrong.", this);
+            return;
+        }
+
+        foreach (AnswerButtonVisual visual in answerButtonVisuals)
+            if (visual != null)
+                visual.ApplyTheme(theme);
     }
 
     private void BindAnswerButtons()

@@ -18,6 +18,17 @@ public static class TeamIntroSetup
     [MenuItem("Trivia Duel/Setup/Apply 2v2 Animations")]
     public static void Apply()
     {
+        // Nothing scene-shaped survives Play mode: Unity discards every change on exit, so a tool
+        // run now reports success and leaves no trace. Worse, it reads the RUNNING values --
+        // TextFitsItsBox has already shrunk labels to fit by then, so a font authored at 100pt
+        // measures 41 and any box sized from it comes out wrong as well as unsaved.
+        if (EditorApplication.isPlaying)
+        {
+            Debug.LogError("TeamIntroSetup: stop Play mode first. Changes made while playing are thrown " +
+                           "away, and the values read are the running ones rather than the real ones.");
+            return;
+        }
+
         TeamDuelManager team = Object.FindAnyObjectByType<TeamDuelManager>(FindObjectsInactive.Include);
 
         if (team == null)

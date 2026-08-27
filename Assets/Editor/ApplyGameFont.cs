@@ -30,6 +30,17 @@ public static class ApplyGameFont
     [MenuItem("Trivia Duel/Setup/Apply Game Font To All Text")]
     public static void ApplyToEverything()
     {
+        // Nothing scene-shaped survives Play mode: Unity discards every change on exit, so a tool
+        // run now reports success and leaves no trace. Worse, it reads the RUNNING values --
+        // TextFitsItsBox has already shrunk labels to fit by then, so a font authored at 100pt
+        // measures 41 and any box sized from it comes out wrong as well as unsaved.
+        if (EditorApplication.isPlaying)
+        {
+            Debug.LogError("ApplyGameFont: stop Play mode first. Changes made while playing are thrown " +
+                           "away, and the values read are the running ones rather than the real ones.");
+            return;
+        }
+
         TMP_FontAsset fontAsset = LoadOrCreateFontAsset();
 
         if (fontAsset == null)

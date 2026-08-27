@@ -29,6 +29,17 @@ public static class LobbyBadgeBuilder
     [MenuItem("Trivia Duel/Setup/Wire Lobby Profile Badge")]
     public static void Wire()
     {
+        // Nothing scene-shaped survives Play mode: Unity discards every change on exit, so a tool
+        // run now reports success and leaves no trace. Worse, it reads the RUNNING values --
+        // TextFitsItsBox has already shrunk labels to fit by then, so a font authored at 100pt
+        // measures 41 and any box sized from it comes out wrong as well as unsaved.
+        if (EditorApplication.isPlaying)
+        {
+            Debug.LogError("LobbyBadgeBuilder: stop Play mode first. Changes made while playing are thrown " +
+                           "away, and the values read are the running ones rather than the real ones.");
+            return;
+        }
+
         LobbyPageSwitcher switcher = Object.FindAnyObjectByType<LobbyPageSwitcher>(FindObjectsInactive.Include);
 
         if (switcher == null)
