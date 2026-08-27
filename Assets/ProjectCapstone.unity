@@ -4558,6 +4558,23 @@ MonoBehaviour:
   - {fileID: 21300000, guid: b582522d004564533be0199f45bbdb6c, type: 3}
   matchStartFramesPerSecond: 24
   matchStartDelaySeconds: 0.2
+  yourSoloFrames:
+  - {fileID: 21300000, guid: 95e3db23301204f069194dfcb19e356d, type: 3}
+  - {fileID: 21300000, guid: 18fe53249075e411bb8e343de4e781ce, type: 3}
+  - {fileID: 21300000, guid: 556af3c62c0374f028fa9be5e3fa1377, type: 3}
+  - {fileID: 21300000, guid: 1b1f6894a758c498b8d23eab4f6b57f8, type: 3}
+  - {fileID: 21300000, guid: ecf14739432454825b9864c11bd1d5bd, type: 3}
+  - {fileID: 21300000, guid: 0ecaab62a9b704ad1b47148b9d664cfd, type: 3}
+  - {fileID: 21300000, guid: 33978c5ace2024e9c92fc3b87447c5f2, type: 3}
+  otherSoloFrames:
+  - {fileID: 21300000, guid: 67b41919216d64ecdbe15537f91e067b, type: 3}
+  - {fileID: 21300000, guid: 92ffeea5ebac1449cbe525a862b089c7, type: 3}
+  - {fileID: 21300000, guid: c3a5d1c62db784a319e8060818a7ea6a, type: 3}
+  - {fileID: 21300000, guid: 7883a3fbcbe11469abc95a2d77f62a54, type: 3}
+  - {fileID: 21300000, guid: 443154828423a4538a9ef1ea58d496df, type: 3}
+  - {fileID: 21300000, guid: f981d5381d08040b5808a12384260d4f, type: 3}
+  - {fileID: 21300000, guid: 1ddf79cd17cdf4de1942976dd6ddb457, type: 3}
+  soloFramesPerSecond: 24
 --- !u!4 &518754658
 Transform:
   m_ObjectHideFlags: 0

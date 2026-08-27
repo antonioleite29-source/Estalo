@@ -80,6 +80,19 @@ public class TeamDuelManager : MonoBehaviour
              "screen still being there is what makes the cut read as 'found them'.")]
     public float matchStartDelaySeconds = 0.2f;
 
+    [Header("--- SOLO TRANSITION ---")]
+    [Tooltip("Played when somebody on YOUR team gets a solo turn. The same list runs backwards on " +
+             "the way out, so a solo animates in both directions from one export.")]
+    public Sprite[] yourSoloFrames;
+
+    [Tooltip("Played when somebody on the OTHER team gets a solo turn. Leave empty and their solo " +
+             "simply does not animate, which is better than borrowing yours and reading as if the " +
+             "turn were yours.")]
+    public Sprite[] otherSoloFrames;
+
+    [Tooltip("Playback rate for the solo frames.")]
+    public float soloFramesPerSecond = 24f;
+
     public int LocalAssignedSlot { get; private set; }
 
     private RoundState roundState = RoundState.MatchEnded;
@@ -249,6 +262,13 @@ public class TeamDuelManager : MonoBehaviour
 
     private void RevealBoard()
     {
+        // Captured before any transition can overwrite it, or the board would settle onto whatever
+        // frame happened to be showing when it was first asked.
+        Image board = ResolveTeamBackground();
+
+        if (board != null && restingBoard == null)
+            restingBoard = board.sprite;
+
         // Every lobby page off. lobbyRootObject is empty in this scene, so relying on it would
         // leave the lobby drawn on top of the board.
         if (lobbyPageSwitcher != null)
@@ -303,7 +323,10 @@ public class TeamDuelManager : MonoBehaviour
 
     public void ApplyNetworkedRoundState(int newRoundState)
     {
+        RoundState previous = roundState;
         roundState = (RoundState)newRoundState;
+
+        PlaySoloTransition(previous, roundState);
 
         // The donuts are only redrawn while a solo is ticking, so leaving a solo used to leave the
         // last frame of the ring frozen on screen into the next round. Nothing else ever cleared it:
@@ -312,6 +335,80 @@ public class TeamDuelManager : MonoBehaviour
             soloTimer = 0f;
 
         UpdateSoloDonuts();
+    }
+
+    // The board's own artwork, remembered so a transition has something to settle back onto.
+    private Sprite restingBoard;
+    private Coroutine soloTransition;
+
+    // A solo turn animates in, and unwinds on the way out — the same list played backwards, so one
+    // export covers both directions and they can never drift apart.
+    private void PlaySoloTransition(RoundState from, RoundState to)
+    {
+        bool wasSolo = IsSolo(from);
+        bool isSolo = IsSolo(to);
+
+        if (wasSolo == isSolo)
+            return;
+
+        // Whose turn it is decides which export plays. SoloActiveA means the team A seat is
+        // answering, so it is yours only if you are on team A.
+        bool soloIsTeamA = (isSolo ? to : from) == RoundState.SoloActiveA;
+        bool mine = soloIsTeamA == (PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == 1);
+
+        Sprite[] frames = mine ? yourSoloFrames : otherSoloFrames;
+
+        if (frames == null || frames.Length == 0)
+            return;
+
+        if (soloTransition != null)
+            StopCoroutine(soloTransition);
+
+        soloTransition = StartCoroutine(PlayBoardFrames(frames, reversed: !isSolo));
+    }
+
+    private static bool IsSolo(RoundState state) =>
+        state == RoundState.SoloActiveA || state == RoundState.SoloActiveB;
+
+    // Only the sprite changes. The team board carries its own size and a mirrored x scale that
+    // says which end of the table you are sitting at -- touching the transform here would flip the
+    // board mid-match, which is what the 1v1 frame helpers would have done if they were reused.
+    private IEnumerator PlayBoardFrames(Sprite[] frames, bool reversed)
+    {
+        Image board = ResolveTeamBackground();
+
+        if (board == null)
+            yield break;
+
+        if (restingBoard == null)
+            restingBoard = board.sprite;
+
+        float secondsPerFrame = 1f / Mathf.Max(1f, soloFramesPerSecond);
+
+        // Driven by elapsed time rather than by waiting a slice per frame. Waiting rounds up to
+        // the next rendered frame and throws the overshoot away, which is how 24 fps plays back at
+        // 15 on a 60Hz screen.
+        float startedAt = Time.unscaledTime;
+        int lastShown = -1;
+
+        while (true)
+        {
+            int step = Mathf.FloorToInt((Time.unscaledTime - startedAt) / secondsPerFrame);
+
+            if (step >= frames.Length)
+                break;
+
+            if (step != lastShown)
+            {
+                lastShown = step;
+                board.sprite = frames[reversed ? frames.Length - 1 - step : step];
+            }
+
+            yield return null;
+        }
+
+        board.sprite = restingBoard;
+        soloTransition = null;
     }
 
     public void ApplyNetworkedActiveSlots(int newActiveSlotA, int newActiveSlotB)
