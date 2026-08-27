@@ -897,9 +897,9 @@ RectTransform:
   - {fileID: 1600783310}
   m_Father: {fileID: 317169207}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 880, y: -96.67425}
   m_SizeDelta: {x: 160, y: 193.3485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &143644569
@@ -3493,9 +3493,9 @@ RectTransform:
   - {fileID: 861663044}
   m_Father: {fileID: 317169207}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 720, y: -96.67425}
   m_SizeDelta: {x: 160, y: 193.3485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &421617022
@@ -4013,9 +4013,9 @@ RectTransform:
   - {fileID: 1493183942}
   m_Father: {fileID: 317169207}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 80, y: -96.67425}
   m_SizeDelta: {x: 160, y: 193.3485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &466624369
@@ -4500,7 +4500,7 @@ MonoBehaviour:
   lobbyRootObject: {fileID: 0}
   lobbyPageSwitcher: {fileID: 2119174437}
   teamGameplayRoot: {fileID: 1178660616}
-  teamBackground: {fileID: 0}
+  teamBackground: {fileID: 1902799527}
   bottomBar: {fileID: 1050730845}
   returnToLobbyAfterWin: 1
   returnToLobbyDelaySeconds: 2
@@ -4729,9 +4729,9 @@ RectTransform:
   - {fileID: 206755179}
   m_Father: {fileID: 317169207}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 400, y: -96.67425}
   m_SizeDelta: {x: 160, y: 193.3485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &529244963
@@ -7217,6 +7217,7 @@ MonoBehaviour:
   serverAddress: 216.238.108.122
   autoConnectToServer: 1
   reconnectDelaySeconds: 5
+  staleConnectionSeconds: 16
   autoConnectInEditor: 1
   disconnectTimeoutSeconds: 120
   keepScreenAwake: 1
@@ -10689,9 +10690,9 @@ RectTransform:
   - {fileID: 1528448160}
   m_Father: {fileID: 317169207}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 240, y: -96.67425}
   m_SizeDelta: {x: 160, y: 193.3485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1130580296
@@ -10981,7 +10982,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1178660617
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11054,7 +11055,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1212259187
 RectTransform:
   m_ObjectHideFlags: 0
@@ -14214,9 +14215,9 @@ RectTransform:
   - {fileID: 375013887}
   m_Father: {fileID: 317169207}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 560, y: -96.67425}
   m_SizeDelta: {x: 160, y: 193.3485}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1621041103
@@ -17115,7 +17116,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1900057188
 RectTransform:
   m_ObjectHideFlags: 0
@@ -17280,7 +17281,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 6283103770893950049, guid: c75cd5648819c42e6a6acc4f479a4c47, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 065e6f2bfc787456489575700eed08a7, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -18704,7 +18705,7 @@ MonoBehaviour:
   returnToLobbyDelaySeconds: 2
   gameBackground: {fileID: 854893869}
   openBuzzBackground:
-    backgroundSprite: {fileID: 3667276704593549445, guid: 4f99af49deced4a12ab17455ef3079e2, type: 3}
+    backgroundSprite: {fileID: -38993996406925288, guid: 0db413323681f49c28e453f4a13d0df7, type: 3}
     animation: 0
     animationSeconds: 0
     frames: []
