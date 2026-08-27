@@ -11,6 +11,7 @@ using UnityEngine.UI;
 public static class TeamBackgroundSetup
 {
     private const string ArtworkPath = "Assets/Art/Backgrounds/Background2x2final.png";
+    private const string DuelArtworkPath = "Assets/Art/Backgrounds/Backgounrd1x1final.png";
 
     [MenuItem("Trivia Duel/Setup/Apply 2v2 Board")]
     public static void Apply()
@@ -28,6 +29,7 @@ public static class TeamBackgroundSetup
 
         SizeScoreBoxes();
         CoverTheScreen();
+        ApplyDuelBoard();
 
         Sprite artwork = LoadAsSingleSprite(ArtworkPath);
 
@@ -76,6 +78,44 @@ public static class TeamBackgroundSetup
 
     // A texture imported as Multiple has no single sprite to hand an Image -- it produces
     // sub-sprites instead, and the assignment quietly does nothing. Switched to Single first.
+    // The 1v1 board, which is a different mechanism entirely.
+    //
+    // Nothing shows the sprite sitting on that Image: entering Open Buzz applies
+    // openBuzzBackground.backgroundSprite over it every round. So the artwork has to go on the
+    // STATE, not on the Image — putting it on the Image alone would look right in the Scene view
+    // and be replaced the moment a match started.
+    private static void ApplyDuelBoard()
+    {
+        Sprite artwork = LoadAsSingleSprite(DuelArtworkPath);
+
+        if (artwork == null)
+            return;
+
+        TriviaDuelManager duel = Object.FindAnyObjectByType<TriviaDuelManager>(FindObjectsInactive.Include);
+
+        if (duel == null)
+        {
+            Debug.LogError("TeamBackgroundSetup: no TriviaDuelManager in the scene.");
+            return;
+        }
+
+        Undo.RecordObject(duel, "Apply 1v1 background");
+        duel.openBuzzBackground.backgroundSprite = artwork;
+        EditorUtility.SetDirty(duel);
+
+        // And on the Image too, so the Scene view shows what the game will rather than whichever
+        // placeholder was last dragged onto it.
+        if (duel.gameBackground != null)
+        {
+            Undo.RecordObject(duel.gameBackground, "Apply 1v1 background");
+            duel.gameBackground.sprite = artwork;
+            duel.gameBackground.color = Color.white;
+            EditorUtility.SetDirty(duel.gameBackground);
+        }
+
+        Debug.Log($"TeamBackgroundSetup: 1v1 Open Buzz now shows {artwork.name}.", duel);
+    }
+
     // The board has to reach the edges of the screen, or it does not.
     //
     // It was 1173 x 2506 against a 1179 x 2556 design, and nudged four pixels right and seven up on
