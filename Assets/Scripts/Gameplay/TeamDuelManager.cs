@@ -67,6 +67,19 @@ public class TeamDuelManager : MonoBehaviour
     [Header("--- RULES ---")]
     public int pointsToWin = 9;
 
+    [Header("--- MATCH START ANIMATION ---")]
+    [Tooltip("The exported sequence played when a 2v2 forms. Leave empty and the board opens " +
+             "immediately, exactly as it did before. It plays on the same overlay the 1v1 uses, " +
+             "which is why there is no second overlay slot here.")]
+    public Sprite[] matchStartFrames;
+
+    [Tooltip("Playback rate for those frames. Match what the timeline was authored at.")]
+    public float matchStartFramesPerSecond = 24f;
+
+    [Tooltip("Beat between the match forming and the animation starting. A moment of the waiting " +
+             "screen still being there is what makes the cut read as 'found them'.")]
+    public float matchStartDelaySeconds = 0.2f;
+
     public int LocalAssignedSlot { get; private set; }
 
     private RoundState roundState = RoundState.MatchEnded;
@@ -198,7 +211,49 @@ public class TeamDuelManager : MonoBehaviour
         // from the last match would swallow the first points of this one.
         teamAScore = 0;
         teamBScore = 0;
-        // Match has formed — take down the queue/waiting screen before showing the gameplay UI.
+
+        if (matchStartCoroutine != null)
+            StopCoroutine(matchStartCoroutine);
+
+        matchStartCoroutine = StartCoroutine(MatchStartSequence());
+    }
+
+    private Coroutine matchStartCoroutine;
+
+    // The board is revealed underneath the animation rather than before it. Doing it the other way
+    // shows the board for a frame before the overlay covers it, which is the flicker this exists
+    // to avoid.
+    private IEnumerator MatchStartSequence()
+    {
+        // Pin the waiting screen at "found" first. The queue these four came from is already
+        // empty, so left live it would count itself down to 0 / 4 while the opening plays over it.
+        if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
+            lobbyPageSwitcher.waitingScreen.FreezeOnMatchFound();
+
+        if (matchStartDelaySeconds > 0f)
+            yield return new WaitForSecondsRealtime(matchStartDelaySeconds);
+
+        TriviaDuelManager overlay = TriviaDuelManager.Instance;
+
+        if (overlay != null && matchStartFrames != null && matchStartFrames.Length > 0)
+            yield return overlay.PlayOverlayFrames(matchStartFrames, matchStartFramesPerSecond, false);
+
+        RevealBoard();
+
+        // Taken down after the reveal, not before: hiding it first would uncover the board while
+        // this frame is still on screen, which is the same flicker in the other direction.
+        overlay?.HideOverlay();
+
+        matchStartCoroutine = null;
+    }
+
+    private void RevealBoard()
+    {
+        // Every lobby page off. lobbyRootObject is empty in this scene, so relying on it would
+        // leave the lobby drawn on top of the board.
+        if (lobbyPageSwitcher != null)
+            lobbyPageSwitcher.HideAllPages();
+
         if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)
             lobbyPageSwitcher.waitingScreen.HideWaiting();
 

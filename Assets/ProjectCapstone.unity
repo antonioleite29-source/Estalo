@@ -4543,6 +4543,21 @@ MonoBehaviour:
   nextRoundDelaySeconds: 0.35
   inactivityEndSeconds: 60
   pointsToWin: 9
+  matchStartFrames:
+  - {fileID: 21300000, guid: c6b00104dc5d5486abd65dad96ad68f4, type: 3}
+  - {fileID: 21300000, guid: 387ae821c4569459b827387c9759e334, type: 3}
+  - {fileID: 21300000, guid: 3b5254e8c0ca2436e93675fc55166cc7, type: 3}
+  - {fileID: 21300000, guid: 48043042bbb4f40d090c1f04288345e6, type: 3}
+  - {fileID: 21300000, guid: b20321ef409ae410cb92bd94e643f1ef, type: 3}
+  - {fileID: 21300000, guid: a2e3016e21ae241708609e6f8774939d, type: 3}
+  - {fileID: 21300000, guid: a30e87100b6f84259b6ab87fbb088bdc, type: 3}
+  - {fileID: 21300000, guid: fd6bbec45d79b4051b2f168384da365d, type: 3}
+  - {fileID: 21300000, guid: 16916a7b4e4c142c8b9feec92bd89d1f, type: 3}
+  - {fileID: 21300000, guid: 805add7d795d84440866b46699f81702, type: 3}
+  - {fileID: 21300000, guid: fecebe2f09ecd499081ae49e8b20b9b7, type: 3}
+  - {fileID: 21300000, guid: b582522d004564533be0199f45bbdb6c, type: 3}
+  matchStartFramesPerSecond: 24
+  matchStartDelaySeconds: 0.2
 --- !u!4 &518754658
 Transform:
   m_ObjectHideFlags: 0

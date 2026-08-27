@@ -1997,6 +1997,33 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         }
     }
 
+    // The match-start overlay, driven with somebody else's frames.
+    //
+    // The overlay sits above the waiting screen and is switched off the rest of the time, which is
+    // what lets an animation play while the board behind it is still hidden. Team mode has its own
+    // export but no reason to own a second copy of the machinery that plays one.
+    internal IEnumerator PlayOverlayFrames(Sprite[] frames, float framesPerSecond, bool reversed)
+    {
+        if (matchStartOverlay == null || frames == null || frames.Length == 0)
+            yield break;
+
+        // Configured while still INACTIVE, then switched on. Setting up an object that is already
+        // visible lets it render once in whatever state it was left in, which is what produced the
+        // stretched opening frames the first time round.
+        PrepareFrameSurface(matchStartOverlay, frames[reversed ? frames.Length - 1 : 0]);
+
+        matchStartOverlay.gameObject.SetActive(true);
+        matchStartOverlay.transform.SetAsLastSibling();
+
+        yield return PlayFramesOn(matchStartOverlay, frames, framesPerSecond, reversed);
+    }
+
+    internal void HideOverlay()
+    {
+        if (matchStartOverlay != null)
+            matchStartOverlay.gameObject.SetActive(false);
+    }
+
     private IEnumerator AnimateStaticBackground(StateBackgroundVisual visual, StateBackgroundVisual outgoing)
     {
         // Leaving a state that has frames runs those frames backwards first, so a solo animates out
