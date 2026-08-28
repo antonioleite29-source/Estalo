@@ -38,6 +38,11 @@ public class LobbyLearningScroller : MonoBehaviour
     [Range(0.08f, 0.3f)]
     public float nodeSize = 0.16f;
 
+    [Tooltip("The \"Praticar meus erros\" bar, which floats over the path rather than scrolling " +
+             "with it. The column leaves its height clear at the bottom so the last lesson can " +
+             "still be scrolled out from under it.")]
+    public RectTransform pinnedFooter;
+
     [Header("Scroll")]
     [Tooltip("How fast momentum fades after releasing a drag (higher = stops faster).")]
     [Range(0.5f, 10f)]
@@ -142,8 +147,10 @@ public class LobbyLearningScroller : MonoBehaviour
         float spacing = viewH * nodeSpacing;
 
         // Half a spacing of air at each end, so the first and last nodes are not jammed against
-        // the edge of the scroll.
-        contentH = Mathf.Max(viewH, (LessonLadder.Count + 1) * spacing);
+        // the edge of the scroll, plus room under the last one for whatever floats over the
+        // bottom of the page.
+        float footer = pinnedFooter != null ? pinnedFooter.rect.height + viewH * 0.04f : 0f;
+        contentH = Mathf.Max(viewH, (LessonLadder.Count + 1) * spacing + footer);
 
         content = NewChild("PathContent", transform);
         content.anchorMin = new Vector2(0f, 1f);
@@ -151,6 +158,10 @@ public class LobbyLearningScroller : MonoBehaviour
         content.pivot = new Vector2(0.5f, 1f);
         content.sizeDelta = new Vector2(0f, contentH);
         content.anchoredPosition = Vector2.zero;
+
+        // Behind everything the page already had. The path is the backdrop; the heading and the
+        // "practise my mistakes" bar sit on top of it, and a UGUI child drawn later is drawn over.
+        content.SetAsFirstSibling();
 
         BuildTiles();
         BuildNodes(spacing);

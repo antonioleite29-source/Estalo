@@ -21,6 +21,7 @@ public static class LearningArtSetup
         }
 
         WireNewPathArt();
+        DockMistakesBar();
         HideTeamBoard();
 
         AssetDatabase.SaveAssets();
@@ -95,6 +96,52 @@ public static class LearningArtSetup
 
         Debug.Log($"LearningArtSetup: {frames.Count} path images wired, {frames[0].name} to " +
                   $"{frames[frames.Count - 1].name}.", scroller);
+    }
+
+    // The "Praticar meus erros" bar was floating a third of the way up the page, which was fine
+    // when the page was scrolling wallpaper and is not fine now that lesson nodes scroll past
+    // underneath it -- it would swallow the taps meant for whichever node was behind it.
+    //
+    // Docked to the bottom instead, and handed to the scroller so the column leaves room for it.
+    private static void DockMistakesBar()
+    {
+        LobbyLearningScroller scroller =
+            Object.FindAnyObjectByType<LobbyLearningScroller>(FindObjectsInactive.Include);
+
+        if (scroller == null)
+            return;
+
+        RectTransform bar = null;
+
+        foreach (RectTransform candidate in scroller.GetComponentsInChildren<RectTransform>(true))
+        {
+            if (candidate.name == "PractiseMistakesButton")
+            {
+                bar = candidate;
+                break;
+            }
+        }
+
+        if (bar == null)
+        {
+            Debug.LogWarning("LearningArtSetup: no PractiseMistakesButton on the learning page.");
+            return;
+        }
+
+        Undo.RecordObject(bar, "Dock the practise-mistakes bar");
+        bar.anchorMin = new Vector2(0.5f, 0f);
+        bar.anchorMax = new Vector2(0.5f, 0f);
+        bar.pivot = new Vector2(0.5f, 0f);
+        bar.anchoredPosition = new Vector2(0f, 40f);
+        bar.SetAsLastSibling();
+        EditorUtility.SetDirty(bar);
+
+        Undo.RecordObject(scroller, "Reserve room for the practise-mistakes bar");
+        scroller.pinnedFooter = bar;
+        EditorUtility.SetDirty(scroller);
+
+        Debug.Log("LearningArtSetup: the practise-mistakes bar is docked at the bottom of the " +
+                  "learning page and the lesson column now leaves room for it.", bar);
     }
 
     // These are 158x316 and get stretched across the whole height of a phone -- around seven times
