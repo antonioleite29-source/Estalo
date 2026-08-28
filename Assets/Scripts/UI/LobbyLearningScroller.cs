@@ -1,43 +1,96 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
+// The learning path: a finite column of lesson nodes running down the winding artwork.
+//
+// This used to be an endless scroller that recycled three slots forever, which is the right shape
+// for decoration and the wrong one for lessons — lesson seven has to be in the same place every
+// time you open the page. It is a fixed-height column now, which is also simpler: the images tile
+// down it, the nodes sit at known heights, and scrolling is just moving the column and clamping.
+//
+// Nodes sit in the margin BESIDE the path rather than on it. The ribbon is a quarter of the width,
+// so the two margins together are three quarters and the wider of them is never less than a third
+// of the screen — there is always room on one side, even where the other side is down to four
+// percent.
 public class LobbyLearningScroller : MonoBehaviour
 {
-    [Header("Images")]
-    [Tooltip("Drag your sprites here. They scroll in the order shown.")]
+    [Header("Path artwork")]
+    [Tooltip("The path images, tiled down the column in this order.")]
     public Sprite[] sourceSprites;
 
     [Tooltip("How far each image runs under the next one, in pixels. Only there to stop float " +
-             "drift and per-slot rounding opening a hairline at the join — a couple of pixels does " +
-             "that. Anything large starts hiding real artwork behind the next image.")]
+             "drift opening a hairline at the join.")]
     [Range(0f, 40f)]
     public float slotOverlap = 8f;
+
+    [Header("Lessons")]
+    [Tooltip("Vertical distance between lesson nodes, as a fraction of the visible height. " +
+             "0.28 puts about three and a half on screen at once.")]
+    [Range(0.15f, 0.6f)]
+    public float nodeSpacing = 0.28f;
+
+    [Tooltip("Node diameter, as a fraction of the visible WIDTH.")]
+    [Range(0.08f, 0.3f)]
+    public float nodeSize = 0.16f;
 
     [Header("Scroll")]
     [Tooltip("How fast momentum fades after releasing a drag (higher = stops faster).")]
     [Range(0.5f, 10f)]
     public float dragFriction = 4f;
 
+    // The centre of the path as a fraction of the width, sixteen samples down each image, measured
+    // from the artwork itself. Baked rather than computed at runtime: reading pixels means the
+    // textures must stay CPU-readable, which doubles their memory for a number that never changes.
+    private static readonly float[] PathCentre =
+    {
+        // NewPath1
+        0.336f, 0.456f, 0.581f, 0.632f, 0.468f, 0.383f, 0.568f, 0.642f,
+        0.664f, 0.620f, 0.502f, 0.351f, 0.498f, 0.700f, 0.583f, 0.468f,
+        // NewPath2
+        0.341f, 0.285f, 0.319f, 0.542f, 0.400f, 0.329f, 0.353f, 0.593f,
+        0.664f, 0.620f, 0.502f, 0.351f, 0.498f, 0.656f, 0.583f, 0.474f,
+        // NewPath3
+        0.368f, 0.253f, 0.180f, 0.339f, 0.485f, 0.334f, 0.216f, 0.172f,
+        0.243f, 0.483f, 0.507f, 0.436f, 0.295f, 0.517f, 0.551f, 0.495f,
+        // NewPath4
+        0.336f, 0.456f, 0.588f, 0.444f, 0.370f, 0.463f, 0.571f, 0.642f,
+        0.664f, 0.620f, 0.502f, 0.466f, 0.654f, 0.774f, 0.656f, 0.517f
+    };
+
+    private const int SamplesPerImage = 16;
+    private const float PathHalfWidth = 0.126f;   // the ribbon is about a quarter of the width
+
     private RectTransform panel;
-    private RectTransform[] slotRTs;
-    private Image[] slotImgs;
-    private float[] slotY;
+    private RectTransform content;
+    private readonly List<GameObject> built = new List<GameObject>();
+    private readonly List<LessonNode> nodes = new List<LessonNode>();
+
     private float viewH;
-    private float slotH;
-    private const int SlotCount = 3;
-    private int nextSpriteIndex;
-    private readonly List<GameObject> builtSlots = new List<GameObject>();
+    private float viewW;
+    private float contentH;
+    private float scroll;          // 0 at the top, contentH - viewH at the bottom
 
     private bool isDragging;
-    private float lastMouseY;
+    private bool draggedFar;       // a drag this far is a scroll, not a tap on a node
+    private float lastPointerY;
     private float dragVelocity;
-
-    // Stores recent (time, y) samples to compute release velocity over a window
     private readonly List<(float time, float y)> velHistory = new List<(float, float)>();
     private const float VelWindowSec = 0.1f;
+    private const float TapSlop = 12f;
+
+    private sealed class LessonNode
+    {
+        public int Index;
+        public Image Background;
+        public TMP_Text Label;
+        public Button Button;
+        public RectTransform Rect;
+    }
 
     private void Awake()
     {
@@ -47,19 +100,21 @@ public class LobbyLearningScroller : MonoBehaviour
 
     private IEnumerator Start()
     {
-        // Wait two frames so Canvas finishes layout before reading rect.height
+        // Two frames so the Canvas has finished laying out before rect.height is read.
         yield return null;
         yield return null;
         Build();
     }
 
-    // Start only ever runs once. Opening the Learning tab again after the slots have been lost — a
-    // script recompile clears them without re-running Start — used to leave the page permanently
-    // blank, so the path is rebuilt whenever the page comes back with nothing on it.
+    // Start only ever runs once, and a script recompile clears the built objects without re-running
+    // it. Rebuilding whenever the page comes back with nothing on it covers that, and refreshes
+    // the lock states after a lesson has been finished.
     private void OnEnable()
     {
-        if (slotRTs == null || slotRTs.Length == 0)
+        if (content == null || built.Count == 0)
             StartCoroutine(RebuildNextFrame());
+        else
+            RefreshNodes();
     }
 
     private IEnumerator RebuildNextFrame()
@@ -70,221 +125,308 @@ public class LobbyLearningScroller : MonoBehaviour
 
     private void Build()
     {
-        // Only the slots this component made are cleared. It used to destroy every child, which
-        // quietly deleted anything else placed on the Learning page — the practice button among
-        // them — the moment the path first built itself.
-        List<GameObject> doomed = new List<GameObject>(builtSlots);
+        foreach (GameObject old in built)
+            if (old != null)
+                Destroy(old);
 
-        for (int i = 0; i < doomed.Count; i++)
-            if (doomed[i] != null)
-                Destroy(doomed[i]);
+        built.Clear();
+        nodes.Clear();
 
-        builtSlots.Clear();
-
-        // Children that are not ours are kept, and put back on top once the slots exist: slots are
-        // appended, and a later sibling draws over an earlier one, so without this the path art
-        // would cover whatever is sitting on the page.
-        List<Transform> keep = new List<Transform>();
-
-        for (int i = 0; i < transform.childCount; i++)
-        {
-            Transform child = transform.GetChild(i);
-
-            // Destroy is deferred to the end of the frame, so slots torn down a moment ago are
-            // still children right now. Without this check a rebuild would adopt them as page
-            // furniture and raise them back over the new path.
-            if (!doomed.Contains(child.gameObject))
-                keep.Add(child);
-        }
-
-        if (!HasValidSprites())
-        {
-            RaiseAbovePath(keep);
+        if (sourceSprites == null || sourceSprites.Length == 0)
             return;
-        }
 
         Canvas.ForceUpdateCanvases();
         viewH = panel.rect.height > 0f ? panel.rect.height : Screen.height;
-        slotH = viewH + slotOverlap;
+        viewW = panel.rect.width > 0f ? panel.rect.width : Screen.width;
 
-        slotRTs = new RectTransform[SlotCount];
-        slotImgs = new Image[SlotCount];
-        slotY = new float[SlotCount];
-        nextSpriteIndex = 0;
+        float spacing = viewH * nodeSpacing;
 
-        for (int i = 0; i < SlotCount; i++)
+        // Half a spacing of air at each end, so the first and last nodes are not jammed against
+        // the edge of the scroll.
+        contentH = Mathf.Max(viewH, (LessonLadder.Count + 1) * spacing);
+
+        content = NewChild("PathContent", transform);
+        content.anchorMin = new Vector2(0f, 1f);
+        content.anchorMax = new Vector2(1f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.sizeDelta = new Vector2(0f, contentH);
+        content.anchoredPosition = Vector2.zero;
+
+        BuildTiles();
+        BuildNodes(spacing);
+
+        scroll = 0f;
+        ApplyScroll();
+    }
+
+    private void BuildTiles()
+    {
+        int tiles = Mathf.CeilToInt(contentH / viewH) + 1;
+
+        for (int i = 0; i < tiles; i++)
         {
-            var go = new GameObject("Slot" + i, typeof(RectTransform), typeof(Image));
-            go.transform.SetParent(transform, false);
+            RectTransform rect = NewChild("Path" + i, content);
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, viewH + slotOverlap);
+            rect.anchoredPosition = new Vector2(0f, -i * viewH);
 
-            var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(1f, 0f);
-            rt.pivot     = new Vector2(0.5f, 0f);
-            rt.sizeDelta = new Vector2(0f, slotH);
+            Image image = rect.gameObject.AddComponent<Image>();
+            image.sprite = sourceSprites[i % sourceSprites.Length];
+            image.preserveAspect = false;
+            image.color = Color.white;
+            image.raycastTarget = false;
+        }
+    }
 
-            slotY[i] = -i * viewH;
-            rt.anchoredPosition = new Vector2(0f, Mathf.Floor(slotY[i]));
+    private void BuildNodes(float spacing)
+    {
+        ButtonTheme theme = TriviaDuelManager.Instance != null ? TriviaDuelManager.Instance.buttonTheme : null;
+        float diameter = viewW * nodeSize;
 
-            var img = go.GetComponent<Image>();
-            img.sprite = PickNext();
-            img.preserveAspect = false;
-            img.color = Color.white;
+        for (int i = 0; i < LessonLadder.Count; i++)
+        {
+            // Lesson one at the top, descending — the path flows downward and so does reading.
+            float y = -(i + 1f) * spacing;
 
-            slotRTs[i] = rt;
-            slotImgs[i] = img;
-            builtSlots.Add(go);
+            RectTransform rect = NewChild("Lesson" + (i + 1), content);
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(diameter, diameter);
+            rect.anchoredPosition = new Vector2(MarginXAt(y) * viewW, y);
+
+            Image background = rect.gameObject.AddComponent<Image>();
+            background.preserveAspect = true;
+
+            if (theme != null && theme.normalSprite != null)
+                background.sprite = theme.normalSprite;
+
+            Button button = rect.gameObject.AddComponent<Button>();
+            button.targetGraphic = background;
+            button.transition = Selectable.Transition.None;
+
+            TMP_Text label = NewChild("Number", rect).gameObject.AddComponent<TextMeshProUGUI>();
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            label.alignment = TextAlignmentOptions.Center;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 10f;
+            label.fontSizeMax = diameter * 0.5f;
+            label.raycastTarget = false;
+            label.text = (i + 1).ToString();
+
+            int index = i;
+            button.onClick.AddListener(() => OnNodeTapped(index));
+
+            nodes.Add(new LessonNode
+            {
+                Index = i, Background = background, Label = label, Button = button, Rect = rect
+            });
         }
 
-        RaiseAbovePath(keep);
+        RefreshNodes();
     }
 
-    private static void RaiseAbovePath(List<Transform> keep)
+    // Which side has room, and where in it. The ribbon is a quarter of the width, so the wider
+    // margin is never below about a third — placing the node in the middle of it always clears the
+    // path, even where the other side has almost nothing.
+    private float MarginXAt(float contentY)
     {
-        for (int i = 0; i < keep.Count; i++)
-            if (keep[i] != null)
-                keep[i].SetAsLastSibling();
+        float centre = PathCentreAt(contentY);
+
+        float leftRoom = centre - PathHalfWidth;
+        float rightRoom = 1f - (centre + PathHalfWidth);
+
+        return leftRoom >= rightRoom
+            ? leftRoom * 0.5f
+            : centre + PathHalfWidth + rightRoom * 0.5f;
     }
+
+    private float PathCentreAt(float contentY)
+    {
+        if (viewH <= 0f)
+            return 0.5f;
+
+        // contentY runs negative downward from the top of the column.
+        float rows = -contentY / viewH;
+        int image = Mathf.FloorToInt(rows) % sourceSprites.Length;
+
+        if (image < 0)
+            image += sourceSprites.Length;
+
+        float within = rows - Mathf.Floor(rows);
+        float sample = within * SamplesPerImage - 0.5f;
+
+        int a = Mathf.Clamp(Mathf.FloorToInt(sample), 0, SamplesPerImage - 1);
+        int b = Mathf.Clamp(a + 1, 0, SamplesPerImage - 1);
+        float t = Mathf.Clamp01(sample - a);
+
+        // The baked curve only covers as many images as were measured; beyond that it repeats.
+        int block = (image % (PathCentre.Length / SamplesPerImage)) * SamplesPerImage;
+
+        return Mathf.Lerp(PathCentre[block + a], PathCentre[block + b], t);
+    }
+
+    public void RefreshNodes()
+    {
+        ButtonTheme theme = TriviaDuelManager.Instance != null ? TriviaDuelManager.Instance.buttonTheme : null;
+
+        foreach (LessonNode node in nodes)
+        {
+            bool unlocked = LessonLadder.IsUnlocked(node.Index);
+            bool done = LessonLadder.IsDone(node.Index);
+
+            if (theme != null)
+            {
+                Sprite sprite = done ? theme.pressedRightSprite
+                             : unlocked ? theme.normalSprite
+                             : theme.pressedSprite;
+
+                if (sprite != null)
+                    node.Background.sprite = sprite;
+            }
+
+            // Locked nodes are dimmed rather than hidden: seeing what is coming is most of why a
+            // path like this works at all.
+            node.Background.color = unlocked ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+            node.Label.color = unlocked ? Color.white : new Color(1f, 1f, 1f, 0.5f);
+            node.Button.interactable = unlocked;
+        }
+    }
+
+    private void OnNodeTapped(int index)
+    {
+        // A drag that happened to end on a node is a scroll, not a tap. Without this every attempt
+        // to scroll by grabbing the middle of the screen would open a lesson.
+        if (draggedFar || !LessonLadder.IsUnlocked(index))
+            return;
+
+        PracticeQuizController practice = FindAnyObjectByType<PracticeQuizController>(FindObjectsInactive.Include);
+
+        if (practice == null)
+        {
+            Debug.LogError("LobbyLearningScroller: no PracticeQuizController, so a lesson cannot start.");
+            return;
+        }
+
+        practice.StartLesson(index);
+    }
+
+    // --- scrolling ------------------------------------------------------
 
     private void Update()
     {
-        if (slotRTs == null || slotRTs.Length == 0) return;
+        if (content == null)
+            return;
 
-        // Pointer, not Mouse. A phone has no mouse at all, so Mouse.current is null there and this
-        // returned on the first line every frame -- the page scrolled perfectly in the Editor and
-        // not at all on the device, which is the most expensive kind of bug to notice.
-        //
-        // Pointer.current is whichever device last reported: the mouse in the Editor, the
-        // touchscreen on a phone. `press` is the left button on one and a finger on the other, so
-        // the drag logic below needs no idea which it is.
+        // Pointer, not Mouse: a phone has no mouse, so Mouse.current is null there and this used
+        // to return on its first line every frame.
         Pointer pointer = Pointer.current;
-        if (pointer == null) return;
 
-        float currentMouseY = pointer.position.ReadValue().y;
+        if (pointer == null)
+            return;
+
+        float pointerY = pointer.position.ReadValue().y;
 
         if (pointer.press.wasPressedThisFrame)
         {
-            isDragging   = true;
-            lastMouseY   = currentMouseY;
+            isDragging = true;
+            draggedFar = false;
+            lastPointerY = pointerY;
             dragVelocity = 0f;
             velHistory.Clear();
-            velHistory.Add((Time.time, currentMouseY));
+            velHistory.Add((Time.time, pointerY));
         }
-        else if (pointer.press.wasReleasedThisFrame)
+        else if (pointer.press.wasReleasedThisFrame && isDragging)
         {
             isDragging = false;
-            // Compute release velocity from the last VelWindowSec of movement
-            dragVelocity = ComputeReleaseVelocity(currentMouseY);
+            dragVelocity = ReleaseVelocity(pointerY);
         }
 
-        // Nothing moving means nothing to redraw. Writing anchoredPosition dirties the canvas even
-        // when the value is unchanged, and this page sits on the same canvas as the whole game — so
-        // a still path was forcing a full UI rebuild every frame for no visible reason.
-        if (!isDragging && dragVelocity == 0f)
+        if (!isDragging && Mathf.Approximately(dragVelocity, 0f))
             return;
 
         float delta;
+
         if (isDragging)
         {
-            // Record position sample, drop samples older than the window
-            velHistory.Add((Time.time, currentMouseY));
+            velHistory.Add((Time.time, pointerY));
+
             while (velHistory.Count > 1 && Time.time - velHistory[0].time > VelWindowSec)
                 velHistory.RemoveAt(0);
 
-            delta = currentMouseY - lastMouseY;
-            lastMouseY = currentMouseY;
+            delta = pointerY - lastPointerY;
+            lastPointerY = pointerY;
+
+            if (Mathf.Abs(pointerY - velHistory[0].y) > TapSlop)
+                draggedFar = true;
         }
         else
         {
-            // Coast: exponential friction until nearly stopped
             dragVelocity *= Mathf.Exp(-dragFriction * Time.deltaTime);
-            if (Mathf.Abs(dragVelocity) < 2f) dragVelocity = 0f;
+
+            if (Mathf.Abs(dragVelocity) < 2f)
+                dragVelocity = 0f;
+
             delta = dragVelocity * Time.deltaTime;
         }
 
-        // Move all slots
-        float minY = float.MaxValue;
-        float maxY = float.MinValue;
-        for (int i = 0; i < SlotCount; i++)
-        {
-            slotY[i] += delta;
-            if (slotY[i] < minY) minY = slotY[i];
-            if (slotY[i] > maxY) maxY = slotY[i];
-        }
-
-        for (int i = 0; i < SlotCount; i++)
-        {
-            if (slotY[i] >= viewH)
-            {
-                slotY[i] = minY - viewH;
-                slotImgs[i].sprite = PickNext();
-            }
-            else if (slotY[i] < -(viewH * (SlotCount - 1)))
-            {
-                slotY[i] = maxY + viewH;
-                slotImgs[i].sprite = PickNext();
-            }
-            slotRTs[i].anchoredPosition = new Vector2(0f, Mathf.Floor(slotY[i]));
-        }
+        // Dragging up moves the content up, which means scrolling further down the list.
+        scroll = Mathf.Clamp(scroll + delta, 0f, Mathf.Max(0f, contentH - viewH));
+        ApplyScroll();
     }
 
-    private float ComputeReleaseVelocity(float currentY)
+    private void ApplyScroll()
     {
-        // Find the oldest sample still within the window
-        int oldest = 0;
-        for (int i = 0; i < velHistory.Count; i++)
-        {
-            if (Time.time - velHistory[i].time <= VelWindowSec) { oldest = i; break; }
-        }
-        float dt = Time.time - velHistory[oldest].time;
-        if (dt < 0.001f) return 0f;
-        return (currentY - velHistory[oldest].y) / dt;
+        if (content != null)
+            content.anchoredPosition = new Vector2(0f, Mathf.Round(scroll));
     }
 
-    private Sprite PickNext()
+    private float ReleaseVelocity(float currentY)
     {
-        if (sourceSprites == null || sourceSprites.Length == 0) return null;
-        int tries = sourceSprites.Length;
-        while (tries-- > 0)
-        {
-            Sprite s = sourceSprites[nextSpriteIndex % sourceSprites.Length];
-            nextSpriteIndex++;
-            if (s != null) return s;
-        }
-        return null;
+        if (velHistory.Count == 0)
+            return 0f;
+
+        float dt = Time.time - velHistory[0].time;
+        return dt < 0.001f ? 0f : (currentY - velHistory[0].y) / dt;
     }
 
-    private bool HasValidSprites()
+    // --- plumbing -------------------------------------------------------
+
+    private RectTransform NewChild(string name, Transform parent)
     {
-        if (sourceSprites == null) return false;
-        foreach (var s in sourceSprites)
-            if (s != null) return true;
-        return false;
+        GameObject go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        built.Add(go);
+        return go.GetComponent<RectTransform>();
     }
 
     private void EnsureMask()
     {
         // Whether the Image was already here decides whether the mask may hide it. A Mask draws
-        // nothing when showMaskGraphic is false — and on this object the masking graphic is the
-        // Learning page's own background art, so hiding it switched the page's artwork off the
-        // moment the player opened the tab.
+        // nothing when showMaskGraphic is false, and on this object the masking graphic is the
+        // page's own background art — hiding it switched the page's artwork off.
         bool hadOwnGraphic = GetComponent<Image>() != null;
 
         if (!hadOwnGraphic)
             gameObject.AddComponent<Image>().color = Color.black;
 
         if (GetComponent<Mask>() == null)
-        {
-            // Keep showing a background that belongs to the page; hide one we invented purely to
-            // give the mask a shape to clip against.
             gameObject.AddComponent<Mask>().showMaskGraphic = hadOwnGraphic;
-        }
     }
 
     private void OnRectTransformDimensionsChange()
     {
-        if (slotRTs == null) return;
+        if (content == null)
+            return;
+
         float h = panel.rect.height;
+
         if (h > 0f && !Mathf.Approximately(h, viewH))
             StartCoroutine(RebuildNextFrame());
     }

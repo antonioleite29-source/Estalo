@@ -179,9 +179,40 @@ public class PracticeQuizController : MonoBehaviour
             return;
         }
 
+        activeLesson = -1;
+
         List<TriviaQuestion> all = TriviaDuelManager.Instance.GetAllQuestions();
         Begin(MistakeLogManager.Instance.BuildPracticeSet(questionsPerSet, all));
     }
+
+    // Started from a node on the learning path. The lesson decides the topic and the level; the
+    // board, the coach and the scoring are the same as any other practice set.
+    public void StartLesson(int lessonIndex)
+    {
+        if (TriviaDuelManager.Instance == null)
+        {
+            Debug.LogError("PracticeQuizController: no TriviaDuelManager, so a lesson has no " +
+                           "question bank and no board.");
+            return;
+        }
+
+        LessonLadder.Lesson lesson = LessonLadder.At(lessonIndex);
+        List<TriviaQuestion> questions = LessonLadder.BuildSet(lesson, questionsPerSet);
+
+        if (questions.Count == 0)
+        {
+            Debug.LogWarning($"PracticeQuizController: lesson {lesson.Number} ({lesson.Topic}, " +
+                             $"level {lesson.Level}) has no questions.");
+            return;
+        }
+
+        activeLesson = lessonIndex;
+        Begin(questions);
+    }
+
+    // -1 when this is the free "practise my mistakes" set rather than a numbered lesson, so
+    // finishing that one cannot advance the ladder.
+    private int activeLesson = -1;
 
     private void Begin(List<TriviaQuestion> questions)
     {
@@ -478,6 +509,14 @@ public class PracticeQuizController : MonoBehaviour
 
         if (duel == null)
             yield break;
+
+        // Finishing is what unlocks the next node, not scoring well on it. A player who is
+        // struggling with a topic is exactly the one who must not be walled in behind it.
+        if (activeLesson >= 0)
+        {
+            LessonLadder.MarkDone(activeLesson);
+            activeLesson = -1;
+        }
 
         // The summary goes where the question was, which is where the player is already looking.
         if (duel.questionText != null)
