@@ -12510,10 +12510,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobbyLearningScroller
   sourceSprites:
-  - {fileID: -3208213247304168876, guid: 047dceaab8b6c462393f2546aee5ff06, type: 3}
-  - {fileID: -4369205760167130415, guid: f0a5c507e05dc4b5397e2fc1e59fe0f3, type: 3}
-  - {fileID: 406010847404976819, guid: 09f1fad09fe804301bef282b6bb98ede, type: 3}
-  - {fileID: -5769755502348513618, guid: 64a4bd2612d0441c29c93981e16ef860, type: 3}
+  - {fileID: 21300000, guid: 7e99c824ee1614b0e97abd21d86690e3, type: 3}
+  - {fileID: 21300000, guid: 7b2b1f2faf0b14ff7a24564c9a0db306, type: 3}
+  - {fileID: 21300000, guid: e6f5ce825b7c14bb2a2373c76e00e161, type: 3}
+  - {fileID: 21300000, guid: d198f8a1142ae4d309423c24d76edbd2, type: 3}
+  slotOverlap: 8
   dragFriction: 10
 --- !u!223 &1405330899
 Canvas:

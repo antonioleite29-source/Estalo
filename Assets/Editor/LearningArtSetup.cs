@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -7,6 +8,7 @@ using UnityEngine.SceneManagement;
 public static class LearningArtSetup
 {
     private const string PathArt = "Assets/Resources";
+    private const string NewPathArt = "Assets/Art/UI/LearningPath";
 
     [MenuItem("Trivia Duel/Setup/Fix Learning Page Art")]
     public static void Apply()
@@ -18,12 +20,81 @@ public static class LearningArtSetup
             return;
         }
 
-        UncompressPathArt();
+        WireNewPathArt();
         HideTeamBoard();
 
         AssetDatabase.SaveAssets();
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         Debug.Log("LearningArtSetup: done. Save the scene to keep it.");
+    }
+
+    // The scrolling artwork, imported and handed to the scroller in filename order.
+    //
+    // Unlike the old 158x316 set, these are 4913x10650 at the phone's own aspect. Unity clamps the
+    // long side to maxTextureSize, so they land around 945x2048 and are drawn at roughly 1180 wide
+    // -- about a 1.25x upscale rather than seven times up.
+    //
+    // That is why they stay COMPRESSED. Block compression only became visible before because every
+    // 4x4 block was being magnified into a smear; at this scale the blocks are around a pixel and
+    // the alternative is roughly 31MB of texture for four decorations on the learning page.
+    private static void WireNewPathArt()
+    {
+        List<Sprite> frames = new List<Sprite>();
+        List<string> paths = new List<string>();
+
+        foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { NewPathArt }))
+            paths.Add(AssetDatabase.GUIDToAssetPath(guid));
+
+        paths.Sort(string.CompareOrdinal);
+
+        foreach (string path in paths)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+
+            if (importer == null)
+                continue;
+
+            if (importer.textureType != TextureImporterType.Sprite ||
+                importer.spriteImportMode != SpriteImportMode.Single ||
+                importer.maxTextureSize != 2048)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.maxTextureSize = 2048;
+                importer.mipmapEnabled = false;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.textureCompression = TextureImporterCompression.CompressedHQ;
+                importer.SaveAndReimport();
+            }
+
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+
+            if (sprite != null)
+                frames.Add(sprite);
+        }
+
+        if (frames.Count == 0)
+        {
+            Debug.LogError($"LearningArtSetup: no sprites in {NewPathArt}.");
+            return;
+        }
+
+        LobbyLearningScroller scroller =
+            Object.FindAnyObjectByType<LobbyLearningScroller>(FindObjectsInactive.Include);
+
+        if (scroller == null)
+        {
+            Debug.LogError("LearningArtSetup: no LobbyLearningScroller in the scene.");
+            return;
+        }
+
+        Undo.RecordObject(scroller, "Wire the learning path art");
+        scroller.sourceSprites = frames.ToArray();
+        EditorUtility.SetDirty(scroller);
+
+        Debug.Log($"LearningArtSetup: {frames.Count} path images wired, {frames[0].name} to " +
+                  $"{frames[frames.Count - 1].name}.", scroller);
     }
 
     // These are 158x316 and get stretched across the whole height of a phone -- around seven times
