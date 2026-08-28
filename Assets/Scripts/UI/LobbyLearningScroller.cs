@@ -10,6 +10,12 @@ public class LobbyLearningScroller : MonoBehaviour
     [Tooltip("Drag your sprites here. They scroll in the order shown.")]
     public Sprite[] sourceSprites;
 
+    [Tooltip("How far each image runs under the next one, in pixels. Only there to stop float " +
+             "drift and per-slot rounding opening a hairline at the join — a couple of pixels does " +
+             "that. Anything large starts hiding real artwork behind the next image.")]
+    [Range(0f, 40f)]
+    public float slotOverlap = 8f;
+
     [Header("Scroll")]
     [Tooltip("How fast momentum fades after releasing a drag (higher = stops faster).")]
     [Range(0.5f, 10f)]
@@ -99,11 +105,7 @@ public class LobbyLearningScroller : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
         viewH = panel.rect.height > 0f ? panel.rect.height : Screen.height;
-        // Slots overlap the step rather than meeting it exactly, so float drift and per-slot
-        // rounding can never open a hairline between two of them. Six pixels was fine at the
-        // authored size and is nothing once a 316px-tall image is stretched across a phone, so it
-        // scales with the view instead of being a constant.
-        slotH = viewH + Mathf.Max(12f, viewH * 0.02f);
+        slotH = viewH + slotOverlap;
 
         slotRTs = new RectTransform[SlotCount];
         slotImgs = new Image[SlotCount];
