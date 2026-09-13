@@ -35,6 +35,8 @@ PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
 ReadWritePaths=/var/log/triviaduel
+# /var/lib/triviaduel, writable by the service and kept across deploys: the leaderboard lives here.
+StateDirectory=triviaduel
 
 [Install]
 WantedBy=multi-user.target

@@ -96,6 +96,56 @@ public class PlayerSideIdentity : NetworkBehaviour
 
         if (PlayerIQManager.Instance != null)
             DifficultyLevel.Value = PlayerIQManager.Instance.GetLocalDifficultyLevel();
+
+        // A renamed player should be renamed on the leaderboard too.
+        SubmitToLeaderboard();
+    }
+
+    // --- leaderboard ----------------------------------------------------
+
+    // For code with no identity object in hand: the end of a match, the Profile page opening. Does
+    // nothing while disconnected, and the page shows "sem conexão" until an answer arrives.
+    public static void SubmitLocalToLeaderboard()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient ||
+            NetworkManager.Singleton.LocalClient == null)
+            return;
+
+        NetworkObject localPlayerObject = NetworkManager.Singleton.LocalClient.PlayerObject;
+        PlayerSideIdentity localIdentity = localPlayerObject != null
+            ? localPlayerObject.GetComponent<PlayerSideIdentity>()
+            : null;
+
+        if (localIdentity != null)
+            localIdentity.SubmitToLeaderboard();
+    }
+
+    // Reports this player's IQ points to the server and asks where that puts them.
+    public void SubmitToLeaderboard()
+    {
+        if (!IsOwner || !IsSpawned)
+            return;
+
+        float iq = PlayerIQManager.Instance != null ? PlayerIQManager.Instance.GetLocalIQ() : 100f;
+        string playerName = PlayerProfileManager.Instance != null
+            ? PlayerProfileManager.Instance.GetLocalName()
+            : PlayerProfileManager.DefaultName;
+
+        SubmitLeaderboardServerRpc(PlayerStats.PlayerId, playerName, iq);
+    }
+
+    [Rpc(SendTo.Server)]
+    private void SubmitLeaderboardServerRpc(FixedString64Bytes playerId, FixedString64Bytes playerName, float iq)
+    {
+        (int rank, int size) = Leaderboard.Submit(playerId.ToString(), playerName.ToString(), iq);
+        LeaderboardPositionRpc(rank, size);
+    }
+
+    // Back to the player who asked and nobody else.
+    [Rpc(SendTo.Owner)]
+    private void LeaderboardPositionRpc(int rank, int size)
+    {
+        PlayerStats.SetLeaderboardPosition(rank, size);
     }
 
     private static void RefreshAllIdentities()

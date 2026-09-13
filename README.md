@@ -41,6 +41,29 @@ Every answer a player gives is logged on their own device by topic — `adicao`,
 from the questions they actually got wrong, padded from their weakest topics when there
 are not yet enough. See `MistakeLogManager` and `PracticeQuizController`.
 
+## Lessons
+
+The Learning page is a path of **20 lessons**, easiest first, defined in
+`Assets/Resources/Lessons.json`. Each lesson names one topic and one level from the question
+bank, plus a few short teaching cards. Tapping a node shows the cards (Voltar / Próximo), then
+asks that topic's questions on the duel board until the player has **10 right**. A wrong answer
+shows the right one and comes back two questions later. **Sair** leaves and **Rever lição**
+reopens the cards mid-lesson. Finishing unlocks the next lesson, and finished lessons can be
+replayed. See `LessonSession` and `LessonLadder`.
+
+To change a lesson, edit the JSON — no code change needed. A lesson's topic must exist at that
+level in `TriviaQuestions.txt`.
+
+## Profile stats
+
+The Profile page shows matches played, won and lost; best and current IQ points; how long the
+player has been playing; and their global leaderboard position. Everything but the position is
+kept on the device (`PlayerStats`). Only matches with a winner count.
+
+The position comes from the server: clients report their IQ with a random per-device id, and the
+server keeps `leaderboard.json` in `/var/lib/triviaduel` (`Leaderboard`). While disconnected the
+page shows "sem conexão".
+
 ## Questions
 
 `Assets/Resources/TriviaQuestions.txt` — **1,819 rows**, tab-separated:

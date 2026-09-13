@@ -32,6 +32,8 @@ public class PlayerIQManager : MonoBehaviour
     {
         PlayerPrefs.SetFloat(PREFS_KEY_IQ + KeySuffix, iq);
         PlayerPrefs.Save();
+
+        PlayerStats.NoteIQ(iq);
     }
 
     // Maps this device's IQ to difficulty level 1-7. Below 70 = Level 1, above 150 = Level 7.
@@ -43,10 +45,16 @@ public class PlayerIQManager : MonoBehaviour
     }
 
     // delta = 50 / currentIQ, applied against this device's own IQ. Call once per match end.
+    //
+    // Also the one place every finished match with a winner passes through -- 1v1, 2v2, networked or
+    // local -- which is why the Profile page's match record is kept from here.
     public void AdjustLocalIQAfterMatch(bool didWin)
     {
         float currentIQ = GetLocalIQ();
         float delta = 50f / currentIQ;
         SetLocalIQ(didWin ? currentIQ + delta : currentIQ - delta);
+
+        PlayerStats.RecordMatch(didWin);
+        PlayerSideIdentity.SubmitLocalToLeaderboard();
     }
 }

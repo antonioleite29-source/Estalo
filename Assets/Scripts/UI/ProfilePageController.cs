@@ -20,10 +20,25 @@ public class ProfilePageController : MonoBehaviour
     [Tooltip("The container holding the avatar option buttons (e.g. AvatarRow). Hidden by default, shown when the preview is clicked.")]
     public GameObject avatarOptionsPanel;
 
+    [Tooltip("The player's stats. Leave empty and one is built under the name field when the page opens.")]
+    public TMP_Text statsText;
+
     private void OnEnable()
     {
         RefreshFromProfile();
         SetDropdownOpen(false);
+
+        EnsureStatsText();
+        RefreshStats();
+        PlayerStats.Changed += RefreshStats;
+
+        // Asks the server for a fresh leaderboard position; the answer lands through Changed.
+        PlayerSideIdentity.SubmitLocalToLeaderboard();
+    }
+
+    private void OnDisable()
+    {
+        PlayerStats.Changed -= RefreshStats;
     }
 
     private void Start()
@@ -46,6 +61,69 @@ public class ProfilePageController : MonoBehaviour
         RefreshHighlight(selectedIndex);
         RefreshSelectedPreview(selectedIndex);
     }
+
+    // --- stats ----------------------------------------------------------
+
+    // Built in code when nothing is wired, so the stats appear without anyone having to edit the
+    // scene. Placed in the empty middle of the page -- below the name field and the avatar row,
+    // above the navigation bar -- in the page's authored 1179 x 2556 units.
+    private void EnsureStatsText()
+    {
+        if (statsText != null)
+            return;
+
+        GameObject go = new GameObject("StatsText", typeof(RectTransform));
+        RectTransform rect = (RectTransform)go.transform;
+        rect.SetParent(transform, false);
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = new Vector2(0f, 420f);
+        rect.sizeDelta = new Vector2(980f, 1000f);
+
+        // Just after the page heading, so the avatar dropdown still opens over the top of it.
+        rect.SetSiblingIndex(Mathf.Min(1, transform.childCount - 1));
+
+        TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
+
+        // The page heading's font, so the stats look like part of this page.
+        TMP_Text heading = GetComponentInChildren<TMP_Text>(true);
+
+        if (heading != null && heading != text && heading.font != null)
+            text.font = heading.font;
+
+        text.alignment = TextAlignmentOptions.TopLeft;
+        text.color = Color.white;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = 30f;
+        text.fontSizeMax = 64f;
+        text.lineSpacing = 18f;
+        text.raycastTarget = false;
+
+        statsText = text;
+    }
+
+    private void RefreshStats()
+    {
+        if (statsText == null)
+            return;
+
+        string rank = PlayerStats.LeaderboardRank > 0
+            ? $"#{PlayerStats.LeaderboardRank} de {PlayerStats.LeaderboardSize}"
+            : "sem conexão";
+
+        statsText.text =
+            $"<b>Partidas jogadas:</b> {PlayerStats.MatchesPlayed}\n" +
+            $"<b>Vitórias:</b> {PlayerStats.MatchesWon}\n" +
+            $"<b>Derrotas:</b> {PlayerStats.MatchesLost}\n" +
+            // Two decimals, the same as the IQ bar in the lobby, so the two screens agree.
+            $"<b>Pontos máximos:</b> {PlayerStats.BestIQ:F2}\n" +
+            $"<b>Pontos atuais:</b> {PlayerStats.CurrentIQ:F2}\n" +
+            $"<b>Jogando há:</b> {PlayerStats.TimePlayingText()}\n" +
+            $"<b>Ranking global:</b> {rank}";
+    }
+
+    // --- avatars --------------------------------------------------------
 
     private void RefreshAvatarImages()
     {
