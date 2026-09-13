@@ -576,18 +576,18 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 4	multiplicacao	Quanto é 12 + 8 × 2?	40	30	20	28	3
 4	multiplicacao	Quanto é 3 + 7 × 2?	17	20	13	10	0
 4	multiplicacao	Quanto é 4 + 3 × 5?	35	19	22	14	1
-4	multiplicacao	Quanto é 5 + 7 × 3?	26	29	23	17	2
-4	multiplicacao	Quanto é 6 + 9 × 4?	60	42	39	33	3
+4	multiplicacao	Quanto é 5 + 7 × 3?	26	29	23	17	0
+4	multiplicacao	Quanto é 6 + 9 × 4?	60	42	39	33	1
 4	multiplicacao	Quanto é 7 + 3 × 3?	16	30	20	13	0
 4	multiplicacao	Quanto é 8 + 5 × 2?	26	18	21	13	1
-4	multiplicacao	Quanto é 9 + 7 × 1?	16	18	17	9	2
+4	multiplicacao	Quanto é 9 + 7 × 1?	16	18	17	9	0
 4	multiplicacao	Quanto é 10 + 9 × 6?	114	64	60	66	1
 4	multiplicacao	Quanto é 12 + 3 × 5?	27	75	30	22	0
-4	multiplicacao	Quanto é 5 + 5 × 5?	30	50	27	20	1
-4	multiplicacao	Quanto é 6 + 7 × 3?	39	27	30	21	2
+4	multiplicacao	Quanto é 5 + 5 × 5?	30	50	27	20	0
+4	multiplicacao	Quanto é 6 + 7 × 3?	39	27	30	21	1
 4	multiplicacao	Quanto é 7 + 9 × 2?	32	25	23	27	1
 4	multiplicacao	Quanto é 8 + 3 × 1?	11	14	13	8	0
-4	multiplicacao	Quanto é 9 + 5 × 6?	39	84	42	34	1
+4	multiplicacao	Quanto é 9 + 5 × 6?	39	84	42	34	0
 4	multiplicacao	Quanto é 11 × 16?	176	165	187	160	0
 4	multiplicacao	Quanto é 13 × 4?	39	52	65	48	1
 4	multiplicacao	Quanto é 13 × 13?	156	169	182	619	1

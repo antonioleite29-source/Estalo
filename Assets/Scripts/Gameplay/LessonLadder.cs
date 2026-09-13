@@ -1,45 +1,81 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-// The list of lessons on the learning path, and how far along it the player has got.
+// The lessons on the learning path, and how far along it the player has got.
 //
-// Thirty-two lessons: every topic twice, once early and once late, with the difficulty ramping
-// from level 1 to level 7 across the whole ladder. So a topic is met once while it is gentle and
-// again when it is hard, which is how the same material is supposed to be revisited.
+// What each lesson teaches lives in Resources/Lessons.json rather than here: the teaching cards are
+// words, and words get rewritten far more often than code. A lesson names one topic and one level
+// from the question bank, and the order of the file is the order of the path, easiest first.
+//
+// Every topic a lesson names must actually exist in TriviaQuestions.txt at that level. The ladder
+// this replaced asked for "fracoes", "porcentagem" and "geral", which the bank has never had, so a
+// fifth of its lessons quietly filled up with whatever else was at that level.
 public static class LessonLadder
 {
-    // Roughly the order these are taught in. Arithmetic first because everything else leans on it,
-    // reasoning last because it leans on everything.
-    private static readonly string[] TopicOrder =
-    {
-        "adicao", "subtracao", "multiplicacao", "divisao",
-        "fracoes", "porcentagem", "potencias", "geometria",
-        "sequencias", "algebra", "logica", "analogias",
-        "classificacao", "probabilidade", "raciocinio", "geral"
-    };
+    private const string ResourceName = "Lessons";
 
-    public const int Count = 32;
+    // A lesson is finished by getting this many right, however many tries that takes.
+    public const int CorrectToPass = 10;
 
-    public struct Lesson
+    [Serializable]
+    public class Lesson
     {
-        public int Number;        // 1-based, what the player sees on the button
-        public string Topic;
-        public int Level;         // 1-7, the same scale PlayerIQManager uses
+        public string title;
+        public string topic;
+        public int level;         // 1-7, the same scale PlayerIQManager uses
+        public string[] cards;    // the teaching, shown one card at a time before the questions
+
+        [NonSerialized] public int Number;   // 1-based, what the player sees on the button
     }
+
+    [Serializable]
+    private class LessonFile
+    {
+        public Lesson[] lessons;
+    }
+
+    private static Lesson[] lessons;
+
+    private static Lesson[] All
+    {
+        get
+        {
+            if (lessons == null)
+                lessons = Load();
+
+            return lessons;
+        }
+    }
+
+    public static int Count => All.Length;
 
     public static Lesson At(int index)
     {
-        index = Mathf.Clamp(index, 0, Count - 1);
+        if (Count == 0)
+            return null;
 
-        return new Lesson
+        return All[Mathf.Clamp(index, 0, Count - 1)];
+    }
+
+    private static Lesson[] Load()
+    {
+        TextAsset file = Resources.Load<TextAsset>(ResourceName);
+
+        if (file == null)
         {
-            Number = index + 1,
-            Topic = TopicOrder[index % TopicOrder.Length],
+            Debug.LogError($"LessonLadder: no Resources/{ResourceName}.json, so the learning path is empty.");
+            return new Lesson[0];
+        }
 
-            // Linear from 1 to 7 across the ladder, so the second pass through the topics is
-            // always harder than the first.
-            Level = Mathf.Clamp(1 + Mathf.FloorToInt(index * 6f / (Count - 1)), 1, 7)
-        };
+        LessonFile parsed = JsonUtility.FromJson<LessonFile>(file.text);
+        Lesson[] loaded = parsed != null && parsed.lessons != null ? parsed.lessons : new Lesson[0];
+
+        for (int i = 0; i < loaded.Length; i++)
+            loaded[i].Number = i + 1;
+
+        return loaded;
     }
 
     // --- progress -------------------------------------------------------
@@ -60,6 +96,8 @@ public static class LessonLadder
         }
     }
 
+    // Everything up to and including the next lesson is open, so any finished lesson can be
+    // played again.
     public static bool IsUnlocked(int index) => index <= Completed;
 
     public static bool IsDone(int index) => index < Completed;
@@ -77,49 +115,44 @@ public static class LessonLadder
         Completed = 0;
     }
 
-    // The questions for one lesson: that topic at that level, falling back to the level on its own
-    // when a topic has too few. A lesson that cannot fill itself is worse than a slightly
+    // Every question for one lesson, shuffled: its topic at its level. Falls back to the whole level
+    // when the topic has none there, since a lesson that cannot start at all is worse than an
     // off-topic one.
-    public static List<TriviaQuestion> BuildSet(Lesson lesson, int wanted)
+    public static List<TriviaQuestion> BuildPool(Lesson lesson)
     {
-        List<TriviaQuestion> pool = new List<TriviaQuestion>();
-        List<TriviaQuestion> offTopic = new List<TriviaQuestion>();
+        List<TriviaQuestion> onTopic = new List<TriviaQuestion>();
+        List<TriviaQuestion> wholeLevel = new List<TriviaQuestion>();
 
         TriviaDuelManager duel = TriviaDuelManager.Instance;
 
-        if (duel == null)
-            return pool;
+        if (duel == null || lesson == null)
+            return onTopic;
 
-        int size = duel.GetPoolSize(lesson.Level);
+        int size = duel.GetPoolSize(lesson.level);
 
         for (int i = 0; i < size; i++)
         {
-            TriviaQuestion question = duel.GetQuestionAt(lesson.Level, i);
+            TriviaQuestion question = duel.GetQuestionAt(lesson.level, i);
 
             if (question == null)
                 continue;
 
-            if (question.topic == lesson.Topic)
-                pool.Add(question);
-            else
-                offTopic.Add(question);
+            wholeLevel.Add(question);
+
+            if (question.topic == lesson.topic)
+                onTopic.Add(question);
         }
 
+        if (onTopic.Count == 0 && wholeLevel.Count > 0)
+            Debug.LogWarning($"LessonLadder: lesson {lesson.Number} asks for \"{lesson.topic}\" at level " +
+                             $"{lesson.level}, which the question bank does not have. Using the whole level.");
+
+        List<TriviaQuestion> pool = onTopic.Count > 0 ? onTopic : wholeLevel;
         Shuffle(pool);
-
-        if (pool.Count < wanted)
-        {
-            Shuffle(offTopic);
-            pool.AddRange(offTopic);
-        }
-
-        if (pool.Count > wanted)
-            pool.RemoveRange(wanted, pool.Count - wanted);
-
         return pool;
     }
 
-    private static void Shuffle(List<TriviaQuestion> list)
+    public static void Shuffle<T>(List<T> list)
     {
         for (int i = list.Count - 1; i > 0; i--)
         {

@@ -1,0 +1,201 @@
+{
+  "lessons": [
+    {
+      "title": "Adição",
+      "topic": "adicao",
+      "level": 1,
+      "cards": [
+        "Somar é juntar. Para somar números maiores, some primeiro as dezenas e depois as unidades.",
+        "Exemplo: 14 + 17\nDezenas: 10 + 10 = 20\nUnidades: 4 + 7 = 11\nTotal: 20 + 11 = <b>31</b>"
+      ]
+    },
+    {
+      "title": "Sequências",
+      "topic": "sequencias",
+      "level": 1,
+      "cards": [
+        "Numa sequência, tudo segue uma regra. Descubra quanto muda de um termo para o próximo.",
+        "Exemplo: 7, 10, 13, 16, ___\nCada um soma 3, então vem <b>19</b>.",
+        "Letras, dias e meses também têm ordem. A, C, E, G pula uma letra: vem <b>I</b>. Depois de outubro vem <b>novembro</b>."
+      ]
+    },
+    {
+      "title": "Subtração",
+      "topic": "subtracao",
+      "level": 2,
+      "cards": [
+        "Subtrair é tirar. Tire primeiro as dezenas, depois as unidades.",
+        "Exemplo: 31 - 13\nTire 10: 31 - 10 = 21\nTire 3: 21 - 3 = <b>18</b>",
+        "Para conferir, some de volta: 18 + 13 = 31. Se bater, está certo!"
+      ]
+    },
+    {
+      "title": "Qual não pertence?",
+      "topic": "classificacao",
+      "level": 2,
+      "cards": [
+        "Em \"Qual NÃO pertence?\", três itens têm algo em comum. Descubra o que une esses três.",
+        "Exemplo: Piano, Violão, Pincel, Violino\nTrês são instrumentos musicais. O intruso é o <b>Pincel</b>."
+      ]
+    },
+    {
+      "title": "Formas e medidas",
+      "topic": "geometria",
+      "level": 2,
+      "cards": [
+        "<b>Perímetro</b> é a volta toda: some todos os lados.\nRetângulo de 14 cm por 5 cm: 14 + 5 + 14 + 5 = <b>38 cm</b>",
+        "<b>Área</b> é o espaço de dentro: base × altura.\nQuadrado de lado 5 cm: 5 × 5 = <b>25 cm²</b>",
+        "Triângulos: o <b>equilátero</b> tem 3 lados iguais, o <b>isósceles</b> tem 2 e o <b>escaleno</b> nenhum. O triângulo <b>retângulo</b> tem um ângulo de 90°.",
+        "Faces são os lados de um sólido. O cubo tem <b>6</b> faces; a pirâmide de base quadrada tem <b>5</b>."
+      ]
+    },
+    {
+      "title": "Multiplicação",
+      "topic": "multiplicacao",
+      "level": 3,
+      "cards": [
+        "Multiplicar é somar o mesmo número várias vezes.\n4 × 3 = 4 + 4 + 4 = <b>12</b>",
+        "Truques: × 10 é só pôr um zero no fim (7 × 10 = 70). E × 5 é a metade de × 10: 5 × 12 = 120 ÷ 2 = <b>60</b>."
+      ]
+    },
+    {
+      "title": "Analogias",
+      "topic": "analogias",
+      "level": 3,
+      "cards": [
+        "\"A está para B assim como C está para ___\": descubra a ligação entre A e B e use a mesma ligação com C.",
+        "Exemplo: Itália está para Roma assim como Japão está para ___\nRoma é a capital da Itália, então: <b>Tóquio</b>.",
+        "A ligação pode ser um contrário: quente e frio. Então caro está para <b>barato</b>."
+      ]
+    },
+    {
+      "title": "Chances",
+      "topic": "probabilidade",
+      "level": 3,
+      "cards": [
+        "Probabilidade = casos que você quer ÷ casos possíveis.\nSacola com 3 vermelhas e 2 azuis: chance de azul = <b>2/5</b>",
+        "Um dado tem 6 lados. Chance de NÃO sair o 3: sobram 5 lados, então <b>5/6</b>.",
+        "Na moeda, cada jogada é 1/2. Para várias caras seguidas, multiplique: 2 caras = 1/2 × 1/2 = <b>1/4</b>."
+      ]
+    },
+    {
+      "title": "Sólidos e ângulos",
+      "topic": "geometria",
+      "level": 3,
+      "cards": [
+        "Num sólido, <b>faces</b> são os lados, <b>arestas</b> são as linhas e <b>vértices</b> são as pontas. O cubo tem 6 faces, 12 arestas e 8 vértices.",
+        "Os 3 ângulos de um triângulo somam <b>180°</b>. Se dois medem 25° e 95°, o terceiro mede 180 - 120 = <b>60°</b>.",
+        "O <b>complemento</b> completa 90° e o <b>suplemento</b> completa 180°. Área do triângulo = base × altura ÷ 2."
+      ]
+    },
+    {
+      "title": "Padrões escondidos",
+      "topic": "sequencias",
+      "level": 3,
+      "cards": [
+        "Quando a diferença muda, olhe a diferença das diferenças.\n2, 5, 10, 17, 26: +3, +5, +7, +9. O próximo é +11 = <b>37</b>",
+        "Na sequência de <b>Fibonacci</b>, cada número é a soma dos dois anteriores: 0, 1, 1, 2, 3, 5, 8, <b>13</b>.",
+        "Com letras, troque por números (A=1, B=2, C=3...). A, D, G, J vai de 3 em 3, então vem <b>M</b>."
+      ]
+    },
+    {
+      "title": "Contas maiores",
+      "topic": "multiplicacao",
+      "level": 4,
+      "cards": [
+        "Quebre o número em partes.\n14 × 15 = 14 × 10 + 14 × 5\n= 140 + 70 = <b>210</b>",
+        "Ordem das contas: faça <b>× e ÷ antes</b> de + e -.\n5 + 7 × 3 = 5 + 21 = <b>26</b>"
+      ]
+    },
+    {
+      "title": "Lógica",
+      "topic": "logica",
+      "level": 4,
+      "cards": [
+        "Use só o que foi dito. \"Todos na sala usam óculos. Bruno está na sala.\" Então Bruno <b>usa óculos</b>.",
+        "Cuidado com o caminho de volta. \"Se chove, a rua fica molhada. A rua está molhada.\" Isso <b>não prova</b> que choveu.",
+        "Comparações viram uma fila: se A é maior que B e B é maior que C, então <b>A é maior que C</b>."
+      ]
+    },
+    {
+      "title": "Dados e sorteios",
+      "topic": "probabilidade",
+      "level": 4,
+      "cards": [
+        "Um dado tem 6 lados: 1, 2, 3, 4, 5 e 6. Pares são 2, 4 e 6, então a chance é 3/6 = <b>1/2</b>.",
+        "Primos no dado: 2, 3 e 5, então <b>1/2</b>. Maiores que 2: 3, 4, 5 e 6, então 4/6 = <b>2/3</b>.",
+        "A moeda não tem memória: depois de 3 caras, a próxima ainda é <b>1/2</b>. E todas as chances somadas dão sempre <b>1</b>."
+      ]
+    },
+    {
+      "title": "Problemas do dia a dia",
+      "topic": "raciocinio",
+      "level": 4,
+      "cards": [
+        "Distância = velocidade × tempo.\nA 50 km/h por 4 horas: 50 × 4 = <b>200 km</b>",
+        "Horários: some a duração. Um filme começa às 14h e dura 3 horas: termina às <b>17h</b>.",
+        "Leia com calma, algumas são pegadinhas! \"17 ovelhas, todas menos 9 morrem.\" Sobram <b>9</b>."
+      ]
+    },
+    {
+      "title": "Potências",
+      "topic": "potencias",
+      "level": 5,
+      "cards": [
+        "Potência é multiplicar o número por ele mesmo.\n5 ao quadrado = 5 × 5 = <b>25</b>\n2 ao cubo = 2 × 2 × 2 = <b>8</b>",
+        "Quadrados grandes: quebre em partes.\n22 ao quadrado = 22 × 20 + 22 × 2\n= 440 + 44 = <b>484</b>",
+        "Na divisão de potências da mesma base, subtraia os expoentes: 2 elevado a 20 ÷ 2 elevado a 10 = 2 elevado a 10 = <b>1024</b>."
+      ]
+    },
+    {
+      "title": "Polígonos e Pitágoras",
+      "topic": "geometria",
+      "level": 5,
+      "cards": [
+        "Ângulo interno de um polígono regular = (lados - 2) × 180 ÷ lados.\nHexágono: 4 × 180 ÷ 6 = <b>120°</b>",
+        "<b>Pitágoras</b>: hipotenusa² = cateto² + cateto².\nCatetos 5 e 12: 25 + 144 = 169, então a hipotenusa é <b>13</b>.",
+        "No relógio, cada hora vale <b>30°</b>: às 2h os ponteiros formam <b>60°</b>. Área do paralelogramo = base × altura."
+      ]
+    },
+    {
+      "title": "Lógica afiada",
+      "topic": "logica",
+      "level": 5,
+      "cards": [
+        "\"Não necessariamente\": todo gato é mamífero, mas um mamífero não precisa ser gato. A regra não vale ao contrário.",
+        "Postes e vãos: 7 postes em linha têm <b>6</b> vãos entre eles. Para cortar uma corda em 6 pedaços, bastam <b>5</b> cortes.",
+        "Para garantir um par de meias da mesma cor, tire uma a mais que o número de cores. Com 3 cores: <b>4</b> meias."
+      ]
+    },
+    {
+      "title": "Cartas e dois dados",
+      "topic": "probabilidade",
+      "level": 5,
+      "cards": [
+        "Um baralho tem 52 cartas: 4 naipes com 13 cartas cada. Chance de copas: 13/52 = <b>1/4</b>. De um ás: 4/52 = <b>1/13</b>.",
+        "Dois dados dão 6 × 6 = <b>36</b> resultados. A soma 7 sai de 6 jeitos (1+6, 2+5, 3+4...), então 6/36 = <b>1/6</b>.",
+        "A soma 11 só sai com 5+6 ou 6+5: 2/36 = <b>1/18</b>."
+      ]
+    },
+    {
+      "title": "Divisão com resto",
+      "topic": "divisao",
+      "level": 6,
+      "cards": [
+        "O <b>resto</b> é o que sobra quando a divisão não é exata.",
+        "Exemplo: 85 ÷ 4\nMaior múltiplo de 4 que cabe: 4 × 21 = 84\nSobra 85 - 84 = <b>1</b>",
+        "Se a divisão é exata, o resto é <b>0</b>: 76 = 4 × 19, sem sobra nenhuma."
+      ]
+    },
+    {
+      "title": "Equações",
+      "topic": "algebra",
+      "level": 7,
+      "cards": [
+        "Numa equação, x é um número escondido. Faça a mesma conta dos dois lados até o x ficar sozinho.",
+        "Exemplo: 3x + 8 = 35\nTire 8 dos dois lados: 3x = 27\nDivida os dois por 3: x = <b>9</b>",
+        "Confira colocando o número no lugar do x: 3 × 9 + 8 = 35. Deu certo!"
+      ]
+    }
+  ]
+}

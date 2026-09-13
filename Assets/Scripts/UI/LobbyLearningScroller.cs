@@ -93,14 +93,33 @@ public class LobbyLearningScroller : MonoBehaviour
         public int Index;
         public Image Background;
         public TMP_Text Label;
+        public TMP_Text Title;
         public Button Button;
         public RectTransform Rect;
     }
+
+    private float spacingPx;
 
     private void Awake()
     {
         panel = GetComponent<RectTransform>();
         EnsureMask();
+        EnsureFooterShown();
+    }
+
+    // The "Praticar meus erros" bar sits inside PracticeArea, next to the old practice page's two
+    // full-screen panels. Those panels cover the whole Learning page in the Scene view, so switching
+    // PracticeArea off to see past them is the obvious move -- and it takes the bar down with it.
+    // Everything between the bar and this page is switched back on; the old panels themselves stay
+    // hidden, because PracticeQuizController hides them.
+    private void EnsureFooterShown()
+    {
+        if (pinnedFooter == null || !pinnedFooter.IsChildOf(transform))
+            return;
+
+        for (Transform t = pinnedFooter; t != null && t != transform; t = t.parent)
+            if (!t.gameObject.activeSelf)
+                t.gameObject.SetActive(true);
     }
 
     private IEnumerator Start()
@@ -117,9 +136,14 @@ public class LobbyLearningScroller : MonoBehaviour
     private void OnEnable()
     {
         if (content == null || built.Count == 0)
+        {
             StartCoroutine(RebuildNextFrame());
+        }
         else
+        {
             RefreshNodes();
+            ScrollToCurrentLesson();
+        }
     }
 
     private IEnumerator RebuildNextFrame()
@@ -145,6 +169,7 @@ public class LobbyLearningScroller : MonoBehaviour
         viewW = panel.rect.width > 0f ? panel.rect.width : Screen.width;
 
         float spacing = viewH * nodeSpacing;
+        spacingPx = spacing;
 
         // Half a spacing of air at each end, so the first and last nodes are not jammed against
         // the edge of the scroll, plus room under the last one for whatever floats over the
@@ -166,7 +191,22 @@ public class LobbyLearningScroller : MonoBehaviour
         BuildTiles();
         BuildNodes(spacing);
 
-        scroll = 0f;
+        ScrollToCurrentLesson();
+    }
+
+    // Opens with the next lesson to do in view, a little above the middle, rather than always back at
+    // lesson one -- by lesson twelve, scrolling past eleven finished nodes every time is the whole
+    // visit.
+    private void ScrollToCurrentLesson()
+    {
+        if (content == null)
+            return;
+
+        int next = Mathf.Min(LessonLadder.Completed, LessonLadder.Count - 1);
+        float nodeY = (next + 1f) * spacingPx;
+
+        scroll = Mathf.Clamp(nodeY - viewH * 0.4f, 0f, Mathf.Max(0f, contentH - viewH));
+        dragVelocity = 0f;
         ApplyScroll();
     }
 
@@ -231,12 +271,34 @@ public class LobbyLearningScroller : MonoBehaviour
             label.raycastTarget = false;
             label.text = (i + 1).ToString();
 
+            // The lesson's name just under its node, so the path reads as a plan rather than a column
+            // of numbers. Twice the node's width still fits the margin, which is never under a third.
+            LessonLadder.Lesson lesson = LessonLadder.At(i);
+
+            TMP_Text title = NewChild("Title", rect).gameObject.AddComponent<TextMeshProUGUI>();
+            RectTransform titleRect = title.rectTransform;
+            titleRect.anchorMin = new Vector2(0.5f, 0f);
+            titleRect.anchorMax = new Vector2(0.5f, 0f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.sizeDelta = new Vector2(diameter * 1.9f, diameter * 0.45f);
+            titleRect.anchoredPosition = new Vector2(0f, -diameter * 0.04f);
+            title.alignment = TextAlignmentOptions.Top;
+            title.fontStyle = FontStyles.Bold;
+            title.enableAutoSizing = true;
+            title.fontSizeMin = 8f;
+            title.fontSizeMax = diameter * 0.2f;
+            title.raycastTarget = false;
+            title.text = lesson != null ? lesson.title : string.Empty;
+
+            if (label.font != null)
+                title.font = label.font;
+
             int index = i;
             button.onClick.AddListener(() => OnNodeTapped(index));
 
             nodes.Add(new LessonNode
             {
-                Index = i, Background = background, Label = label, Button = button, Rect = rect
+                Index = i, Background = background, Label = label, Title = title, Button = button, Rect = rect
             });
         }
 
@@ -306,6 +368,7 @@ public class LobbyLearningScroller : MonoBehaviour
             // path like this works at all.
             node.Background.color = unlocked ? Color.white : new Color(1f, 1f, 1f, 0.45f);
             node.Label.color = unlocked ? Color.white : new Color(1f, 1f, 1f, 0.5f);
+            node.Title.color = node.Label.color;
             node.Button.interactable = unlocked;
         }
     }
