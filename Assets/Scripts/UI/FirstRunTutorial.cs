@@ -442,8 +442,16 @@ public class FirstRunTutorial : MonoBehaviour
 
         // Back through the manager, so the lobby is restored exactly the way it is after a real
         // match rather than by this class guessing which objects to switch on.
+        // Then straight into "Entrar ou criar conta", so the first thing after learning the game is
+        // making sure its progress can't be lost.
         if (duel != null)
-            duel.PlayReturnToLobbyTransition(() => duel.PrepareForLobby(true));
+            duel.PlayReturnToLobbyTransition(() =>
+            {
+                duel.PrepareForLobby(true);
+                LoginPanel.OfferAfterTutorial();
+            });
+        else
+            LoginPanel.OfferAfterTutorial();
 
         Destroy(gameObject);
     }

@@ -29,6 +29,31 @@ public class LoginPanel : MonoBehaviour
     private string pendingUsername;
     private bool wired;
 
+    // Set when the panel was opened straight after the tutorial: closing it goes on to the lobby
+    // instead of leaving the player on the Profile page they never chose to open.
+    private LobbyPageSwitcher returnToLobby;
+
+    // Opened by the tutorial as it finishes. The panel lives on the Profile page, so that page is
+    // shown under it. Skipped for anyone already logged in.
+    public static void OfferAfterTutorial()
+    {
+        if (!string.IsNullOrEmpty(PlayerStats.Username))
+            return;
+
+        LobbyPageSwitcher switcher = FindAnyObjectByType<LobbyPageSwitcher>(FindObjectsInactive.Include);
+        ProfilePageController profile = FindAnyObjectByType<ProfilePageController>(FindObjectsInactive.Include);
+
+        if (switcher == null || profile == null)
+            return;
+
+        switcher.ShowProfilePage();
+
+        LoginPanel panel = profile.OpenLogin();
+
+        if (panel != null)
+            panel.returnToLobby = switcher;
+    }
+
     public void Show()
     {
         gameObject.SetActive(true);
@@ -39,6 +64,13 @@ public class LoginPanel : MonoBehaviour
     public void Hide()
     {
         gameObject.SetActive(false);
+
+        if (returnToLobby != null)
+        {
+            LobbyPageSwitcher switcher = returnToLobby;
+            returnToLobby = null;
+            switcher.ShowLobbyPage();
+        }
     }
 
     private void OnEnable()

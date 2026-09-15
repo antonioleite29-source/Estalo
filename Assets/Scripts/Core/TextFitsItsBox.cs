@@ -13,9 +13,9 @@ using UnityEngine;
 // the labels that would have overflowed change at all.
 public static class TextFitsItsBox
 {
-    // Below this it stops being readable on a phone, and a label that needs 8pt to fit is a layout
+    // The game-wide floor: nothing is drawn under 70. A label that needs less to fit is a layout
     // problem worth seeing rather than hiding.
-    private const float SmallestSize = 8f;
+    private const float SmallestSize = MinimumTextSize.Smallest;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Apply()
@@ -46,9 +46,9 @@ public static class TextFitsItsBox
             text.fontSizeMax = authored;
             text.fontSizeMin = SmallestSize;
 
-            // Truncate, not overflow: if a label somehow still does not fit at the minimum, it is
-            // cut at the edge of its box rather than drawn across whatever is beside it.
-            text.overflowMode = TextOverflowModes.Truncate;
+            // Overflow, not truncate: with a floor as high as 70, cutting at the edge would hide words
+            // of questions and answers. Spilling past the box shows where the box needs widening.
+            text.overflowMode = TextOverflowModes.Overflow;
 
             fitted++;
         }
