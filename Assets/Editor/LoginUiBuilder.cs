@@ -8,8 +8,50 @@ using UnityEngine;
 // "Jogar" button when made; after that, whatever you change on them is kept.
 //
 // Safe to run again: anything already wired on ProfilePageController is left alone.
+[InitializeOnLoad]
 public static class LoginUiBuilder
 {
+    private const string WrapFixedKey = "EstaloLoginTextWrapFixed";
+
+    // Panels built before the labels were set to wrap were saved as No Wrap, so a sentence that did
+    // not fit on one line was cut off. Fixed once, automatically, in the open scene -- save it after.
+    static LoginUiBuilder()
+    {
+        if (!EditorPrefs.GetBool(WrapFixedKey, false))
+            EditorApplication.delayCall += () =>
+            {
+                if (!EditorApplication.isPlayingOrWillChangePlaymode && MakeLoginTextWrap())
+                    EditorPrefs.SetBool(WrapFixedKey, true);
+            };
+    }
+
+    [MenuItem("Trivia Duel/Setup/Make Login Text Wrap")]
+    private static bool MakeLoginTextWrap()
+    {
+        bool found = false;
+
+        foreach (LoginPanel panel in Object.FindObjectsByType<LoginPanel>(FindObjectsInactive.Include))
+        {
+            foreach (TMP_Text text in panel.GetComponentsInChildren<TMP_Text>(true))
+            {
+                // Input fields scroll their own text sideways; leave those alone.
+                if (text.GetComponentInParent<TMP_InputField>(true) != null)
+                    continue;
+
+                Undo.RecordObject(text, "Make login text wrap");
+                text.textWrappingMode = TextWrappingModes.Normal;
+                text.overflowMode = TextOverflowModes.Overflow;
+                EditorUtility.SetDirty(text);
+            }
+
+            EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
+            Debug.Log("LoginUiBuilder: the login panel's text now wraps onto more lines. Save the scene.", panel);
+            found = true;
+        }
+
+        return found;
+    }
+
     [MenuItem("Trivia Duel/Setup/Build Login Buttons")]
     private static void Build()
     {

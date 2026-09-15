@@ -84,6 +84,14 @@ public class LoginPanel : MonoBehaviour
         text.textWrappingMode = TextWrappingModes.Normal;
         text.overflowMode = TextOverflowModes.Overflow;
 
+        // The status messages are long sentences too.
+        if (statusText != null)
+        {
+            statusText.enableAutoSizing = false;
+            statusText.textWrappingMode = TextWrappingModes.Normal;
+            statusText.overflowMode = TextOverflowModes.Overflow;
+        }
+
         RectTransform rect = text.rectTransform;
         float height = rect.sizeDelta.y;
         float bottom = rect.anchoredPosition.y - rect.pivot.y * height;
@@ -109,6 +117,7 @@ public class LoginPanel : MonoBehaviour
     private void OnEnable()
     {
         Wire();
+        FitSubtitle();
         PlayerStats.LoginFinished += OnLoginFinished;
     }
 
@@ -303,6 +312,8 @@ public class LoginPanel : MonoBehaviour
         label.text = text;
         label.fontSize = size;
         label.alignment = TextAlignmentOptions.Center;
+        label.textWrappingMode = TextWrappingModes.Normal;
+        label.overflowMode = TextOverflowModes.Overflow;
         label.color = Color.white;
         label.raycastTarget = false;
         return label;
