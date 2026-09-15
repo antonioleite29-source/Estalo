@@ -31,7 +31,9 @@ echo "    (one password prompt, then it goes quiet for a minute while it copies)
 # Unpacked beside the live copy and swapped into place only once it is complete,
 # so a connection that drops halfway leaves the running server untouched rather
 # than half-overwritten. The previous build stays as .old for one deploy.
-tar czf - -C "$BUILD" . | ssh "$TARGET" 'set -e
+# --no-mac-metadata: without it macOS packs its own file attributes, and Linux tar prints a
+# warning about each one.
+COPYFILE_DISABLE=1 tar --no-mac-metadata -czf - -C "$BUILD" . | ssh "$TARGET" 'set -e
     rm -rf /opt/triviaduel.new
     mkdir -p /opt/triviaduel.new
     tar xzf - -C /opt/triviaduel.new
