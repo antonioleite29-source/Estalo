@@ -67,8 +67,8 @@ public class FirstRunTutorial : MonoBehaviour
         StartTutorial(false);
     }
 
-    // "Rever tutorial" on the More page: the same tutorial again, on purpose. It leaves IQ alone --
-    // the starting placement only ever happens once -- and does not offer the login at the end.
+    // "Rever tutorial" on the More page: the explanation cards again, on purpose. No test round -- so
+    // IQ is never touched, the starting placement only ever happens once -- and no login offer.
     public static bool Replay()
     {
         if (IsRunning || LessonSession.IsRunning || NetworkBootstrap.IsDedicatedServerBuild)
@@ -132,10 +132,13 @@ public class FirstRunTutorial : MonoBehaviour
         // learn. Finish() writes it too, so a completed run is covered either way.
         MarkSeen();
 
-        yield return PlayTestRound();
+        if (!isReplay)
+        {
+            yield return PlayTestRound();
 
-        ShowResult();
-        yield return new WaitForSecondsRealtime(6f);
+            ShowResult();
+            yield return new WaitForSecondsRealtime(6f);
+        }
 
         Finish();
     }
@@ -222,7 +225,9 @@ public class FirstRunTutorial : MonoBehaviour
 
         yield return Card("Se ele errar ou o tempo acabar, o jogo continua.");
 
-        yield return Card("Para você entender direito, vamos fazer uma rodada de teste!");
+        // A replay from the More page is only the explanation: no test round, so nothing announcing one.
+        if (!isReplay)
+            yield return Card("Para você entender direito, vamos fazer uma rodada de teste!");
     }
 
     // Every card holds for the same beat whatever it is doing, so the tutorial has a rhythm rather
@@ -430,17 +435,6 @@ public class FirstRunTutorial : MonoBehaviour
     // be flattery: 150 is meant to be about one person in two thousand.
     private void ShowResult()
     {
-        if (isReplay)
-        {
-            if (duel.questionText != null)
-                duel.questionText.text = $"Você acertou {answeredCorrectly} de {TestQuestions}.\n" +
-                                         "Foi só um treino: seu IQ continua o mesmo.";
-
-            SetScores(0, 0);
-            HideRings();
-            return;
-        }
-
         int iq = Mathf.Clamp(Mathf.RoundToInt(100f + 2.5f * (answeredCorrectlyRaw - 14f)),
                              Mathf.RoundToInt(PlayerIQManager.IQ_MIN),
                              Mathf.RoundToInt(PlayerIQManager.IQ_MAX));
