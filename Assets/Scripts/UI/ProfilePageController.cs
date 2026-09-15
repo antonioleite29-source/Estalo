@@ -29,6 +29,15 @@ public class ProfilePageController : MonoBehaviour
     [Tooltip("The login panel, switched off until the account button is tapped. Made by the same menu.")]
     public LoginPanel loginPanel;
 
+    // The login panel is saved switched on in the scene whenever it was left that way after editing
+    // it. Awake runs the moment the page first opens, before anything can ask for the panel, so it
+    // never greets whoever opens the Profile page.
+    private void Awake()
+    {
+        if (loginPanel != null && loginPanel.gameObject.activeSelf)
+            loginPanel.gameObject.SetActive(false);
+    }
+
     private void OnEnable()
     {
         RefreshFromProfile();

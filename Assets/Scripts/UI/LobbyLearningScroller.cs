@@ -299,8 +299,8 @@ public class LobbyLearningScroller : MonoBehaviour
             if (label.font != null)
                 title.font = label.font;
 
-            int index = i;
-            button.onClick.AddListener(() => OnNodeTapped(index));
+            // No onClick: taps are found by position in TapAt, which works whatever is drawn over
+            // the path. The Button stays for its pressed look and its locked state.
 
             nodes.Add(new LessonNode
             {
@@ -379,6 +379,76 @@ public class LobbyLearningScroller : MonoBehaviour
         }
     }
 
+    // Taps are found here, from where the finger lifted, rather than through each node's Button.
+    //
+    // A Button only hears a tap when nothing else in the UI sits on top of it at that spot, and on
+    // this page something did: tapping lesson 1 never reached OnNodeTapped at all, not even to say it
+    // was locked. Looking the node up by position works whatever is drawn over the path. A real,
+    // working button on top -- the "Praticar meus erros" bar, the navigation bar -- still keeps its
+    // tap, so this never steals theirs.
+    private void TapAt(Vector2 screenPoint)
+    {
+        if (LessonSession.IsRunning || FirstRunTutorial.IsRunning)
+            return;
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+        Camera eye = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+
+        // Only the part of the path actually on screen: the page's mask hides nodes scrolled past.
+        if (!RectTransformUtility.RectangleContainsScreenPoint(panel, screenPoint, eye))
+            return;
+
+        LessonNode hit = null;
+
+        foreach (LessonNode node in nodes)
+        {
+            if (node.Rect != null && RectTransformUtility.RectangleContainsScreenPoint(node.Rect, screenPoint, eye))
+            {
+                hit = node;
+                break;
+            }
+        }
+
+        if (hit == null)
+            return;
+
+        EventSystem events = EventSystem.current;
+
+        if (events != null)
+        {
+            List<RaycastResult> results = new List<RaycastResult>();
+            events.RaycastAll(new PointerEventData(events) { position = screenPoint }, results);
+
+            if (results.Count > 0 && !results[0].gameObject.transform.IsChildOf(hit.Rect))
+            {
+                GameObject top = results[0].gameObject;
+                Selectable other = top.GetComponentInParent<Selectable>();
+
+                if (other != null && other != hit.Button && other.interactable && other.isActiveAndEnabled)
+                {
+                    Debug.Log($"LobbyLearningScroller: the tap on lesson {hit.Index + 1} landed on the button " +
+                              $"\"{PathOf(other.transform)}\" drawn over it, so it goes to that button.");
+                    return;
+                }
+
+                Debug.Log($"LobbyLearningScroller: \"{PathOf(top.transform)}\" is drawn over lesson " +
+                          $"{hit.Index + 1} and catches taps there; opening the lesson anyway.");
+            }
+        }
+
+        OnNodeTapped(hit.Index);
+    }
+
+    private static string PathOf(Transform t)
+    {
+        string path = t.name;
+
+        for (Transform p = t.parent; p != null; p = p.parent)
+            path = p.name + "/" + path;
+
+        return path;
+    }
+
     private void OnNodeTapped(int index)
     {
         // A drag that happened to end on a node is a scroll, not a tap. Without this every attempt
@@ -437,6 +507,9 @@ public class LobbyLearningScroller : MonoBehaviour
 
             // A tap does not fling the path.
             dragVelocity = draggedFar ? ReleaseVelocity(pointerY) : 0f;
+
+            if (!draggedFar)
+                TapAt(pointer.position.ReadValue());
         }
 
         if (!isDragging && Mathf.Approximately(dragVelocity, 0f))
