@@ -10,6 +10,7 @@ using UnityEngine;
 public static class SettingsUiBuilder
 {
     private const string BuiltKey = "EstaloSettingsButtonsBuilt";
+    private const string WhiteKey = "EstaloSettingsLabelsWhite";
     private const string UndoName = "Build settings buttons";
 
     static SettingsUiBuilder()
@@ -21,6 +22,38 @@ public static class SettingsUiBuilder
         {
             if (!EditorApplication.isPlayingOrWillChangePlaymode && Build())
                 EditorPrefs.SetBool(BuiltKey, true);
+        };
+    }
+
+    // The buttons already in the scene were made with the Jogar label colour. Turned white once,
+    // automatically -- save the scene after.
+    [InitializeOnLoadMethod]
+    private static void WhiteOnce()
+    {
+        if (EditorPrefs.GetBool(WhiteKey, false))
+            return;
+
+        EditorApplication.delayCall += () =>
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
+            SettingsPage page = Object.FindAnyObjectByType<SettingsPage>(FindObjectsInactive.Include);
+
+            if (page == null)
+                return;
+
+            foreach (TMPro.TMP_Text label in page.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                Undo.RecordObject(label, "White settings labels");
+
+            page.MakeLabelsWhite();
+
+            foreach (TMPro.TMP_Text label in page.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                EditorUtility.SetDirty(label);
+
+            EditorSceneManager.MarkSceneDirty(page.gameObject.scene);
+            EditorPrefs.SetBool(WhiteKey, true);
+            Debug.Log("SettingsUiBuilder: settings button labels are white. Save the scene.", page);
         };
     }
 

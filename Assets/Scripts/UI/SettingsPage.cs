@@ -66,12 +66,25 @@ public class SettingsPage : MonoBehaviour
             return;
 
         wired = true;
+        MakeLabelsWhite();
 
         if (soundButton != null) soundButton.onClick.AddListener(ToggleSound);
         if (accountButton != null) accountButton.onClick.AddListener(() => LoginPanel.OpenFor(LobbyPageSwitcher.LobbyPage.More));
         if (tutorialButton != null) tutorialButton.onClick.AddListener(() => FirstRunTutorial.Replay());
         if (creditsButton != null) creditsButton.onClick.AddListener(() => SetCreditsOpen(true));
         if (creditsCloseButton != null) creditsCloseButton.onClick.AddListener(() => SetCreditsOpen(false));
+    }
+
+    // White labels on every settings button, whatever colour the Jogar style gave them.
+    public void MakeLabelsWhite()
+    {
+        foreach (Button button in new[] { soundButton, accountButton, tutorialButton, creditsButton, creditsCloseButton })
+        {
+            TMP_Text label = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
+
+            if (label != null)
+                label.color = Color.white;
+        }
     }
 
     private void ToggleSound()
@@ -176,6 +189,7 @@ public class SettingsPage : MonoBehaviour
 
         Button button = go.GetComponent<Button>();
         JogarButtonStyle.ApplyTo(button);
+        label.color = Color.white;
 
         Vector2 size = JogarButtonStyle.Size;
         rect.sizeDelta = size;
