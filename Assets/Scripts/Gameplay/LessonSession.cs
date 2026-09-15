@@ -330,7 +330,7 @@ public class LessonSession : MonoBehaviour
                 continue;
 
             if (i == question.correctAnswerIndex)
-                visuals[i].SetPressedRightState();
+                visuals[i].SetPressedRightState(i == chosen);
             else if (i == chosen)
                 visuals[i].SetPressedWrongState();
             else

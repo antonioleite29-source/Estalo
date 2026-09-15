@@ -398,7 +398,7 @@ public class FirstRunTutorial : MonoBehaviour
                 // Showing the right one matters more here than in a match: this is the only round
                 // where nobody else answers it, so an unanswered question teaches nothing.
                 if (question.correctAnswerIndex >= 0 && question.correctAnswerIndex < duel.answerButtonVisuals.Length)
-                    duel.answerButtonVisuals[question.correctAnswerIndex].SetPressedRightState();
+                    duel.answerButtonVisuals[question.correctAnswerIndex].SetPressedRightState(false);
             }
 
             yield return new WaitForSecondsRealtime(1.4f);

@@ -45,6 +45,10 @@ public class AnswerButtonVisual : MonoBehaviour, IPointerEnterHandler, IPointerE
 
     private Vector2 baseSize;
     private bool pointerInside;
+
+    // Whether a right or wrong colour is on this button because someone pressed it, rather than
+    // because it is being pointed out as the right answer. Only a pressed button is drawn smaller.
+    private bool pressedByPlayer;
     private VisualState currentState = VisualState.LockedPressed;
 
     private void Reset()
@@ -90,8 +94,10 @@ public class AnswerButtonVisual : MonoBehaviour, IPointerEnterHandler, IPointerE
 
     public void SetLockedPressedState() { SetState(VisualState.LockedPressed, false); }
     public void SetAvailableState()     { SetState(VisualState.Normal, true); }
-    public void SetPressedRightState()  { SetState(VisualState.PressedRight, false); }
-    public void SetPressedWrongState()  { SetState(VisualState.PressedWrong, false); }
+    // pressed is false when the right answer is only being shown -- after a wrong pick in a lesson or
+    // the tutorial -- so that button keeps its full size.
+    public void SetPressedRightState(bool pressed = true) { pressedByPlayer = pressed; SetState(VisualState.PressedRight, false); }
+    public void SetPressedWrongState(bool pressed = true) { pressedByPlayer = pressed; SetState(VisualState.PressedWrong, false); }
     public void SetDisabledState()      { SetState(VisualState.Disabled, false); }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -147,7 +153,12 @@ public class AnswerButtonVisual : MonoBehaviour, IPointerEnterHandler, IPointerE
 
         Sprite sprite = GetSpriteForState();
         bool showText = ShouldShowText();
-        bool useNotPressedSize = currentState == VisualState.Normal || currentState == VisualState.Highlighted;
+        // Smaller only while actually pressed: under the finger, or the answer that was picked. Locked
+        // and disabled buttons keep their full size, so the whole row no longer shrinks and grows
+        // again every time the question changes.
+        bool isPressed = currentState == VisualState.PointerPressed ||
+                         ((currentState == VisualState.PressedRight || currentState == VisualState.PressedWrong) && pressedByPlayer);
+        bool useNotPressedSize = !isPressed;
 
         if (sprite != null)
             targetImage.sprite = sprite;
