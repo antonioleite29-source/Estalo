@@ -272,7 +272,9 @@ public class LoginPanel : MonoBehaviour
         root.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.88f);
 
         LoginPanel panel = root.AddComponent<LoginPanel>();
-        float y = 700f;
+
+        // Centred in the space above the bottom bar (about 380 tall), not on the whole page.
+        float y = 890f;
 
         Label(rect, "Title", "Sua conta", 110f, ref y, 200f, font);
         panel.subtitleText = Label(rect, "Subtitle", "Entre para recuperar seu progresso em outro celular.", 50f, ref y, 160f, font);
