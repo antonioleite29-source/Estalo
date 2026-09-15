@@ -620,6 +620,7 @@ public class LessonSession : MonoBehaviour
         label.enableAutoSizing = true;
         label.fontSizeMin = TextFitsItsBox.SmallestSize;
         label.fontSizeMax = 48f;
+        label.textWrappingMode = TextWrappingModes.Normal;
         label.raycastTarget = false;
     }
 
