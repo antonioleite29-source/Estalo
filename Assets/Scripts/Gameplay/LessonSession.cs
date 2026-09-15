@@ -618,7 +618,7 @@ public class LessonSession : MonoBehaviour
         label.alignment = TextAlignmentOptions.Center;
         label.color = Color.white;
         label.enableAutoSizing = true;
-        label.fontSizeMin = 8f;
+        label.fontSizeMin = TextFitsItsBox.SmallestSize;
         label.fontSizeMax = 48f;
         label.raycastTarget = false;
     }

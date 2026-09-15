@@ -266,8 +266,8 @@ public class LobbyLearningScroller : MonoBehaviour
             labelRect.offsetMax = Vector2.zero;
             label.alignment = TextAlignmentOptions.Center;
             label.enableAutoSizing = true;
-            label.fontSizeMin = 10f;
             label.fontSizeMax = diameter * 0.5f;
+            label.fontSizeMin = Mathf.Min(TextFitsItsBox.SmallestSize, label.fontSizeMax);
             label.raycastTarget = false;
             label.text = (i + 1).ToString();
 
@@ -285,8 +285,8 @@ public class LobbyLearningScroller : MonoBehaviour
             title.alignment = TextAlignmentOptions.Top;
             title.fontStyle = FontStyles.Bold;
             title.enableAutoSizing = true;
-            title.fontSizeMin = 8f;
             title.fontSizeMax = diameter * 0.2f;
+            title.fontSizeMin = Mathf.Min(TextFitsItsBox.SmallestSize, title.fontSizeMax);
             title.raycastTarget = false;
             title.text = lesson != null ? lesson.title : string.Empty;
 

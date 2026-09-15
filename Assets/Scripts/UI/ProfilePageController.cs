@@ -130,7 +130,7 @@ public class ProfilePageController : MonoBehaviour
         text.alignment = TextAlignmentOptions.TopLeft;
         text.color = Color.white;
         text.enableAutoSizing = true;
-        text.fontSizeMin = 30f;
+        text.fontSizeMin = TextFitsItsBox.SmallestSize;
         text.fontSizeMax = 90f;
         text.lineSpacing = 18f;
         text.raycastTarget = false;

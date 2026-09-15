@@ -13,9 +13,10 @@ using UnityEngine;
 // the labels that would have overflowed change at all.
 public static class TextFitsItsBox
 {
-    // Below this it stops being readable on a phone, and a label that needs 8pt to fit is a layout
-    // problem worth seeing rather than hiding.
-    private const float SmallestSize = 8f;
+    // Apple's 11pt floor on a phone, in this game's 1179-wide layout units (1pt = 3 units). Below
+    // this it stops being readable, and a label that needs less to fit is a layout problem worth
+    // seeing rather than hiding. Used by every auto-sizing label in the game.
+    public const float SmallestSize = 36f;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Apply()
@@ -44,7 +45,8 @@ public static class TextFitsItsBox
 
             text.enableAutoSizing = true;
             text.fontSizeMax = authored;
-            text.fontSizeMin = SmallestSize;
+            // A label authored smaller than the floor keeps its own size as the floor.
+            text.fontSizeMin = Mathf.Min(SmallestSize, authored);
 
             // Truncate, not overflow: if a label somehow still does not fit at the minimum, it is
             // cut at the edge of its box rather than drawn across whatever is beside it.
