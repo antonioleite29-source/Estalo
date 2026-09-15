@@ -23,9 +23,6 @@ public class ProfilePageController : MonoBehaviour
     [Tooltip("The player's stats. Leave empty and one is built under the name field when the page opens.")]
     public TMP_Text statsText;
 
-    [Tooltip("The big \"Estatísticas\" heading above the stats. Built above them if empty.")]
-    public TMP_Text statsHeading;
-
     [Tooltip("\"Entrar ou criar conta\". Made by Trivia Duel > Setup > Build Login Buttons; built at runtime if empty.")]
     public Button accountButton;
 
@@ -38,7 +35,6 @@ public class ProfilePageController : MonoBehaviour
         SetDropdownOpen(false);
 
         EnsureStatsText();
-        EnsureStatsHeading();
         RefreshStats();
         PlayerStats.Changed += RefreshStats;
 
@@ -112,9 +108,8 @@ public class ProfilePageController : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 1f);
-        // Top edge under the "Estatísticas" heading, which takes the space above it up to y 430.
-        rect.anchoredPosition = new Vector2(0f, 260f);
-        rect.sizeDelta = new Vector2(980f, 870f);
+        rect.anchoredPosition = new Vector2(0f, 420f);
+        rect.sizeDelta = new Vector2(980f, 1000f);
 
         // Just after the page heading, so the avatar dropdown still opens over the top of it.
         rect.SetSiblingIndex(Mathf.Min(1, transform.childCount - 1));
@@ -138,39 +133,6 @@ public class ProfilePageController : MonoBehaviour
         statsText = text;
     }
 
-    // "Estatísticas", larger than the lines under it, sitting right on top of the stats wherever
-    // they are placed.
-    private void EnsureStatsHeading()
-    {
-        if (statsHeading != null || statsText == null)
-            return;
-
-        RectTransform stats = statsText.rectTransform;
-
-        GameObject go = new GameObject("StatsHeading", typeof(RectTransform));
-        RectTransform rect = (RectTransform)go.transform;
-        rect.SetParent(stats.parent, false);
-        rect.anchorMin = stats.anchorMin;
-        rect.anchorMax = stats.anchorMax;
-        rect.pivot = new Vector2(0.5f, 0f);
-        rect.sizeDelta = new Vector2(stats.sizeDelta.x, 170f);
-
-        float statsTop = stats.anchoredPosition.y + (1f - stats.pivot.y) * stats.sizeDelta.y;
-        rect.anchoredPosition = new Vector2(stats.anchoredPosition.x, statsTop);
-        rect.SetSiblingIndex(stats.GetSiblingIndex());
-
-        TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
-        text.font = statsText.font;
-        text.text = "Estatísticas";
-        text.fontSize = 130f;
-        text.fontStyle = FontStyles.Bold;
-        text.alignment = TextAlignmentOptions.BottomLeft;
-        text.color = Color.white;
-        text.raycastTarget = false;
-
-        statsHeading = text;
-    }
-
     private void RefreshStats()
     {
         if (statsText == null)
@@ -181,6 +143,9 @@ public class ProfilePageController : MonoBehaviour
             : "sem conexão";
 
         statsText.text =
+            // The heading is part of the same text, so it moves and scales with the box. Sized
+            // relative to the lines, so auto-sizing shrinks both together.
+            "<size=150%><b>Estatísticas</b></size>\n" +
             $"<b>Partidas jogadas:</b> {PlayerStats.MatchesPlayed}\n" +
             $"<b>Vitórias:</b> {PlayerStats.MatchesWon}\n" +
             $"<b>Derrotas:</b> {PlayerStats.MatchesLost}\n" +
