@@ -122,7 +122,7 @@ public class TeamDuelManager : MonoBehaviour
         {
             questionText.enableAutoSizing = true;
             questionText.fontSizeMax = questionText.fontSize;
-            questionText.fontSizeMin = TextFitsItsBox.SmallestSize;
+            questionText.fontSizeMin = TextFitsItsBox.MinFor(questionText);
             questionText.textWrappingMode = TMPro.TextWrappingModes.Normal;
             questionText.overflowMode = TMPro.TextOverflowModes.Overflow;
         }

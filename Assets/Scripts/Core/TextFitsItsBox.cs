@@ -63,6 +63,30 @@ public class TextFitsItsBox : MonoBehaviour
         return fitted;
     }
 
+    // The floor in this label's own units. SmallestSize is measured in the layout, but a label can be
+    // scaled inside it: the question box is drawn at 4x, so its 36 already looks like 144 on screen.
+    // Taking 36 as its minimum made the minimum equal the maximum, and the question could not shrink
+    // at all. A label authored smaller than the floor keeps its own size as the floor.
+    public static float MinFor(TMP_Text text)
+    {
+        float scale = 1f;
+
+        // Every scale between the label and the layout root -- the object CanvasStretchFitter sizes,
+        // or the Canvas -- whose own scale is the screen fit rather than the design.
+        for (Transform t = text.transform; t != null; t = t.parent)
+        {
+            if (t.GetComponent<CanvasStretchFitter>() != null || t.GetComponent<Canvas>() != null)
+                break;
+
+            scale *= Mathf.Abs(t.localScale.y);
+        }
+
+        if (scale <= 0.0001f)
+            scale = 1f;
+
+        return Mathf.Min(SmallestSize / scale, text.fontSizeMax);
+    }
+
     public static void Fit(TMP_Text text)
     {
         // An input field manages its own text: TMP_InputField drives the size, scrolling and caret
@@ -82,8 +106,7 @@ public class TextFitsItsBox : MonoBehaviour
             text.fontSizeMax = authored;
         }
 
-        // A label authored smaller than the floor keeps its own size as the floor.
-        text.fontSizeMin = Mathf.Min(SmallestSize, text.fontSizeMax);
+        text.fontSizeMin = MinFor(text);
 
         // Never cut off: if even 36 on several lines does not fit, the words stay visible past the
         // edge of the box, which shows where the box needs to be bigger.

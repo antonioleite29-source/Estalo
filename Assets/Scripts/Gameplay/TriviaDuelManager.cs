@@ -369,7 +369,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         {
             questionText.enableAutoSizing = true;
             questionText.fontSizeMax = questionText.fontSize;
-            questionText.fontSizeMin = TextFitsItsBox.SmallestSize;
+            questionText.fontSizeMin = TextFitsItsBox.MinFor(questionText);
             questionText.textWrappingMode = TMPro.TextWrappingModes.Normal;
             questionText.overflowMode = TMPro.TextOverflowModes.Overflow;
         }
