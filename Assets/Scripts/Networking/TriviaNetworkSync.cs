@@ -46,7 +46,10 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         joinOrder.Clear();
 
         foreach (ulong existingId in NetworkManager.ConnectedClientsIds)
+        {
             joinOrder.Add(existingId);
+            AttachAccount(existingId);
+        }
 
         NetworkManager.OnClientConnectedCallback += HandleServerClientConnected;
         NetworkManager.OnClientDisconnectCallback += HandleServerClientDisconnected;
@@ -224,20 +227,138 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     private int AverageDifficultyOf(IReadOnlyList<ulong> group)
     {
         int total = 0;
-        int counted = 0;
 
         foreach (ulong clientId in group)
+            total += LevelFor(clientId);
+
+        return group.Count == 0 ? 1 : Mathf.Clamp(Mathf.RoundToInt((float)total / group.Count), 1, 7);
+    }
+
+    // From the server's own copy of the player's IQ. The level the phone reports is only a fallback
+    // for a client with no account, which should not happen once connection approval has run.
+    private int LevelFor(ulong clientId)
+    {
+        PlayerAccounts.Account account = PlayerAccounts.For(clientId);
+
+        if (account != null)
+            return PlayerIQManager.LevelForIQ(account.iq);
+
+        PlayerSideIdentity identity = FindIdentity(clientId);
+        return identity != null ? identity.DifficultyLevel.Value : 1;
+    }
+
+    // ---------------------------------------------------------------
+    // Accounts: the server's copy of every player's IQ and record
+    // ---------------------------------------------------------------
+
+    private void AttachAccount(ulong clientId)
+    {
+        PlayerAccounts.Attach(clientId);
+        SendAccount(clientId);
+    }
+
+    // Every participant's record changes here, on the server, from the result the server itself
+    // decided. Nothing a phone says about who won is involved.
+    private void RecordResults(MatchSession match, int winningTeam)
+    {
+        foreach (ulong clientId in match.Participants)
         {
+            int seat = match.GetSeat(clientId);
+            int team = match.Mode == MatchMode.TeamFour ? PlayerSideIdentity.TeamForSlot(seat) : seat;
+
             PlayerSideIdentity identity = FindIdentity(clientId);
+            string playerName = identity != null ? identity.PlayerName.Value.ToString() : null;
 
-            if (identity == null)
-                continue;
-
-            total += identity.DifficultyLevel.Value;
-            counted++;
+            PlayerAccounts.RecordMatch(clientId, team == winningTeam, playerName);
         }
 
-        return counted == 0 ? 1 : Mathf.Clamp(Mathf.RoundToInt((float)total / counted), 1, 7);
+        PlayerAccounts.Save();
+
+        foreach (ulong clientId in match.Participants)
+            SendAccount(clientId);
+    }
+
+    private void SendAccount(ulong clientId)
+    {
+        PlayerAccounts.Account account = PlayerAccounts.For(clientId);
+
+        if (account == null || !CanSendRpc)
+            return;
+
+        // Kept current for the leaderboard file; saved with the next change that saves.
+        PlayerSideIdentity identity = FindIdentity(clientId);
+        string playerName = identity != null ? identity.PlayerName.Value.ToString() : string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(playerName))
+            account.name = playerName;
+
+        (int rank, int size) = PlayerAccounts.RankOf(account);
+
+        AccountTargetedClientRpc(PlayerAccounts.TakeUnsentKey(clientId), account.iq, account.bestIQ,
+            account.played, account.won, account.lost, account.firstSeen, account.claimed, rank, size,
+            account.username ?? string.Empty, OnlyTo(clientId));
+    }
+
+    private static ClientRpcParams OnlyTo(ulong clientId) =>
+        new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } } };
+
+    [ClientRpc]
+    private void AccountTargetedClientRpc(string key, float iq, float bestIQ, int played, int won, int lost,
+        long firstSeen, bool claimed, int rank, int size, string username, ClientRpcParams _ = default)
+    {
+        PlayerStats.ApplyServerAccount(key, iq, bestIQ, played, won, lost, firstSeen, claimed, rank, size, username);
+    }
+
+    // A Unity login, checked against Unity's own keys before it is tied to anything. The player id is
+    // taken from inside the verified token, never from the phone.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void LinkLoginServerRpc(string accessToken, string username, RpcParams rpcParams = default)
+    {
+        StartCoroutine(VerifyAndLink(rpcParams.Receive.SenderClientId, accessToken, username));
+    }
+
+    private System.Collections.IEnumerator VerifyAndLink(ulong clientId, string accessToken, string username)
+    {
+        string unityPlayerId = null;
+        yield return UnityLoginVerifier.Verify(accessToken, id => unityPlayerId = id);
+
+        // Left while the check was running.
+        if (PlayerAccounts.For(clientId) == null || !CanSendRpc)
+            yield break;
+
+        bool accepted = !string.IsNullOrEmpty(unityPlayerId);
+
+        if (accepted)
+        {
+            PlayerAccounts.LinkLogin(clientId, unityPlayerId, username);
+            SendAccount(clientId);
+        }
+
+        LoginResultTargetedClientRpc(accepted, OnlyTo(clientId));
+    }
+
+    [ClientRpc]
+    private void LoginResultTargetedClientRpc(bool accepted, ClientRpcParams _ = default)
+    {
+        PlayerStats.ApplyLoginResult(accepted);
+    }
+
+    // Both of these act on the sender's own account and nobody else's: the account is found from who
+    // sent the message, never from anything inside it.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void RequestAccountServerRpc(RpcParams rpcParams = default)
+    {
+        SendAccount(rpcParams.Receive.SenderClientId);
+    }
+
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void ClaimStartingRecordServerRpc(float iq, int played, int won, long firstPlayed,
+        RpcParams rpcParams = default)
+    {
+        ulong sender = rpcParams.Receive.SenderClientId;
+
+        PlayerAccounts.Claim(sender, iq, played, won, firstPlayed);
+        SendAccount(sender);
     }
 
     private PlayerSideIdentity FindIdentity(ulong clientId)
@@ -344,9 +465,14 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     public void AnswerMarked(MatchSession match, int answerIndex, bool wasCorrect, int answeringSeat) =>
         MatchAnswerMarkedTargetedClientRpc((int)match.Mode, answerIndex, wasCorrect, answeringSeat, OnlyFor(match));
 
-    public void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam) =>
+    public void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam)
+    {
         MatchEndedTargetedClientRpc((int)match.Mode, NameTheWinner(match, message, hasWinner, winningTeam),
             hasWinner, winningTeam, OnlyFor(match));
+
+        if (hasWinner)
+            RecordResults(match, winningTeam);
+    }
 
     // "Tom ganhou!" rather than "Jogador 1 venceu!".
     //
@@ -518,6 +644,8 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     {
         if (!joinOrder.Contains(clientId))
             joinOrder.Add(clientId);
+
+        AttachAccount(clientId);
     }
 
     // Routed per match, so an answer only ever affects the match its sender is actually in.
@@ -543,6 +671,7 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
             liveMatches.Remove(match);
         }
 
+        PlayerAccounts.Detach(clientId);
         PublishQueueStatus();
     }
 

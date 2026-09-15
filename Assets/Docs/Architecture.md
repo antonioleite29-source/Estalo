@@ -122,6 +122,8 @@ for this; run either the stretch or the scaler, never both.
 - Match difficulty is the **average** of its players' levels, so a strong player matched
   with a weak one gets questions between the two. Is that the right call, or should it
   follow the stronger player, or adapt mid-match?
-- IQ is stored per device with no server validation — trivially edited, and lost on
-  reinstall. Fine for testing, not for release.
+- IQ and match records now live on the server (`PlayerAccounts`), keyed by a secret the server
+  issues each phone, and only the server changes them. Still open: the key crosses the network
+  unencrypted, a reinstall loses it (and with it the account) until there is a real login, and the
+  question bank shipped in the app still contains every correct answer.
 - There is no reconnect. A dropped player's match aborts for everyone in it.

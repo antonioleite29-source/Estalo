@@ -465,7 +465,7 @@ public class NetworkBootstrap : MonoBehaviour
         {
             ConfigureTransport("127.0.0.1", listenAddress: "0.0.0.0", port: port);
 
-            if (!NetworkManager.Singleton.StartHost())
+            if (!StartHostWithAccount())
                 continue;
 
             ActivePort = port;
@@ -580,7 +580,7 @@ public class NetworkBootstrap : MonoBehaviour
 
         ConfigureTransport(resolved, listenAddress: "0.0.0.0", port: port);
 
-        if (NetworkManager.Singleton.StartClient())
+        if (StartClientWithAccount())
         {
             IsConnecting = true;
             ReportStatus("Conectando a " + address + "…");
@@ -636,6 +636,10 @@ public class NetworkBootstrap : MonoBehaviour
         response.Pending = false;
         response.CreatePlayerObject = true;
 
+        // Which account this is. The payload can only be read here, so it is held until the client
+        // has finished connecting and TriviaNetworkSync attaches the account.
+        PlayerAccounts.NoteConnectionPayload(request.ClientNetworkId, request.Payload);
+
         // The host itself always gets in — rejecting it would tear down the session it just opened.
         if (request.ClientNetworkId == NetworkManager.ServerClientId ||
             request.ClientNetworkId == NetworkManager.Singleton.LocalClientId)
@@ -670,6 +674,21 @@ public class NetworkBootstrap : MonoBehaviour
         }
 
         response.Approved = true;
+    }
+
+    // The account key rides in the connection request, so the server knows whose IQ this is before
+    // the player can queue. Set on every attempt: a key the server hands out on the first connection
+    // has to go with every reconnection after it.
+    private static bool StartClientWithAccount()
+    {
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = PlayerStats.ConnectionPayload();
+        return NetworkManager.Singleton.StartClient();
+    }
+
+    private static bool StartHostWithAccount()
+    {
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = PlayerStats.ConnectionPayload();
+        return NetworkManager.Singleton.StartHost();
     }
 
     // ---------------------------------------------------------------

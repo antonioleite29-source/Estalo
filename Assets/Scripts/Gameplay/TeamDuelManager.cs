@@ -797,8 +797,8 @@ public class TeamDuelManager : MonoBehaviour
         if (hasWinner)
             MatchSounds.PlayEnded(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == winningTeam);
 
-        if (hasWinner && PlayerIQManager.Instance != null)
-            PlayerIQManager.Instance.AdjustLocalIQAfterMatch(PlayerSideIdentity.TeamForSlot(LocalAssignedSlot) == winningTeam);
+        // No IQ change here: the server refereed this match, so it updates the IQ itself and sends
+        // the new value (PlayerAccounts, PlayerStats).
 
         // NOT gated on hasWinner any more. A match that ends without one — the inactivity
         // timeout, or an opponent abandoning — used to skip this entirely and leave the player

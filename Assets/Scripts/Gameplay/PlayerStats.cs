@@ -1,62 +1,164 @@
 using System;
+using System.Text;
+using Unity.Netcode;
 using UnityEngine;
 
 // This player's record for the Profile page: matches played, won and lost, best and current IQ
 // points, how long they have been playing, and where they sit on the global leaderboard.
 //
-// Kept in PlayerPrefs on the device, like IQ itself, so it shares IQ's weakness -- lost on
-// reinstall, easy to edit -- until accounts exist. The leaderboard position is the one number that
-// comes from the server; it is only cached here when the answer arrives.
+// The server owns all of it (PlayerAccounts). What is kept here is a copy of the last thing the server
+// said, so the lobby and the Profile page have something to draw while offline. Editing these saved
+// numbers changes what this phone shows and nothing else: the next connection overwrites them, and
+// matchmaking and the leaderboard only ever read the server's copy.
 public static class PlayerStats
 {
     // Per virtual player: Multiplayer Play Mode clones share this machine's PlayerPrefs.
     private static string Suffix => NetworkBootstrap.GetLocalProfileSuffix();
 
+    private static string AccountKeyKey => "EstaloAccountKey" + Suffix;
     private static string PlayedKey => "EstaloMatchesPlayed" + Suffix;
     private static string WonKey => "EstaloMatchesWon" + Suffix;
+    private static string LostKey => "EstaloMatchesLost" + Suffix;
     private static string BestIQKey => "EstaloBestIQ" + Suffix;
     private static string FirstPlayedKey => "EstaloFirstPlayed" + Suffix;
-    private static string PlayerIdKey => "EstaloPlayerId" + Suffix;
+    private static string ServerFirstSeenKey => "EstaloServerFirstSeen" + Suffix;
+    private static string ClaimPendingKey => "EstaloStartingRecordPending" + Suffix;
 
     private const string DateFormat = "yyyy-MM-dd";
 
-    // Fired when anything shown on the Profile page changes, including the leaderboard answer
-    // arriving from the server a moment after the page opened.
+    // Fired when anything shown on the Profile page changes, including the server's answer arriving a
+    // moment after the page opened.
     public static event Action Changed;
 
     // Only matches with a winner count. One that ends because a player dropped or nobody answered
     // for a minute has no result, and a loss for somebody's Wi-Fi going would be a lie.
     public static int MatchesPlayed => PlayerPrefs.GetInt(PlayedKey, 0);
     public static int MatchesWon => PlayerPrefs.GetInt(WonKey, 0);
-    public static int MatchesLost => Mathf.Max(0, MatchesPlayed - MatchesWon);
+    public static int MatchesLost => PlayerPrefs.GetInt(LostKey, Mathf.Max(0, MatchesPlayed - MatchesWon));
 
     public static float CurrentIQ => PlayerIQManager.Instance != null ? PlayerIQManager.Instance.GetLocalIQ() : 100f;
 
-    // Never below the current value, so a player from before this was tracked still reads sensibly.
     public static float BestIQ => Mathf.Max(PlayerPrefs.GetFloat(BestIQKey, 0f), CurrentIQ);
 
     // 0 until the server has answered this session.
     public static int LeaderboardRank { get; private set; }
     public static int LeaderboardSize { get; private set; }
 
-    // A random id made once per device, so the leaderboard can tell players apart without accounts.
-    // Names cannot do that job: two players can both be called "Jogador".
-    public static string PlayerId
+    // --- the account key ------------------------------------------------
+
+    // The secret the server gave this phone on its first connection. Empty until then.
+    private static string AccountKey => PlayerPrefs.GetString(AccountKeyKey, string.Empty);
+
+    // Sent inside every connection request, so the server knows whose account this is.
+    public static byte[] ConnectionPayload() => Encoding.UTF8.GetBytes(AccountKey);
+
+    // The Unity login tied to this account, empty if the player has not logged in.
+    private static string UsernameKey => "EstaloUsername" + Suffix;
+    public static string Username => PlayerPrefs.GetString(UsernameKey, string.Empty);
+
+    // Raised when the server has checked a login: true if it was tied to the account.
+    public static event Action<bool> LoginFinished;
+
+    public static bool SendLogin(string accessToken, string username)
     {
-        get
-        {
-            string id = PlayerPrefs.GetString(PlayerIdKey, string.Empty);
+        if (!CanReachServer(out TriviaNetworkSync sync))
+            return false;
 
-            if (string.IsNullOrEmpty(id))
-            {
-                id = Guid.NewGuid().ToString("N");
-                PlayerPrefs.SetString(PlayerIdKey, id);
-                PlayerPrefs.Save();
-            }
-
-            return id;
-        }
+        sync.LinkLoginServerRpc(accessToken, username);
+        return true;
     }
+
+    public static void ApplyLoginResult(bool accepted)
+    {
+        LoginFinished?.Invoke(accepted);
+    }
+
+    // --- talking to the server ------------------------------------------
+
+    // Asks for a fresh copy, e.g. when the Profile page opens. Does nothing while offline.
+    public static void RequestRefresh()
+    {
+        if (CanReachServer(out TriviaNetworkSync sync))
+            sync.RequestAccountServerRpc();
+    }
+
+    // Called by the server whenever this player's account changes: on connecting, after each match,
+    // after a claim, and when asked.
+    public static void ApplyServerAccount(string key, float iq, float bestIQ, int played, int won, int lost,
+        long firstSeen, bool claimed, int rank, int size, string username)
+    {
+        PlayerPrefs.SetString(UsernameKey, username ?? string.Empty);
+
+        bool firstAccount = string.IsNullOrEmpty(AccountKey);
+
+        if (!string.IsNullOrEmpty(key))
+            PlayerPrefs.SetString(AccountKeyKey, key);
+
+        // A phone that already had a record before the server kept them hands it over, once, so
+        // nobody who played before this change is sent back to 100.
+        if (firstAccount && HasRecordOfItsOwn())
+            PlayerPrefs.SetInt(ClaimPendingKey, 1);
+
+        if (PlayerPrefs.GetInt(ClaimPendingKey, 0) == 1 && !claimed && played == 0)
+        {
+            PlayerPrefs.Save();
+
+            // The server answers with another update carrying the claimed record. Until then the
+            // phone's own numbers stay on screen rather than flicking to 100 and back.
+            SendClaim();
+            return;
+        }
+
+        PlayerPrefs.DeleteKey(ClaimPendingKey);
+
+        PlayerPrefs.SetInt(PlayedKey, played);
+        PlayerPrefs.SetInt(WonKey, won);
+        PlayerPrefs.SetInt(LostKey, lost);
+        PlayerPrefs.SetFloat(BestIQKey, bestIQ);
+        PlayerPrefs.SetString(ServerFirstSeenKey, firstSeen.ToString());
+
+        if (PlayerIQManager.Instance != null)
+            PlayerIQManager.Instance.SetLocalIQ(iq);
+
+        LeaderboardRank = rank;
+        LeaderboardSize = size;
+
+        PlayerPrefs.Save();
+
+        foreach (IQBarController bar in UnityEngine.Object.FindObjectsByType<IQBarController>())
+            bar.RefreshFromManager();
+
+        Changed?.Invoke();
+    }
+
+    // The first-run tutorial's placement round is played on the phone, so its result has to be handed
+    // to the server rather than decided there. The server takes it only for an account that has not
+    // played or claimed yet.
+    public static void MarkStartingRecordPending()
+    {
+        PlayerPrefs.SetInt(ClaimPendingKey, 1);
+        PlayerPrefs.Save();
+        SendClaim();
+    }
+
+    private static void SendClaim()
+    {
+        if (CanReachServer(out TriviaNetworkSync sync))
+            sync.ClaimStartingRecordServerRpc(CurrentIQ, MatchesPlayed, MatchesWon, FirstPlayedUnix());
+    }
+
+    private static bool HasRecordOfItsOwn() =>
+        MatchesPlayed > 0 || (PlayerIQManager.Instance != null && PlayerIQManager.Instance.HasSavedIQ());
+
+    private static bool CanReachServer(out TriviaNetworkSync sync)
+    {
+        sync = TriviaNetworkSync.Instance;
+
+        return sync != null && sync.IsSpawned &&
+               NetworkManager.Singleton != null && NetworkManager.Singleton.IsConnectedClient;
+    }
+
+    // --- how long they have been playing --------------------------------
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void StampFirstPlayed()
@@ -71,46 +173,35 @@ public static class PlayerStats
         }
     }
 
-    public static void RecordMatch(bool didWin)
+    // The earlier of the day this phone first opened Estalo and the day the server first saw the
+    // account -- a reinstalled phone forgets the first, a new server forgets the second.
+    private static DateTime FirstPlayed()
     {
-        PlayerPrefs.SetInt(PlayedKey, MatchesPlayed + 1);
+        DateTime first = DateTime.Today;
 
-        if (didWin)
-            PlayerPrefs.SetInt(WonKey, MatchesWon + 1);
+        if (DateTime.TryParseExact(PlayerPrefs.GetString(FirstPlayedKey, string.Empty), DateFormat,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime local) && local < first)
+            first = local;
 
-        PlayerPrefs.Save();
-        Changed?.Invoke();
+        if (long.TryParse(PlayerPrefs.GetString(ServerFirstSeenKey, string.Empty), out long seconds) && seconds > 0)
+        {
+            DateTime server = DateTimeOffset.FromUnixTimeSeconds(seconds).LocalDateTime.Date;
+
+            if (server < first)
+                first = server;
+        }
+
+        return first;
     }
 
-    // Called on every IQ write, which is how the best score keeps up without anything else having
-    // to remember to.
-    public static void NoteIQ(float iq)
-    {
-        if (iq <= PlayerPrefs.GetFloat(BestIQKey, 0f))
-            return;
+    private static long FirstPlayedUnix() => new DateTimeOffset(FirstPlayed()).ToUnixTimeSeconds();
 
-        PlayerPrefs.SetFloat(BestIQKey, iq);
-        PlayerPrefs.Save();
-    }
-
-    public static void SetLeaderboardPosition(int rank, int size)
-    {
-        LeaderboardRank = rank;
-        LeaderboardSize = size;
-        Changed?.Invoke();
-    }
-
-    // "1 ano, 2 meses e 5 dias", counting from the day this device first opened Estalo. Calendar
-    // months rather than 30-day blocks, so the day a month ticks over matches the calendar.
+    // "1 ano, 2 meses e 5 dias". Calendar months rather than 30-day blocks, so the day a month ticks
+    // over matches the calendar.
     public static string TimePlayingText()
     {
-        DateTime first;
-
-        if (!DateTime.TryParseExact(PlayerPrefs.GetString(FirstPlayedKey, string.Empty), DateFormat,
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out first))
-            first = DateTime.Today;
-
+        DateTime first = FirstPlayed();
         DateTime today = DateTime.Today;
 
         int years = today.Year - first.Year;

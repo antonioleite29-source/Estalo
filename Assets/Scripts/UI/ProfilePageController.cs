@@ -23,6 +23,12 @@ public class ProfilePageController : MonoBehaviour
     [Tooltip("The player's stats. Leave empty and one is built under the name field when the page opens.")]
     public TMP_Text statsText;
 
+    [Tooltip("\"Entrar ou criar conta\". Made by Trivia Duel > Setup > Build Login Buttons; built at runtime if empty.")]
+    public Button accountButton;
+
+    [Tooltip("The login panel, switched off until the account button is tapped. Made by the same menu.")]
+    public LoginPanel loginPanel;
+
     private void OnEnable()
     {
         RefreshFromProfile();
@@ -32,8 +38,9 @@ public class ProfilePageController : MonoBehaviour
         RefreshStats();
         PlayerStats.Changed += RefreshStats;
 
-        // Asks the server for a fresh leaderboard position; the answer lands through Changed.
-        PlayerSideIdentity.SubmitLocalToLeaderboard();
+        // Asks the server for a fresh copy of the record and leaderboard position; the answer lands
+        // through Changed.
+        PlayerStats.RequestRefresh();
     }
 
     private void OnDisable()
@@ -46,6 +53,29 @@ public class ProfilePageController : MonoBehaviour
         MobileInputField.MakeSafeForPhones(nameInputField);
         BindAvatarButtons();
         BindPreviewButton();
+        SetHighlightOpacity(HighlightOpacity);
+    }
+
+    // The selection ring over the chosen avatar, at half strength so the face under it still reads.
+    private const float HighlightOpacity = 0.5f;
+
+    private void SetHighlightOpacity(float alpha)
+    {
+        if (avatarHighlights == null)
+            return;
+
+        foreach (GameObject highlight in avatarHighlights)
+        {
+            if (highlight == null)
+                continue;
+
+            foreach (Graphic graphic in highlight.GetComponentsInChildren<Graphic>(true))
+            {
+                Color color = graphic.color;
+                color.a = alpha;
+                graphic.color = color;
+            }
+        }
     }
 
     private void RefreshFromProfile()
@@ -121,6 +151,67 @@ public class ProfilePageController : MonoBehaviour
             $"<b>Pontos atuais:</b> {PlayerStats.CurrentIQ:F2}\n" +
             $"<b>Jogando há:</b> {PlayerStats.TimePlayingText()}\n" +
             $"<b>Ranking global:</b> {rank}";
+
+        RefreshAccountButton();
+    }
+
+    // --- login ----------------------------------------------------------
+
+    private bool accountButtonWired;
+
+    // Under the stats: "Entrar ou criar conta", or who is logged in.
+    private void RefreshAccountButton()
+    {
+        TMP_FontAsset font = statsText != null ? statsText.font : null;
+
+        if (accountButton == null)
+            accountButton = CreateAccountButton(transform, font);
+
+        if (!accountButtonWired)
+        {
+            accountButton.onClick.AddListener(OpenLogin);
+            accountButtonWired = true;
+        }
+
+        TMP_Text label = accountButton.GetComponentInChildren<TMP_Text>(true);
+
+        if (label != null)
+            label.text = string.IsNullOrEmpty(PlayerStats.Username)
+                ? "Entrar ou criar conta"
+                : "Conta: " + PlayerStats.Username;
+    }
+
+    private void OpenLogin()
+    {
+        if (loginPanel == null)
+            loginPanel = LoginPanel.CreateUnder(transform, statsText != null ? statsText.font : null);
+
+        loginPanel.Show();
+    }
+
+    // Used by the editor menu to put the button in the scene, and at runtime only if nobody did.
+    public static Button CreateAccountButton(Transform page, TMP_FontAsset font)
+    {
+        GameObject go = TMP_DefaultControls.CreateButton(new TMP_DefaultControls.Resources());
+        go.name = "AccountButton";
+
+        RectTransform rect = (RectTransform)go.transform;
+        rect.SetParent(page, false);
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+
+        TMP_Text label = go.GetComponentInChildren<TMP_Text>();
+        label.text = "Entrar ou criar conta";
+        label.fontSize = 56f;
+
+        if (font != null)
+            label.font = font;
+
+        Button button = go.GetComponent<Button>();
+        JogarButtonStyle.ApplyTo(button);
+
+        // Top edge just under the stats, whatever height the Jogar button gives it.
+        rect.anchoredPosition = new Vector2(0f, -620f - JogarButtonStyle.Size.y * 0.5f);
+        return button;
     }
 
     // --- avatars --------------------------------------------------------

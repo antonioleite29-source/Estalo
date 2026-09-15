@@ -1690,8 +1690,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (rightPlayerNameText != null)
             rightPlayerNameText.text = string.Empty;
 
-        if (hasWinner && PlayerIQManager.Instance != null)
-            PlayerIQManager.Instance.AdjustLocalIQAfterMatch(winnerSide == localViewPlayerSide);
+        // No IQ change here: the server refereed this match, so it updates the IQ itself and sends
+        // the new value (PlayerAccounts, PlayerStats).
 
         // NOT gated on hasWinner any more. A match that ends without one — the inactivity
         // timeout, or an opponent abandoning — used to skip this entirely and leave the player

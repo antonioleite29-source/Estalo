@@ -1,5 +1,9 @@
 using UnityEngine;
 
+// This phone's copy of its IQ. The server's copy (PlayerAccounts) is the real one: it is what
+// matchmaking and the leaderboard read, and it overwrites this one every time the phone connects or
+// finishes a match. This copy exists so the lobby, the difficulty level and the lessons have a number
+// to use while offline.
 public class PlayerIQManager : MonoBehaviour
 {
     public static PlayerIQManager Instance { get; private set; }
@@ -32,29 +36,38 @@ public class PlayerIQManager : MonoBehaviour
     {
         PlayerPrefs.SetFloat(PREFS_KEY_IQ + KeySuffix, iq);
         PlayerPrefs.Save();
-
-        PlayerStats.NoteIQ(iq);
     }
 
-    // Maps this device's IQ to difficulty level 1-7. Below 70 = Level 1, above 150 = Level 7.
-    public int GetLocalDifficultyLevel()
+    // Whether this phone has ever stored an IQ -- from a match, the placement round or the server.
+    public bool HasSavedIQ()
     {
-        float iq = Mathf.Clamp(GetLocalIQ(), IQ_MIN, IQ_MAX);
+        return PlayerPrefs.HasKey(PREFS_KEY_IQ + KeySuffix);
+    }
+
+    // Maps an IQ to difficulty level 1-7. Below 70 = Level 1, above 150 = Level 7. Static so the
+    // server can use it on its own copy of every player's IQ.
+    public static int LevelForIQ(float iq)
+    {
+        iq = Mathf.Clamp(iq, IQ_MIN, IQ_MAX);
         int level = Mathf.FloorToInt((iq - IQ_MIN) / (IQ_RANGE / LEVELS)) + 1;
         return Mathf.Clamp(level, 1, LEVELS);
     }
 
-    // delta = 50 / currentIQ, applied against this device's own IQ. Call once per match end.
+    public int GetLocalDifficultyLevel()
+    {
+        return LevelForIQ(GetLocalIQ());
+    }
+
+    // delta = 50 / currentIQ, applied against this device's own IQ.
     //
-    // Also the one place every finished match with a winner passes through -- 1v1, 2v2, networked or
-    // local -- which is why the Profile page's match record is kept from here.
+    // Only for a match this device referees by itself, with no server. A match the server ran is
+    // scored on the server (PlayerAccounts.RecordMatch) and the new IQ arrives through PlayerStats --
+    // adjusting it here as well would count every match twice, and would be the phone deciding its
+    // own score again.
     public void AdjustLocalIQAfterMatch(bool didWin)
     {
         float currentIQ = GetLocalIQ();
         float delta = 50f / currentIQ;
         SetLocalIQ(didWin ? currentIQ + delta : currentIQ - delta);
-
-        PlayerStats.RecordMatch(didWin);
-        PlayerSideIdentity.SubmitLocalToLeaderboard();
     }
 }

@@ -416,6 +416,10 @@ public class FirstRunTutorial : MonoBehaviour
         if (PlayerIQManager.Instance != null)
             PlayerIQManager.Instance.SetLocalIQ(iq);
 
+        // The server owns IQ, but this round was played here -- so the result is handed to it, and
+        // it accepts it once, for an account that has not played a match yet.
+        PlayerStats.MarkStartingRecordPending();
+
         int level = PlayerIQManager.Instance != null ? PlayerIQManager.Instance.GetLocalDifficultyLevel() : 1;
 
         if (duel.questionText != null)

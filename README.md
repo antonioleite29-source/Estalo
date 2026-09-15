@@ -57,12 +57,18 @@ level in `TriviaQuestions.txt`.
 ## Profile stats
 
 The Profile page shows matches played, won and lost; best and current IQ points; how long the
-player has been playing; and their global leaderboard position. Everything but the position is
-kept on the device (`PlayerStats`). Only matches with a winner count.
+player has been playing; and their global leaderboard position. Only matches with a winner count.
 
-The position comes from the server: clients report their IQ with a random per-device id, and the
-server keeps `leaderboard.json` in `/var/lib/triviaduel` (`Leaderboard`). While disconnected the
-page shows "sem conexão".
+**The server owns IQ and every stat.** On a phone's first connection the server issues it a secret
+key, sent in every later connection request, and keeps that account's IQ and record in
+`accounts.json` (`/var/lib/triviaduel` on the cloud box, only a hash of each key stored). When a
+match the server refereed ends, the server updates each player's IQ and record itself and sends the
+new values back; matchmaking and the leaderboard read only the server's copy. The phone keeps a copy
+(`PlayerStats`) to draw the lobby and the Profile page offline, and the server's copy overwrites it.
+
+The one exception: an account that has never played accepts a starting record from the phone once —
+the first-run placement IQ, or the history of a phone that played before accounts existed. See
+`PlayerAccounts.Claim`.
 
 ## Questions
 
