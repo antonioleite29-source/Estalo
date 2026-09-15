@@ -83,10 +83,16 @@ public class LobbyLearningScroller : MonoBehaviour
     private bool isDragging;
     private bool draggedFar;       // a drag this far is a scroll, not a tap on a node
     private float lastPointerY;
+    private float pressY;          // where the finger went down, to tell a tap from a scroll
     private float dragVelocity;
     private readonly List<(float time, float y)> velHistory = new List<(float, float)>();
     private const float VelWindowSec = 0.1f;
-    private const float TapSlop = 12f;
+
+    // About three millimetres of finger movement, whatever the screen's density. This used to be a
+    // flat 12 pixels, which is well under a millimetre on a modern phone: the natural wobble of a
+    // fingertip counted as a scroll, and every tap on a lesson was thrown away. A mouse never
+    // wobbles, so in the Editor it looked fine.
+    private static float TapSlop => Mathf.Max(12f, Screen.dpi > 0f ? Screen.dpi * 0.12f : Screen.height * 0.015f);
 
     private sealed class LessonNode
     {
@@ -377,8 +383,16 @@ public class LobbyLearningScroller : MonoBehaviour
     {
         // A drag that happened to end on a node is a scroll, not a tap. Without this every attempt
         // to scroll by grabbing the middle of the screen would open a lesson.
-        if (draggedFar || !LessonLadder.IsUnlocked(index))
+        if (draggedFar)
             return;
+
+        if (!LessonLadder.IsUnlocked(index))
+        {
+            Debug.Log($"LobbyLearningScroller: lesson {index + 1} is locked -- finish lesson {LessonLadder.Completed + 1} first.");
+            return;
+        }
+
+        Debug.Log($"LobbyLearningScroller: starting lesson {index + 1}.");
 
         PracticeQuizController practice = FindAnyObjectByType<PracticeQuizController>(FindObjectsInactive.Include);
 
@@ -411,6 +425,7 @@ public class LobbyLearningScroller : MonoBehaviour
         {
             isDragging = true;
             draggedFar = false;
+            pressY = pointerY;
             lastPointerY = pointerY;
             dragVelocity = 0f;
             velHistory.Clear();
@@ -419,7 +434,9 @@ public class LobbyLearningScroller : MonoBehaviour
         else if (pointer.press.wasReleasedThisFrame && isDragging)
         {
             isDragging = false;
-            dragVelocity = ReleaseVelocity(pointerY);
+
+            // A tap does not fling the path.
+            dragVelocity = draggedFar ? ReleaseVelocity(pointerY) : 0f;
         }
 
         if (!isDragging && Mathf.Approximately(dragVelocity, 0f))
@@ -434,11 +451,14 @@ public class LobbyLearningScroller : MonoBehaviour
             while (velHistory.Count > 1 && Time.time - velHistory[0].time > VelWindowSec)
                 velHistory.RemoveAt(0);
 
-            delta = pointerY - lastPointerY;
-            lastPointerY = pointerY;
-
-            if (Mathf.Abs(pointerY - velHistory[0].y) > TapSlop)
+            // Measured from where the finger went down, not from a moment ago: a slow drift is still a
+            // scroll. Until it is one, the path stays put, so a tap never nudges the node away
+            // from under the finger.
+            if (!draggedFar && Mathf.Abs(pointerY - pressY) > TapSlop)
                 draggedFar = true;
+
+            delta = draggedFar ? pointerY - lastPointerY : 0f;
+            lastPointerY = pointerY;
         }
         else
         {

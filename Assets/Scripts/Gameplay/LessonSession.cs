@@ -113,8 +113,17 @@ public class LessonSession : MonoBehaviour
     private static LessonSession Create()
     {
         // A second tap while a session is already opening would stack two of them on one board.
-        if (current != null || FirstRunTutorial.IsRunning)
+        if (current != null)
+        {
+            Debug.LogWarning("LessonSession: a lesson is already running, so this one was not started.");
             return null;
+        }
+
+        if (FirstRunTutorial.IsRunning)
+        {
+            Debug.LogWarning("LessonSession: the tutorial is still running, so the lesson was not started.");
+            return null;
+        }
 
         TriviaDuelManager duel = TriviaDuelManager.Instance;
 
