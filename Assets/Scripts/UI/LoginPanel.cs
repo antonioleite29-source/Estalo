@@ -22,6 +22,7 @@ public class LoginPanel : MonoBehaviour
     public TMP_InputField usernameField;
     public TMP_InputField passwordField;
     public TMP_Text statusText;
+    public TMP_Text subtitleText;
     public Button signInButton;
     public Button createAccountButton;
     public Button closeButton;
@@ -58,7 +59,39 @@ public class LoginPanel : MonoBehaviour
     {
         gameObject.SetActive(true);
         transform.SetAsLastSibling();
+        FitSubtitle();
         SetBusy(false, string.Empty);
+    }
+
+    // The subtitle wraps onto as many lines as it needs, at its own size, instead of shrinking or
+    // being cut off. The box keeps its bottom edge -- the fields are laid out under it -- and grows
+    // upward into the gap below the title.
+    private void FitSubtitle()
+    {
+        if (subtitleText == null)
+        {
+            Transform found = transform.Find("Subtitle");
+            subtitleText = found != null ? found.GetComponent<TMP_Text>() : null;
+        }
+
+        if (subtitleText == null)
+            return;
+
+        TMP_Text text = subtitleText;
+        float size = text.enableAutoSizing ? text.fontSizeMax : text.fontSize;
+        text.enableAutoSizing = false;
+        text.fontSize = size;
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.overflowMode = TextOverflowModes.Overflow;
+
+        RectTransform rect = text.rectTransform;
+        float height = rect.sizeDelta.y;
+        float bottom = rect.anchoredPosition.y - rect.pivot.y * height;
+        float needed = text.GetPreferredValues(text.text, rect.rect.width, 0f).y;
+
+        rect.pivot = new Vector2(rect.pivot.x, 0f);
+        rect.sizeDelta = new Vector2(rect.sizeDelta.x, Mathf.Max(height, needed));
+        rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, bottom);
     }
 
     public void Hide()
@@ -233,7 +266,7 @@ public class LoginPanel : MonoBehaviour
         float y = 700f;
 
         Label(rect, "Title", "Sua conta", 110f, ref y, 200f, font);
-        Label(rect, "Subtitle", "Entre para recuperar seu progresso em outro celular.", 50f, ref y, 160f, font);
+        panel.subtitleText = Label(rect, "Subtitle", "Entre para recuperar seu progresso em outro celular.", 50f, ref y, 160f, font);
 
         panel.usernameField = Field(rect, "UsernameField", "Nome de usuário", false, ref y, font);
         panel.passwordField = Field(rect, "PasswordField", "Senha", true, ref y, font);
