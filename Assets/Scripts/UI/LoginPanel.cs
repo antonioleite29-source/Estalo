@@ -30,17 +30,24 @@ public class LoginPanel : MonoBehaviour
     private string pendingUsername;
     private bool wired;
 
-    // Set when the panel was opened straight after the tutorial: closing it goes on to the lobby
-    // instead of leaving the player on the Profile page they never chose to open.
-    private LobbyPageSwitcher returnToLobby;
+    // Where to go when the panel closes, when it was opened from somewhere other than the Profile
+    // page -- after the tutorial, or from the More page -- so the player is not left on a page they
+    // never chose to open.
+    private LobbyPageSwitcher returnSwitcher;
+    private LobbyPageSwitcher.LobbyPage returnPage;
 
-    // Opened by the tutorial as it finishes. The panel lives on the Profile page, so that page is
-    // shown under it. Skipped for anyone already logged in.
+    // Opened by the tutorial as it finishes. Skipped for anyone already logged in.
     public static void OfferAfterTutorial()
     {
         if (!string.IsNullOrEmpty(PlayerStats.Username))
             return;
 
+        OpenFor(LobbyPageSwitcher.LobbyPage.Lobby);
+    }
+
+    // The panel lives on the Profile page, so that page is shown under it; closing it goes to returnTo.
+    public static void OpenFor(LobbyPageSwitcher.LobbyPage returnTo)
+    {
         LobbyPageSwitcher switcher = FindAnyObjectByType<LobbyPageSwitcher>(FindObjectsInactive.Include);
         ProfilePageController profile = FindAnyObjectByType<ProfilePageController>(FindObjectsInactive.Include);
 
@@ -52,7 +59,10 @@ public class LoginPanel : MonoBehaviour
         LoginPanel panel = profile.OpenLogin();
 
         if (panel != null)
-            panel.returnToLobby = switcher;
+        {
+            panel.returnSwitcher = switcher;
+            panel.returnPage = returnTo;
+        }
     }
 
     public void Show()
@@ -106,11 +116,11 @@ public class LoginPanel : MonoBehaviour
     {
         gameObject.SetActive(false);
 
-        if (returnToLobby != null)
+        if (returnSwitcher != null)
         {
-            LobbyPageSwitcher switcher = returnToLobby;
-            returnToLobby = null;
-            switcher.ShowLobbyPage();
+            LobbyPageSwitcher switcher = returnSwitcher;
+            returnSwitcher = null;
+            switcher.ShowPage(returnPage);
         }
     }
 

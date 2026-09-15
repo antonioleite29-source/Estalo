@@ -64,12 +64,31 @@ public class FirstRunTutorial : MonoBehaviour
         if (PlayerPrefs.GetInt(SeenKey, 0) == 1)
             return;
 
+        StartTutorial(false);
+    }
+
+    // "Rever tutorial" on the More page: the same tutorial again, on purpose. It leaves IQ alone --
+    // the starting placement only ever happens once -- and does not offer the login at the end.
+    public static bool Replay()
+    {
+        if (IsRunning || LessonSession.IsRunning || NetworkBootstrap.IsDedicatedServerBuild)
+            return false;
+
+        StartTutorial(true);
+        return true;
+    }
+
+    private bool isReplay;
+
+    private static void StartTutorial(bool replay)
+    {
         GameObject host = new GameObject("FirstRunTutorial");
         DontDestroyOnLoad(host);
 
         IsRunning = true;
 
         FirstRunTutorial tutorial = host.AddComponent<FirstRunTutorial>();
+        tutorial.isReplay = replay;
         tutorial.StartCoroutine(tutorial.Run());
     }
 
@@ -77,7 +96,9 @@ public class FirstRunTutorial : MonoBehaviour
     {
         // Behind the launch screen, so the board is already dressed by the time the logo fades off
         // it rather than assembling itself in front of the player.
-        yield return new WaitForSecondsRealtime(LoadingScreenController.HoldSeconds + LoadingScreenController.FadeSeconds);
+        // A replay starts from the More page, long after the launch screen has gone.
+        if (!isReplay)
+            yield return new WaitForSecondsRealtime(LoadingScreenController.HoldSeconds + LoadingScreenController.FadeSeconds);
 
         duel = TriviaDuelManager.Instance;
 
@@ -409,6 +430,17 @@ public class FirstRunTutorial : MonoBehaviour
     // be flattery: 150 is meant to be about one person in two thousand.
     private void ShowResult()
     {
+        if (isReplay)
+        {
+            if (duel.questionText != null)
+                duel.questionText.text = $"Você acertou {answeredCorrectly} de {TestQuestions}.\n" +
+                                         "Foi só um treino: seu IQ continua o mesmo.";
+
+            SetScores(0, 0);
+            HideRings();
+            return;
+        }
+
         int iq = Mathf.Clamp(Mathf.RoundToInt(100f + 2.5f * (answeredCorrectlyRaw - 14f)),
                              Mathf.RoundToInt(PlayerIQManager.IQ_MIN),
                              Mathf.RoundToInt(PlayerIQManager.IQ_MAX));
@@ -444,13 +476,17 @@ public class FirstRunTutorial : MonoBehaviour
         // match rather than by this class guessing which objects to switch on.
         // Then straight into "Entrar ou criar conta", so the first thing after learning the game is
         // making sure its progress can't be lost.
+        bool offerLogin = !isReplay;
+
         if (duel != null)
             duel.PlayReturnToLobbyTransition(() =>
             {
                 duel.PrepareForLobby(true);
-                LoginPanel.OfferAfterTutorial();
+
+                if (offerLogin)
+                    LoginPanel.OfferAfterTutorial();
             });
-        else
+        else if (offerLogin)
             LoginPanel.OfferAfterTutorial();
 
         Destroy(gameObject);
