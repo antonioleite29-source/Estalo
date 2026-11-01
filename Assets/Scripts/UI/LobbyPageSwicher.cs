@@ -152,6 +152,13 @@ public class LobbyPageSwitcher : MonoBehaviour
 
         if (modeToStart == MatchMode.TeamFour)
         {
+            // First 2v2: read the rules before joining the queue, not while three other people wait.
+            if (waitingScreen != null && TeamFirstRunTutorial.ShowBeforeFirstTeamMatch(StartGame))
+            {
+                waitingScreen.HideWaiting();
+                return;
+            }
+
             if (teamManager != null)
                 teamManager.StartTeamTriviaFromLobby();
             else

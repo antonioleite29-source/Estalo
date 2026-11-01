@@ -11,6 +11,7 @@ public static class SettingsUiBuilder
 {
     private const string BuiltKey = "EstaloSettingsButtonsBuilt";
     private const string WhiteKey = "EstaloSettingsLabelsWhite";
+    private const string TeamTutorialKey = "EstaloSettingsTeamTutorialButton";
     private const string UndoName = "Build settings buttons";
 
     static SettingsUiBuilder()
@@ -54,6 +55,36 @@ public static class SettingsUiBuilder
             EditorSceneManager.MarkSceneDirty(page.gameObject.scene);
             EditorPrefs.SetBool(WhiteKey, true);
             Debug.Log("SettingsUiBuilder: settings button labels are white. Save the scene.", page);
+        };
+    }
+
+    // The Tutorial 2x2 button arrived after the first four, so a scene built earlier is missing it.
+    [InitializeOnLoadMethod]
+    private static void AddTeamTutorialOnce()
+    {
+        if (EditorPrefs.GetBool(TeamTutorialKey, false))
+            return;
+
+        EditorApplication.delayCall += () =>
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
+            SettingsPage page = Object.FindAnyObjectByType<SettingsPage>(FindObjectsInactive.Include);
+
+            if (page == null || page.teamTutorialButton != null)
+                return;
+
+            Undo.RecordObject(page, UndoName);
+
+            foreach (GameObject go in page.Build(null))
+                Undo.RegisterCreatedObjectUndo(go, UndoName);
+
+            page.MakeLabelsWhite();
+            EditorUtility.SetDirty(page);
+            EditorSceneManager.MarkSceneDirty(page.gameObject.scene);
+            EditorPrefs.SetBool(TeamTutorialKey, true);
+            Debug.Log("SettingsUiBuilder: Tutorial 2x2 is on the More page. Save the scene.", page);
         };
     }
 

@@ -14,6 +14,7 @@ public class SettingsPage : MonoBehaviour
     public Button soundButton;
     public Button accountButton;
     public Button tutorialButton;
+    public Button teamTutorialButton;
     public Button creditsButton;
 
     [Tooltip("Switched off until Créditos is tapped.")]
@@ -71,6 +72,7 @@ public class SettingsPage : MonoBehaviour
         if (soundButton != null) soundButton.onClick.AddListener(ToggleSound);
         if (accountButton != null) accountButton.onClick.AddListener(() => LoginPanel.OpenFor(LobbyPageSwitcher.LobbyPage.More));
         if (tutorialButton != null) tutorialButton.onClick.AddListener(() => FirstRunTutorial.Replay());
+        if (teamTutorialButton != null) teamTutorialButton.onClick.AddListener(() => TeamFirstRunTutorial.Replay());
         if (creditsButton != null) creditsButton.onClick.AddListener(() => SetCreditsOpen(true));
         if (creditsCloseButton != null) creditsCloseButton.onClick.AddListener(() => SetCreditsOpen(false));
     }
@@ -78,7 +80,7 @@ public class SettingsPage : MonoBehaviour
     // White labels on every settings button, whatever colour the Jogar style gave them.
     public void MakeLabelsWhite()
     {
-        foreach (Button button in new[] { soundButton, accountButton, tutorialButton, creditsButton, creditsCloseButton })
+        foreach (Button button in new[] { soundButton, accountButton, tutorialButton, teamTutorialButton, creditsButton, creditsCloseButton })
         {
             TMP_Text label = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
 
@@ -151,6 +153,7 @@ public class SettingsPage : MonoBehaviour
         if (soundButton == null) soundButton = MakeButton(page, "SoundButton", "Som: ligado", ref top, font, created);
         if (accountButton == null) accountButton = MakeButton(page, "AccountButton", "Entrar ou criar conta", ref top, font, created);
         if (tutorialButton == null) tutorialButton = MakeButton(page, "TutorialButton", "Rever tutorial", ref top, font, created);
+        if (teamTutorialButton == null) teamTutorialButton = MakeButton(page, "TeamTutorialButton", "Tutorial 2x2", ref top, font, created);
         if (creditsButton == null) creditsButton = MakeButton(page, "CreditsButton", "Créditos", ref top, font, created);
 
         if (creditsPanel == null)
