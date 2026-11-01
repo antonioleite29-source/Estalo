@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -244,19 +246,159 @@ public class LobbyPageSwitcher : MonoBehaviour
     public void ShowConnectPage()  { ShowPage(LobbyPage.Connect); }
     public void ShowTriviaPage()   { ShowLobbyPage(); }
 
+    [Header("--- PAGE TRANSITION ---")]
+    [Tooltip("Seconds for a page to slide in when a bottom tab is tapped. 0 switches instantly.")]
+    [Range(0f, 0.6f)]
+    public float slideSeconds = 0.22f;
+
+    // Where each page sits when it is the one on screen, remembered the first time it is moved, so a
+    // transition that is interrupted can always put it back.
+    private readonly Dictionary<RectTransform, Vector2> homePositions = new Dictionary<RectTransform, Vector2>();
+    private Coroutine slideCoroutine;
+    private LobbyPage shownPage;
+    private bool hasShownPage;
+
+    // Left to right, the order of the bottom bar: Profile, Learning, Trivia, More. A tab to the right
+    // of the current one slides in from the right, like Clash Royale's tabs, so the movement matches
+    // where the tap was.
+    private static int TabOrderOf(LobbyPage page)
+    {
+        switch (page)
+        {
+            case LobbyPage.Profile:  return 0;
+            case LobbyPage.Learning: return 1;
+            case LobbyPage.Lobby:    return 2;
+            case LobbyPage.More:     return 3;
+            case LobbyPage.Connect:  return 3;
+            default:                 return 0;
+        }
+    }
+
     public void ShowPage(LobbyPage page)
     {
         // Hide everything first, then show the one we want. Written this way rather than as one
         // SetActive per page with a == test, because two fields are allowed to point at the SAME
         // object — Connect and More share a page so the Connect UI inherits More's background.
         // With per-field tests, whichever line came last would win and switch it straight back off.
+        GameObject incoming = PageObject(page);
+        GameObject outgoing = hasShownPage ? PageObject(shownPage) : null;
+
+        bool animate = slideSeconds > 0f && hasShownPage && incoming != null && outgoing != null &&
+                       incoming != outgoing && outgoing.activeSelf && gameObject.activeInHierarchy;
+
+        // Whatever a half-finished transition left behind, before anything is switched off.
+        if (slideCoroutine != null)
+        {
+            StopCoroutine(slideCoroutine);
+            slideCoroutine = null;
+            ResetPagePositions();
+        }
+
+        shownPage = page;
+        hasShownPage = true;
+
+        if (!animate)
+        {
+            SetPageActive(profilePage,  false);
+            SetPageActive(learningPage, false);
+            SetPageActive(lobbyPage,    false);
+            SetPageActive(morePage,     false);
+            SetPageActive(connectPage,  false);
+
+            SetPageActive(incoming, true);
+            GameMusic.PlayLobby();
+            return;
+        }
+
+        slideCoroutine = StartCoroutine(SlidePages(outgoing, incoming,
+            TabOrderOf(page) >= TabOrderOf(PageOf(outgoing)) ? 1f : -1f));
+
+        GameMusic.PlayLobby();
+    }
+
+    // Which page a given object is, so the direction can be worked out from the object that is on
+    // screen rather than from a second field that could disagree with it.
+    private LobbyPage PageOf(GameObject pageObject)
+    {
+        if (pageObject == profilePage)  return LobbyPage.Profile;
+        if (pageObject == learningPage) return LobbyPage.Learning;
+        if (pageObject == lobbyPage)    return LobbyPage.Lobby;
+        if (pageObject == connectPage)  return LobbyPage.Connect;
+        return LobbyPage.More;
+    }
+
+    // The incoming page comes in from `direction` (1 = from the right), the outgoing one leaves the
+    // other way, both moving together. Unscaled time, so it still runs if anything pauses the game.
+    private IEnumerator SlidePages(GameObject outgoing, GameObject incoming, float direction)
+    {
+        RectTransform from = outgoing.transform as RectTransform;
+        RectTransform to = incoming.transform as RectTransform;
+
+        if (from == null || to == null)
+        {
+            SetPageActive(outgoing, false);
+            SetPageActive(incoming, true);
+            slideCoroutine = null;
+            yield break;
+        }
+
+        Remember(from);
+        Remember(to);
+
+        SetPageActive(incoming, true);
+
+        float width = ((RectTransform)transform).rect.width;
+
+        if (width <= 1f)
+            width = Screen.width;
+
+        Vector2 fromHome = homePositions[from];
+        Vector2 toHome = homePositions[to];
+
+        to.anchoredPosition = toHome + new Vector2(width * direction, 0f);
+
+        float elapsed = 0f;
+
+        while (elapsed < slideSeconds)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            // Fast at first and settling at the end, which is what makes it read as a swipe rather
+            // than a slide at constant speed.
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / slideSeconds));
+
+            to.anchoredPosition = toHome + new Vector2(width * direction * (1f - t), 0f);
+            from.anchoredPosition = fromHome - new Vector2(width * direction * t, 0f);
+
+            yield return null;
+        }
+
+        to.anchoredPosition = toHome;
+        from.anchoredPosition = fromHome;
+
         SetPageActive(profilePage,  false);
         SetPageActive(learningPage, false);
         SetPageActive(lobbyPage,    false);
         SetPageActive(morePage,     false);
         SetPageActive(connectPage,  false);
 
-        SetPageActive(PageObject(page), true);
+        SetPageActive(incoming, true);
+        slideCoroutine = null;
+    }
+
+    private void Remember(RectTransform page)
+    {
+        if (!homePositions.ContainsKey(page))
+            homePositions[page] = page.anchoredPosition;
+    }
+
+    private void ResetPagePositions()
+    {
+        foreach (KeyValuePair<RectTransform, Vector2> entry in homePositions)
+        {
+            if (entry.Key != null)
+                entry.Key.anchoredPosition = entry.Value;
+        }
     }
 
     private GameObject PageObject(LobbyPage page)

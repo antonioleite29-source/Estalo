@@ -558,6 +558,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     public void BeginMatchAuthoritative()
     {
+        GameMusic.PlayMatch();
+
         // Re-bind every time this mode's match actually starts, not just once at Awake — the answer
         // buttons are shared with TeamDuelManager (only one mode is ever active at a time), so
         // whichever mode starts most recently needs to "claim" the click listeners back.
@@ -604,6 +606,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     public void ApplyNetworkedMatchStarted()
     {
+        GameMusic.PlayMatch();
+
         BindAnswerButtons();
 
         // Cleared before the board is shown. ApplyNetworkedScore decides who scored by comparing
@@ -823,6 +827,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             return;
         }
 
+        ClearAnswerLabels();
         currentQuestion = GetNextQuestionForCurrentDifficulty();
 
         if (currentQuestion == null)
@@ -1013,6 +1018,9 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             EndMatch("Jogador 2 venceu!", true, winnerSide: 2);
             yield break;
         }
+
+        // Cleared for the whole gap, not just the frame before the new question lands.
+        ClearAnswerLabels();
 
         yield return new WaitForSeconds(nextRoundDelaySeconds);
         stateCoroutine = null;
@@ -1538,6 +1546,20 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         }
     }
 
+    // Blank answers, for the gap between one question and the next: the buttons keep their text
+    // while an answer is being shown, so it has to be taken off before new options arrive.
+    internal void ClearAnswerLabels()
+    {
+        if (answerButtonVisuals == null)
+            return;
+
+        for (int i = 0; i < answerButtonVisuals.Length; i++)
+        {
+            if (answerButtonVisuals[i] != null)
+                answerButtonVisuals[i].SetLabel(string.Empty);
+        }
+    }
+
     internal void LockAllButtons()
     {
         if (answerButtonVisuals == null)
@@ -1645,6 +1667,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     {
         lastWinnerSide = hasWinner ? winnerSide : 0;
 
+        if (hasWinner)
+            GameMusic.PlayResult(winnerSide == localViewPlayerSide);
+        else
+            GameMusic.Stop();
+
         StopGameplayCoroutines(false);
         triviaRunning = false;
         inputEnabled = false;
@@ -1680,7 +1707,14 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         // Nothing on a match that simply ran out of players or time: there is no result to
         // announce, and a defeat sting for somebody's Wi-Fi dropping is a lie.
         if (hasWinner)
+        {
             MatchSounds.PlayEnded(winnerSide == localViewPlayerSide);
+            GameMusic.PlayResult(winnerSide == localViewPlayerSide);
+        }
+        else
+        {
+            GameMusic.Stop();
+        }
 
         if (questionText != null)
             questionText.text = message;

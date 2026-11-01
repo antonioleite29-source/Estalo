@@ -184,9 +184,14 @@ public class AnswerButtonVisual : MonoBehaviour, IPointerEnterHandler, IPointerE
                 return currentTheme.highlightedSprite != null ? currentTheme.highlightedSprite : currentTheme.normalSprite;
 
             case VisualState.PointerPressed:
+                return currentTheme.pressedSprite != null ? currentTheme.pressedSprite : currentTheme.normalSprite;
+
+            // An answer nobody touched looks untouched, even while the board is locked. The whole row
+            // used to switch to the pressed artwork the moment anyone answered, so all four buttons
+            // appeared to be pressed at once.
             case VisualState.LockedPressed:
             case VisualState.Disabled:
-                return currentTheme.pressedSprite != null ? currentTheme.pressedSprite : currentTheme.normalSprite;
+                return currentTheme.normalSprite;
 
             case VisualState.PressedRight:
                 return currentTheme.pressedRightSprite != null ? currentTheme.pressedRightSprite : currentTheme.pressedSprite;
@@ -200,15 +205,11 @@ public class AnswerButtonVisual : MonoBehaviour, IPointerEnterHandler, IPointerE
         }
     }
 
+    // Always. A pressed answer has to stay readable -- the player needs to see what they picked and
+    // which one was right. The labels go blank between questions instead, cleared by whoever is
+    // running the round, so the new options never appear under the old words.
     private bool ShouldShowText()
     {
-        switch (currentState)
-        {
-            case VisualState.Normal:
-            case VisualState.Highlighted:
-                return true;
-            default:
-                return false;
-        }
+        return true;
     }
 }

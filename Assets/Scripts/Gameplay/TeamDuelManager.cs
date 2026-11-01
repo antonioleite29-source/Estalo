@@ -249,6 +249,8 @@ public class TeamDuelManager : MonoBehaviour
     // to avoid.
     private IEnumerator MatchStartSequence()
     {
+        GameMusic.PlayMatch();
+
         // Pin the waiting screen at "found" first. The queue these four came from is already
         // empty, so left live it would count itself down to 0 / 4 while the opening plays over it.
         if (lobbyPageSwitcher != null && lobbyPageSwitcher.waitingScreen != null)

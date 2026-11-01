@@ -157,6 +157,7 @@ public class LessonSession : MonoBehaviour
             duel.lobbyPageSwitcher.HideAllPages();
 
         TriviaDuelManager.HideTeamBoard();
+        GameMusic.PlayMatch();
 
         yield return duel.MatchStartSequence();
 
