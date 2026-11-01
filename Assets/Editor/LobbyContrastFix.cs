@@ -4,11 +4,12 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Two contrast problems visible in the first phone screenshots, fixed once in the scene.
-//
 // "Jogar" was pale blue on a blue button, which reads as a disabled control -- the one button the
-// whole lobby exists for. And the two mode buttons were tinted white and cyan, so whichever mode was
-// NOT selected looked like the brighter of the two.
+// whole lobby exists for.
+//
+// This used to repaint the 1x1 and 2x2 buttons as well, white against grey. It looked wrong on the
+// real artwork, so those two keep the colours they were authored with; ModeColourRestore puts them
+// back on a scene this already touched.
 //
 // Runs once on its own the first time Unity compiles it with the scene open; save the scene after.
 // Undo puts the old colours back.
@@ -34,20 +35,6 @@ public static class LobbyContrastFix
     private static bool Fix()
     {
         bool changed = false;
-
-        foreach (LobbyPageSwitcher switcher in Object.FindObjectsByType<LobbyPageSwitcher>(FindObjectsInactive.Include))
-        {
-            Undo.RecordObject(switcher, UndoName);
-
-            // White for the mode you picked, a dimmed grey for the other. Both were light before, so
-            // the selection was carried only by a small difference in hue.
-            switcher.selectedModeColor = Color.white;
-            switcher.unselectedModeColor = new Color(0.62f, 0.62f, 0.70f, 1f);
-
-            EditorUtility.SetDirty(switcher);
-            EditorSceneManager.MarkSceneDirty(switcher.gameObject.scene);
-            changed = true;
-        }
 
         foreach (TMP_Text label in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include))
         {
