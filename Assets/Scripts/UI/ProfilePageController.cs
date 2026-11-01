@@ -151,18 +151,23 @@ public class ProfilePageController : MonoBehaviour
             ? $"#{PlayerStats.LeaderboardRank} de {PlayerStats.LeaderboardSize}"
             : "sem conexão";
 
+        // Labels in grey, numbers in white: the row reads as "this is the thing" then "this is the
+        // figure", which is what makes a column of seven lines scannable.
+        const string label = "<color=#A9B2C1>";
+        const string endLabel = "</color>";
+
         statsText.text =
             // The heading is part of the same text, so it moves and scales with the box. Sized
             // relative to the lines, so auto-sizing shrinks both together.
             "<size=150%><b>Estatísticas</b></size>\n" +
-            $"Partidas jogadas: {PlayerStats.MatchesPlayed}\n" +
-            $"Vitórias: {PlayerStats.MatchesWon}\n" +
-            $"Derrotas: {PlayerStats.MatchesLost}\n" +
+            $"{label}Partidas jogadas:{endLabel} {PlayerStats.MatchesPlayed}\n" +
+            $"{label}Vitórias:{endLabel} {PlayerStats.MatchesWon}\n" +
+            $"{label}Derrotas:{endLabel} {PlayerStats.MatchesLost}\n" +
             // Two decimals, the same as the IQ bar in the lobby, so the two screens agree.
-            $"Pontos máximos: {PlayerStats.BestIQ:F2}\n" +
-            $"Pontos atuais: {PlayerStats.CurrentIQ:F2}\n" +
-            $"Jogando há: {PlayerStats.TimePlayingText()}\n" +
-            $"Ranking global: {rank}";
+            $"{label}Pontos máximos:{endLabel} {PlayerStats.BestIQ:F2}\n" +
+            $"{label}Pontos atuais:{endLabel} {PlayerStats.CurrentIQ:F2}\n" +
+            $"{label}Jogando há:{endLabel} {PlayerStats.TimePlayingText()}\n" +
+            $"{label}Ranking global:{endLabel} {rank}";
 
         RefreshAccountButton();
     }
