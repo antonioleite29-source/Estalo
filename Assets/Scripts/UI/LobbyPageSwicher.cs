@@ -347,7 +347,12 @@ public class LobbyPageSwitcher : MonoBehaviour
 
         SetPageActive(incoming, true);
 
-        float width = ((RectTransform)transform).rect.width;
+        // Measured from the page itself, then its parent. This switcher does not live on a UI object,
+        // so casting its own transform to a RectTransform threw on every page change.
+        float width = to.rect.width;
+
+        if (width <= 1f && to.parent is RectTransform area)
+            width = area.rect.width;
 
         if (width <= 1f)
             width = Screen.width;
