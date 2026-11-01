@@ -36,7 +36,22 @@ Required before the listing can be reviewed:
 - Privacy policy at a public URL. `PRIVACY.md` is the text; publish it with GitHub Pages on the
   Estalo repository and use that address.
 
-## 4. Content rating questionnaire
+## 4. Target audience and age
+
+Estalo is a **13+** app, not child-directed. Keep these three answers the same everywhere, because
+Google cross-checks them:
+
+- Play Console **Target audience** → tick 13+ age bands only. Ticking any band under 13 puts the app
+  into the Google Play Families programme, with its own self-certification and stricter review.
+- Unity's **"Will this app be targeted to children"** setting in Project Settings → Services →
+  answer **No**.
+- `PRIVACY.md` says 13 and over.
+
+Nothing in the game collects email, location or advertising identifiers, so the only child-safety
+risk left is a player typing their real name as a display name. The privacy policy asks for a
+nickname instead.
+
+## 5. Content rating questionnaire
 
 Answer honestly; for Estalo everything is "no": no violence, no sexual content, no language, no
 controlled substances, no gambling, no user-generated content shared publicly. Players do choose a
@@ -44,7 +59,7 @@ display name that others see in a match, which is worth declaring under user int
 
 Expected rating: Livre / Everyone.
 
-## 5. Data safety form
+## 6. Data safety form
 
 Declare exactly what the app does. Draft answers:
 
@@ -68,14 +83,14 @@ including the Unity login token when a player signs in. Two consequences:
    Encryption, with certificates on the server), or route logins so the token never crosses the
    plain channel.
 
-## 6. Production release
+## 7. Production release
 
 - Apply for production access from the Play Console dashboard once the 14 days are complete.
   Google asks how the test went: how many testers, what feedback came back, what changed. The
   September survey results in `../Survey/RESULTS.md` answer that directly.
 - Review usually takes a few days, sometimes longer for a first app.
 
-## 7. Timeline from 1 November 2026
+## 8. Timeline from 1 November 2026
 
 | Step | Dates |
 |---|---|

@@ -31,11 +31,11 @@ Estalo. O desenvolvedor não tem acesso a nenhuma senha.
 O Estalo não exibe anúncios, não vende dados e não usa nenhum serviço de análise de comportamento
 de terceiros.
 
-## Crianças
+## Idade
 
-O jogo é feito para estudantes e pode ser usado por menores de 13 anos. Nenhum dado pessoal é
-obrigatório para jogar: sem criar conta, o jogo funciona apenas com uma chave aleatória e o apelido
-que a pessoa escolher. Pedimos que ninguém use o nome completo como apelido.
+O Estalo é destinado a jogadores de **13 anos ou mais** e não é dirigido a crianças menores de 13
+anos. Nenhum dado pessoal é obrigatório para jogar: sem criar conta, o jogo funciona apenas com uma
+chave aleatória e o apelido que a pessoa escolher. Use um apelido, não o nome completo.
 
 ## Por quanto tempo guardamos
 
@@ -55,5 +55,6 @@ random account key created on first launch (the server stores only a SHA-256 has
 display name and avatar you choose, your score and match record, your username if you create an
 account through Unity Authentication, and your IP address while you are connected. Passwords are
 handled by Unity Authentication and never reach the Estalo server. No ads, no data sales, no
-third-party behavioural analytics. To have your data deleted, email the address above; removal
-within 30 days.
+third-party behavioural analytics. The game is intended for players aged 13 and over and is not
+directed to children under 13. To have your data deleted, email the address above; removal within
+30 days.
