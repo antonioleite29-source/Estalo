@@ -310,8 +310,7 @@ public class LobbyPageSwitcher : MonoBehaviour
             return;
         }
 
-        slideCoroutine = StartCoroutine(SlidePages(outgoing, incoming,
-            TabOrderOf(page) >= TabOrderOf(PageOf(outgoing)) ? 1f : -1f));
+        slideCoroutine = StartCoroutine(SlidePages(TabOrderOf(PageOf(outgoing)), TabOrderOf(page), incoming));
 
         GameMusic.PlayLobby();
     }
@@ -327,59 +326,58 @@ public class LobbyPageSwitcher : MonoBehaviour
         return LobbyPage.More;
     }
 
-    // The incoming page comes in from `direction` (1 = from the right), the outgoing one leaves the
-    // other way, both moving together. Unscaled time, so it still runs if anything pauses the game.
-    private IEnumerator SlidePages(GameObject outgoing, GameObject incoming, float direction)
+    // The whole bar of pages moves past, in tab order, so jumping from Profile to More scrolls through
+    // Learning and the lobby on the way rather than cutting straight to the end. Unscaled time, so it
+    // still runs if anything pauses the game.
+    private IEnumerator SlidePages(int fromTab, int toTab, GameObject incoming)
     {
-        RectTransform from = outgoing.transform as RectTransform;
-        RectTransform to = incoming.transform as RectTransform;
+        // Every page between the two, the ones travelling through included.
+        int low = Mathf.Min(fromTab, toTab);
+        int high = Mathf.Max(fromTab, toTab);
 
-        if (from == null || to == null)
+        List<RectTransform> moving = new List<RectTransform>();
+        List<int> tabs = new List<int>();
+
+        for (int tab = low; tab <= high; tab++)
         {
-            SetPageActive(outgoing, false);
-            SetPageActive(incoming, true);
-            slideCoroutine = null;
-            yield break;
+            GameObject pageObject = tab == toTab ? incoming : PageObjectForTab(tab);
+            RectTransform rect = pageObject != null ? pageObject.transform as RectTransform : null;
+
+            // One object can answer to two tabs -- Connect and More share a page -- so it is placed
+            // once, at whichever of the two this journey is actually about.
+            if (rect == null || moving.Contains(rect))
+                continue;
+
+            Remember(rect);
+            moving.Add(rect);
+            tabs.Add(tab);
+            SetPageActive(pageObject, true);
         }
 
-        Remember(from);
-        Remember(to);
+        float width = ((RectTransform)moving[0]).rect.width;
 
-        SetPageActive(incoming, true);
-
-        // Measured from the page itself, then its parent. This switcher does not live on a UI object,
-        // so casting its own transform to a RectTransform threw on every page change.
-        float width = to.rect.width;
-
-        if (width <= 1f && to.parent is RectTransform area)
+        if (width <= 1f && moving[0].parent is RectTransform area)
             width = area.rect.width;
 
         if (width <= 1f)
             width = Screen.width;
 
-        Vector2 fromHome = homePositions[from];
-        Vector2 toHome = homePositions[to];
-
-        to.anchoredPosition = toHome + new Vector2(width * direction, 0f);
+        // Three tabs at once would be a blur at one tab's speed, so a longer journey gets more time --
+        // not proportionally more, or crossing the bar would feel slow.
+        int steps = Mathf.Max(1, high - low);
+        float seconds = slideSeconds * (1f + 0.35f * (steps - 1));
 
         float elapsed = 0f;
 
-        while (elapsed < slideSeconds)
+        while (elapsed < seconds)
         {
             elapsed += Time.unscaledDeltaTime;
-
-            // Fast at first and settling at the end, which is what makes it read as a swipe rather
-            // than a slide at constant speed.
-            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / slideSeconds));
-
-            to.anchoredPosition = toHome + new Vector2(width * direction * (1f - t), 0f);
-            from.anchoredPosition = fromHome - new Vector2(width * direction * t, 0f);
-
+            Place(moving, tabs, Mathf.Lerp(fromTab, toTab, EaseInOut(elapsed / seconds)), width);
             yield return null;
         }
 
-        to.anchoredPosition = toHome;
-        from.anchoredPosition = fromHome;
+        Place(moving, tabs, toTab, width);
+        ResetPagePositions();
 
         SetPageActive(profilePage,  false);
         SetPageActive(learningPage, false);
@@ -389,6 +387,41 @@ public class LobbyPageSwitcher : MonoBehaviour
 
         SetPageActive(incoming, true);
         slideCoroutine = null;
+    }
+
+    // Cubic: slow to start, quick through the middle, settling at the end. Stronger than a smoothstep,
+    // which is what makes the travel read as one movement rather than a cut.
+    private static float EaseInOut(float t)
+    {
+        t = Mathf.Clamp01(t);
+
+        return t < 0.5f
+            ? 4f * t * t * t
+            : 1f - Mathf.Pow(-2f * t + 2f, 3f) * 0.5f;
+    }
+
+    // Lays the pages out as one strip, `position` tabs along it: the page at that position sits home,
+    // the others stand a screen apart on either side.
+    private void Place(List<RectTransform> pages, List<int> tabs, float position, float width)
+    {
+        for (int i = 0; i < pages.Count; i++)
+        {
+            if (pages[i] == null)
+                continue;
+
+            pages[i].anchoredPosition = homePositions[pages[i]] + new Vector2((tabs[i] - position) * width, 0f);
+        }
+    }
+
+    private GameObject PageObjectForTab(int tab)
+    {
+        switch (tab)
+        {
+            case 0:  return profilePage;
+            case 1:  return learningPage;
+            case 2:  return lobbyPage;
+            default: return morePage;
+        }
     }
 
     private void Remember(RectTransform page)
