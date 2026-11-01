@@ -274,10 +274,10 @@ public class LobbyPageSwitcher : MonoBehaviour
         }
     }
 
-    [Tooltip("How much the bottom-bar buttons for the pages you are NOT on are dimmed. 1 leaves them " +
-             "as they are; 0.55 is a little over half strength.")]
+    [Tooltip("How much darker the bottom-bar button for the page you are ON is drawn. 1 leaves it as " +
+             "it is; 0.6 is noticeably darker than the other three, which keep their own colour.")]
     [Range(0.2f, 1f)]
-    public float inactiveTabDim = 0.55f;
+    public float activeTabDarken = 0.6f;
 
     // The bottom bar's buttons, found by what they were wired to call rather than dragged into four
     // more Inspector slots: whichever button opens the Profile page is the Profile tab, by definition.
@@ -326,8 +326,8 @@ public class LobbyPageSwitcher : MonoBehaviour
         }
     }
 
-    // The tab you are on keeps its full colour; the others are dimmed, so the bar says where you are
-    // without needing a separate highlight object under each button.
+    // The tab you are on is drawn darker, like a key held down; the other three keep exactly the colour
+    // they were authored with. No separate highlight object under each button.
     private void RefreshTabHighlight(LobbyPage page)
     {
         FindTabs();
@@ -336,15 +336,14 @@ public class LobbyPageSwitcher : MonoBehaviour
 
         foreach (KeyValuePair<int, Graphic[]> entry in tabGraphics)
         {
-            float dim = entry.Key == current ? 1f : inactiveTabDim;
+            float dim = entry.Key == current ? activeTabDarken : 1f;
 
             foreach (Graphic graphic in entry.Value)
             {
                 if (graphic == null || !tabBaseColors.TryGetValue(graphic, out Color baseColor))
                     continue;
 
-                // Alpha is left alone: dimming it would fade a tab out of the bar rather than make it
-                // the quieter of four.
+                // Alpha is left alone: darkening is a colour change, not a fade.
                 graphic.color = new Color(baseColor.r * dim, baseColor.g * dim, baseColor.b * dim, baseColor.a);
             }
         }
