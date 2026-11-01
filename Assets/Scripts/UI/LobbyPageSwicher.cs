@@ -248,8 +248,13 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     [Header("--- PAGE TRANSITION ---")]
     [Tooltip("Seconds for a page to slide in when a bottom tab is tapped. 0 switches instantly.")]
-    [Range(0f, 0.6f)]
-    public float slideSeconds = 0.22f;
+    [Range(0f, 0.8f)]
+    public float slideSeconds = 0.3f;
+
+    [Tooltip("How heavily the slide eases in and out. 2 is gentle, 5 is a long glide that almost " +
+             "stops at each end.")]
+    [Range(2f, 6f)]
+    public float easeStrength = 5f;
 
     // Where each page sits when it is the one on screen, remembered the first time it is moved, so a
     // transition that is interrupted can always put it back.
@@ -465,15 +470,17 @@ public class LobbyPageSwitcher : MonoBehaviour
         slideCoroutine = null;
     }
 
-    // Cubic: slow to start, quick through the middle, settling at the end. Stronger than a smoothstep,
-    // which is what makes the travel read as one movement rather than a cut.
-    private static float EaseInOut(float t)
+    // Barely moving at each end and quick through the middle. The power is the whole feel of it: 3 is
+    // the usual cubic, 5 pulls away slowly and lands almost at rest, which is what a tab bar that
+    // carries pages past wants.
+    private float EaseInOut(float t)
     {
         t = Mathf.Clamp01(t);
+        float power = Mathf.Max(2f, easeStrength);
 
         return t < 0.5f
-            ? 4f * t * t * t
-            : 1f - Mathf.Pow(-2f * t + 2f, 3f) * 0.5f;
+            ? Mathf.Pow(2f * t, power) * 0.5f
+            : 1f - Mathf.Pow(2f - 2f * t, power) * 0.5f;
     }
 
     // Lays the pages out as one strip, `position` tabs along it: the page at that position sits home,
