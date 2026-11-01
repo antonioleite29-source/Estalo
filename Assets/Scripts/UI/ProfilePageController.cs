@@ -155,14 +155,14 @@ public class ProfilePageController : MonoBehaviour
             // The heading is part of the same text, so it moves and scales with the box. Sized
             // relative to the lines, so auto-sizing shrinks both together.
             "<size=150%><b>Estatísticas</b></size>\n" +
-            $"<b>Partidas jogadas:</b> {PlayerStats.MatchesPlayed}\n" +
-            $"<b>Vitórias:</b> {PlayerStats.MatchesWon}\n" +
-            $"<b>Derrotas:</b> {PlayerStats.MatchesLost}\n" +
+            $"Partidas jogadas: {PlayerStats.MatchesPlayed}\n" +
+            $"Vitórias: {PlayerStats.MatchesWon}\n" +
+            $"Derrotas: {PlayerStats.MatchesLost}\n" +
             // Two decimals, the same as the IQ bar in the lobby, so the two screens agree.
-            $"<b>Pontos máximos:</b> {PlayerStats.BestIQ:F2}\n" +
-            $"<b>Pontos atuais:</b> {PlayerStats.CurrentIQ:F2}\n" +
-            $"<b>Jogando há:</b> {PlayerStats.TimePlayingText()}\n" +
-            $"<b>Ranking global:</b> {rank}";
+            $"Pontos máximos: {PlayerStats.BestIQ:F2}\n" +
+            $"Pontos atuais: {PlayerStats.CurrentIQ:F2}\n" +
+            $"Jogando há: {PlayerStats.TimePlayingText()}\n" +
+            $"Ranking global: {rank}";
 
         RefreshAccountButton();
     }
