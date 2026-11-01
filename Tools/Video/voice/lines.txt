@@ -1,0 +1,30 @@
+Estalo trailer: the narrator's eight lines, in Brazilian Portuguese.
+
+Make them the way the LightZ Out ones were made: Higgsfield (Audio → text to speech, model Seed
+Audio 1.0), the whole script in one take, then cut into eight files. ElevenLabs works the same way.
+
+VOICE
+  Brazilian Portuguese, young adult, warm and quick — a friend explaining a game, not a film trailer
+  narrator. Clear and bright, a little competitive on the duel lines, no echo, no music.
+  Higgsfield prompt: "Brazilian Portuguese voice, young adult, warm and energetic, speaking clearly
+  and quickly, friendly and confident, like someone showing a friend a game they love. Dry, no music."
+  On ElevenLabs: a Portuguese voice, Stability about 50%, Similarity 75%, Style 10–20%, Speed 1.0.
+
+SAVING THEM
+  One file per line, named exactly v1 … v8, as .mp3 or .wav, saved in this folder (Tools/Video/voice).
+  A file here beats the Mac voice in voice/mac of the same name, and the scene re-times itself to
+  whatever length the new file has. Then:  swift Tools/Video/trailer.swift
+
+THE LINES, in the order they play
+
+v1  Estalo é um duelo de matemática em tempo real. Duas pessoas, a mesma pergunta, ao mesmo tempo.
+v7  Quem abre o jogo pela primeira vez aprende jogando: sete perguntas definem o seu nível, de um a sete.
+v2  Quem acertar primeiro marca o ponto.
+v3  E tem uma regra que muda tudo: errou, o adversário ganha quatro segundos para responder sozinho.
+v8  Dá para jogar em dupla também: dois contra dois, revezando quem responde a cada rodada.
+v4  Fora das partidas, uma trilha de vinte lições, da adição às equações. Cada lição ensina primeiro e cobra depois.
+v5  Tudo fica salvo: pontuação, histórico e o ranking de todo mundo que joga.
+v6  Estalo. Matemática fica melhor quando é uma disputa com os amigos.
+
+(The numbers are the order they were written in, not the order on screen; the renderer holds that
+order in voiceOrder. Keep the names as they are and nothing else has to change.)

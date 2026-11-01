@@ -14,7 +14,16 @@ import CoreText
 import Foundation
 import ImageIO
 
-let W = 1080, H = 1920, FPS: Int32 = 30
+let W = 1080, H = 2340, FPS: Int32 = 30
+
+// The game is laid out in a 1179 x 2556 box, with (0,0) in the middle of the screen. Everything below
+// is placed with the numbers taken straight out of the scene, through these two.
+let unit = CGFloat(W) / 1179.0
+func px(_ x: CGFloat) -> CGFloat { CGFloat(W) / 2 + x * unit }
+func py(_ y: CGFloat) -> CGFloat { CGFloat(H) / 2 + y * unit }
+func box(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect {
+    CGRect(x: px(x) - w * unit / 2, y: py(y) - h * unit / 2, width: w * unit, height: h * unit)
+}
 let root = FileManager.default.currentDirectoryPath
 let art = root + "/Assets/Art"
 let voiceDir = root + "/Tools/Video/voice"
@@ -46,9 +55,11 @@ let semi = font("Inter/Inter-SemiBold.ttf", 1)
 let boardImage = image(art + "/Backgrounds/Backgounrd1x1final.png")
 let lobbyImage = image(art + "/Backgrounds/Lobby.png")
 let logoImage = image(art + "/Logo/EstaloLogo.png") ?? image(art + "/Logo/EstaloLogoCirculo.png")
-let buttonNormal = image(art + "/UI/ButtonStates/NormalState.png") ?? image(art + "/UI/NotPressed.png")
-let buttonRight = image(art + "/UI/ButtonStates/PressedRight.png") ?? image(art + "/UI/PressedRight.png")
-let buttonWrong = image(art + "/UI/ButtonStates/PressedWrong.png") ?? image(art + "/UI/PressedWrong.png")
+let themes = root + "/Assets/Data/Themes"
+let buttonNormal = image(themes + "/NotPressed.png")
+let buttonRight = image(themes + "/PressedRight.png")
+let buttonWrong = image(themes + "/PressedWrong.png")
+let counterImage = image(root + "/Assets/Resources/Counter.png")
 let pathImage = image(art + "/UI/LearningPath/NewPath1.png")
 let avatarA = image(root + "/Assets/Art/Avatars/Robo1.png")
 let avatarB = image(root + "/Assets/Art/Avatars/Blob3.png")
@@ -167,64 +178,74 @@ struct Board {
 }
 
 func drawBoard(_ ctx: CGContext, _ b: Board) {
+    // The background is the whole screen: 78.6 x 85.2 at a scale of 15 x 30 is 1179 x 2556.
     ctx.draw(boardImage, covering: CGRect(x: 0, y: 0, width: CGFloat(W), height: CGFloat(H)))
 
-    // Question bubble.
-    let bubble = CGRect(x: 40, y: CGFloat(H) - 560, width: CGFloat(W) - 80, height: 420)
-    ctx.rounded(bubble, 36, panel)
-    ctx.paragraph(b.question, black, 74, at: CGPoint(x: bubble.midX, y: bubble.midY), width: bubble.width - 90)
+    // Question: centred at (22.885, 974), 269.47 x 73.125 at a scale of 4, so 1078 x 292 of room, and
+    // its 36 point text is drawn at 144.
+    let question = box(22.885, 974, 269.47 * 4, 73.125 * 4)
+    ctx.paragraph(b.question, black, 144 * unit, at: CGPoint(x: question.midX, y: question.midY),
+                  width: question.width)
 
-    // Score, in a tab under the bubble.
-    let tab = CGRect(x: CGFloat(W) / 2 - 170, y: bubble.minY - 130, width: 340, height: 130)
-    ctx.rounded(tab, 24, panel)
-    ctx.text("\(b.scoreLeft)", black, 86, at: CGPoint(x: tab.midX - 70, y: tab.midY), width: 120)
-    ctx.text("\(b.scoreRight)", black, 86, at: CGPoint(x: tab.midX + 70, y: tab.midY), width: 120, colour: red)
+    // The scoreboard sits at (906, 537) at a scale of 5, its two numbers inside it.
+    let counter = box(820, 537, 49 * 5, 87 * 5)
+    ctx.draw(counterImage, fitting: counter)
+    ctx.text("\(b.scoreLeft)", black, 150 * unit, at: CGPoint(x: counter.midX, y: counter.midY + counter.height * 0.17),
+             width: counter.width * 0.8)
+    ctx.text("\(b.scoreRight)", black, 150 * unit, at: CGPoint(x: counter.midX, y: counter.midY - counter.height * 0.22),
+             width: counter.width * 0.8, colour: red)
 
-    // Answers.
-    let tray = CGRect(x: 50, y: CGFloat(H) * 0.47, width: CGFloat(W) - 100, height: 250)
-    ctx.rounded(tray, 30, panel.copy(alpha: 0.85) ?? panel)
+    // Four answer buttons in a row at y 229, each 200 x 200, at the x the scene gives them.
+    let xs: [CGFloat] = [-342, -111.886, 120.334, 350.449]
 
-    let gap: CGFloat = 18
-    let cell = (tray.width - gap * 5) / 4
-
-    for (i, answer) in b.answers.enumerated() {
-        let rect = CGRect(x: tray.minX + gap + CGFloat(i) * (cell + gap), y: tray.midY - cell / 2,
-                          width: cell, height: cell)
+    for (i, x) in xs.enumerated() {
+        let rect = box(x, 229, 200, 200)
         var sprite = buttonNormal
+        var pressed = false
 
         if let chosen = b.chosen {
-            if i == chosen { sprite = b.chosenIsRight ? buttonRight : buttonWrong }
-            else if i == b.rightIndex && !b.chosenIsRight { sprite = buttonRight }
+            if i == chosen {
+                sprite = b.chosenIsRight ? buttonRight : buttonWrong
+                pressed = true
+            } else if i == b.rightIndex && !b.chosenIsRight {
+                sprite = buttonRight
+                pressed = true
+            }
         }
-
-        // The untouched buttons are near-white, so their labels are dark; a green or red one takes
-        // white, the same way the game does it.
-        let pressed = b.chosen != nil && (i == b.chosen || (i == b.rightIndex && !b.chosenIsRight))
-        let label = pressed ? ink : CGColor(red: 0.13, green: 0.15, blue: 0.19, alpha: 1)
 
         ctx.saveGState()
         ctx.setAlpha(b.reveal)
         ctx.draw(sprite, fitting: rect)
-        ctx.text(answer, black, 58, at: CGPoint(x: rect.midX, y: rect.midY), width: rect.width - 24,
-                 colour: label, alpha: b.reveal)
+
+        if i < b.answers.count {
+            // The label is the button's own 43.5 point text, and it wraps rather than running out of
+            // the button, the same way the game does it.
+            ctx.paragraph(b.answers[i], black, 60 * unit, at: CGPoint(x: rect.midX, y: rect.midY),
+                          width: rect.width * 0.86,
+                          colour: pressed ? ink : CGColor(red: 0.13, green: 0.15, blue: 0.19, alpha: 1),
+                          alpha: b.reveal)
+        }
+
         ctx.restoreGState()
     }
 
-    // The two players.
-    for (i, avatar) in [avatarA, avatarB].enumerated() {
-        let left = i == 0
-        let centre = CGPoint(x: left ? 300 : CGFloat(W) - 300, y: 520)
-        let frame = CGRect(x: centre.x - 110, y: centre.y - 110, width: 220, height: 220)
-        ctx.rounded(frame.insetBy(dx: -18, dy: -18), 28, panel)
-        ctx.draw(avatar, fitting: frame)
-        ctx.text(left ? "Você" : "Marina", black, 48, at: CGPoint(x: centre.x, y: centre.y - 165), width: 260)
+    // The two players: pictures at (-241, -285) and (250, -295), 280 square, names under them at -498.
+    let seats: [(CGFloat, CGFloat, String, CGImage?, Bool)] = [
+        (-241, -285.245, "Você", avatarA, true),
+        (250, -295, "Marina", avatarB, false),
+    ]
 
-        // The solo ring, drawn round whoever has the four seconds.
-        if let fill = b.soloFill, left == b.soloOnLeft {
-            ctx.setLineWidth(16)
-            ctx.setStrokeColor(left ? blue : red)
-            ctx.addArc(center: centre, radius: 150, startAngle: .pi / 2,
-                       endAngle: .pi / 2 - 2 * .pi * Double(fill), clockwise: true)
+    for (x, y, label, avatar, isLeft) in seats {
+        ctx.draw(avatar, fitting: box(x, y, 280, 280))
+        ctx.text(label, black, 48 * 2 * unit, at: CGPoint(x: px(x), y: py(-498)), width: 300 * unit)
+
+        // The solo ring, drawn where the donut is: (-262, -850) and (228, -850), 100 square at scale 2.
+        if let fill = b.soloFill, isLeft == b.soloOnLeft {
+            let donut = box(isLeft ? -262 : 228, -850, 200, 200)
+            ctx.setLineWidth(20 * unit)
+            ctx.setStrokeColor(isLeft ? blue : red)
+            ctx.addArc(center: CGPoint(x: donut.midX, y: donut.midY), radius: donut.width / 2,
+                       startAngle: .pi / 2, endAngle: .pi / 2 - 2 * .pi * Double(fill), clockwise: true)
             ctx.strokePath()
         }
     }
@@ -240,10 +261,25 @@ struct Scene {
 // Which line plays over which scene, in order.
 let voiceOrder = ["v1", "v7", "v2", "v3", "v8", "v4", "v5", "v6"]
 
+// A real recording wins over the Mac voice: drop v1.mp3 or v1.wav straight into Tools/Video/voice and
+// it is used instead of voice/mac/v1.wav, with the scene re-timing itself to its length.
+func voiceURL(_ name: String) -> URL? {
+    for candidate in ["/\(name).mp3", "/\(name).m4a", "/\(name).wav", "/mac/\(name).wav"] {
+        let url = URL(fileURLWithPath: voiceDir + candidate)
+
+        if FileManager.default.fileExists(atPath: url.path) {
+            return url
+        }
+    }
+
+    return nil
+}
+
 func voiceLength(_ name: String) -> Double {
-    let url = URL(fileURLWithPath: voiceDir + "/" + name + ".wav")
-    guard let file = try? AVAudioFile(forReading: url) else { return 4 }
-    return Double(file.length) / file.fileFormat.sampleRate
+    guard let url = voiceURL(name) else { return 4 }
+    let asset = AVURLAsset(url: url)
+    let seconds = CMTimeGetSeconds(asset.duration)
+    return seconds.isFinite && seconds > 0 ? seconds : 4
 }
 
 let q1 = "Quanto é 7 × 8?"
@@ -464,9 +500,9 @@ func buildAudio() throws -> URL {
     var at = CMTime.zero
 
     for (i, scene) in scenes.enumerated() {
-        let url = URL(fileURLWithPath: voiceDir + "/" + (i < voiceOrder.count ? voiceOrder[i] : "none") + ".wav")
+        let url = i < voiceOrder.count ? voiceURL(voiceOrder[i]) : nil
 
-        if FileManager.default.fileExists(atPath: url.path) {
+        if let url = url {
             let asset = AVURLAsset(url: url)
 
             if let track = asset.tracks(withMediaType: .audio).first {

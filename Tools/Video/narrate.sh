@@ -4,11 +4,11 @@
 #
 #   ./Tools/Video/narrate.sh
 #
-# Replace any file in Tools/Video/voice with a real recording of the same name to use a human voice
-# instead; the renderer only reads the lengths.
+# These are the placeholder. A real recording named v1.mp3 (see voice/lines.txt) dropped straight into
+# Tools/Video/voice is used instead of the file of the same name here.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OUT="$HERE/voice"
+OUT="$HERE/voice/mac"
 mkdir -p "$OUT"
 
 line() {
