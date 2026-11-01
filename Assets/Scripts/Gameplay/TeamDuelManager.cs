@@ -63,7 +63,7 @@ public class TeamDuelManager : MonoBehaviour
     public TMP_Text teamBScoreText;
 
     [Header("--- TIMING (in seconds) ---")]
-    public float soloTimeSeconds = 3f;
+    public float soloTimeSeconds = 4f;
     public float wrongFlashSeconds = 0.5f;
     public float correctResolveSeconds = 1f;
     public float nextRoundDelaySeconds = 0.35f;

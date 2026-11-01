@@ -271,7 +271,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     [Header("--- TIMING (in seconds) ---")]
     [Tooltip("How many seconds a player gets to answer alone after the other player answers wrong (their Solo window).")]
-    public float soloTimeSeconds = 3f;
+    public float soloTimeSeconds = 4f;
 
     [Tooltip("How long the wrong answer flash stays on screen before the other player's solo begins.")]
     public float wrongFlashSeconds = 0.5f;
