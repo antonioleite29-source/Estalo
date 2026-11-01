@@ -106,7 +106,15 @@ public class TextFitsItsBox : MonoBehaviour
             text.fontSizeMax = authored;
         }
 
-        text.fontSizeMin = MinFor(text);
+        // An answer may be one long word -- "Chegaram", "paralelepípedo" -- in a button barely wider
+        // than it. Held at the 36 floor, TMP breaks the word in half rather than shrinking it, which
+        // reads worse than small text, so answer labels alone may go under the floor.
+        float floor = MinFor(text);
+
+        if (text.GetComponentInParent<AnswerButtonVisual>(true) != null)
+            floor *= 0.6f;
+
+        text.fontSizeMin = floor;
 
         // Never cut off: if even 36 on several lines does not fit, the words stay visible past the
         // edge of the box, which shows where the box needs to be bigger.
