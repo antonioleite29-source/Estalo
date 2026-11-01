@@ -85,7 +85,8 @@ public static class PlayerStats
     // Called by the server whenever this player's account changes: on connecting, after each match,
     // after a claim, and when asked.
     public static void ApplyServerAccount(string key, float iq, float bestIQ, int played, int won, int lost,
-        long firstSeen, bool claimed, int rank, int size, string username)
+        long firstSeen, bool claimed, int rank, int size, string username,
+        string accountName = null, int avatarIndex = -1)
     {
         PlayerPrefs.SetString(UsernameKey, username ?? string.Empty);
 
@@ -123,12 +124,45 @@ public static class PlayerStats
         LeaderboardRank = rank;
         LeaderboardSize = size;
 
+        // Sent only just after a login, so this never overwrites a name typed on this phone.
+        ApplyProfileFromServer(accountName, avatarIndex);
+
         PlayerPrefs.Save();
 
         foreach (IQBarController bar in UnityEngine.Object.FindObjectsByType<IQBarController>())
             bar.RefreshFromManager();
 
         Changed?.Invoke();
+    }
+
+    // The account's own name and face, put on this phone after signing in, and pushed straight out to
+    // the network so a match in progress shows them too.
+    private static void ApplyProfileFromServer(string accountName, int avatarIndex)
+    {
+        PlayerProfileManager profile = PlayerProfileManager.Instance;
+
+        if (profile == null)
+            return;
+
+        bool changed = false;
+
+        if (!string.IsNullOrWhiteSpace(accountName) && accountName != profile.GetLocalName())
+        {
+            profile.SetLocalName(accountName);
+            changed = true;
+        }
+
+        if (avatarIndex >= 0 && avatarIndex != profile.GetLocalAvatarIndex())
+        {
+            profile.SetLocalAvatarIndex(avatarIndex);
+            changed = true;
+        }
+
+        if (!changed || NetworkManager.Singleton == null || NetworkManager.Singleton.LocalClient == null)
+            return;
+
+        NetworkObject localPlayer = NetworkManager.Singleton.LocalClient.PlayerObject;
+        localPlayer?.GetComponent<PlayerSideIdentity>()?.PushLocalProfile();
     }
 
     // The first-run tutorial's placement round is played on the phone, so its result has to be handed

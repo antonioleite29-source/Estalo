@@ -278,25 +278,38 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
             SendAccount(clientId);
     }
 
-    private void SendAccount(ulong clientId)
+    // pushProfile is true only just after a login: the account's own name and face go down to the
+    // phone, because the player signed in to get their account back and that includes who they are.
+    // Every other time the phone owns them and they come up, which is what keeps a rename working.
+    private void SendAccount(ulong clientId, bool pushProfile = false)
     {
         PlayerAccounts.Account account = PlayerAccounts.For(clientId);
 
         if (account == null || !CanSendRpc)
             return;
 
-        // Kept current for the leaderboard file; saved with the next change that saves.
         PlayerSideIdentity identity = FindIdentity(clientId);
-        string playerName = identity != null ? identity.PlayerName.Value.ToString() : string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(playerName))
-            account.name = playerName;
+        if (!pushProfile)
+        {
+            // Kept current for the leaderboard file; saved with the next change that saves.
+            string playerName = identity != null ? identity.PlayerName.Value.ToString() : string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(playerName))
+                account.name = playerName;
+
+            if (identity != null && identity.AvatarIndex.Value >= 0)
+                account.avatarIndex = identity.AvatarIndex.Value;
+        }
 
         (int rank, int size) = PlayerAccounts.RankOf(account);
 
         AccountTargetedClientRpc(PlayerAccounts.TakeUnsentKey(clientId), account.iq, account.bestIQ,
             account.played, account.won, account.lost, account.firstSeen, account.claimed, rank, size,
-            account.username ?? string.Empty, OnlyTo(clientId));
+            account.username ?? string.Empty,
+            pushProfile ? account.name ?? string.Empty : string.Empty,
+            pushProfile ? account.avatarIndex : -1,
+            OnlyTo(clientId));
     }
 
     private static ClientRpcParams OnlyTo(ulong clientId) =>
@@ -304,9 +317,11 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     [ClientRpc]
     private void AccountTargetedClientRpc(string key, float iq, float bestIQ, int played, int won, int lost,
-        long firstSeen, bool claimed, int rank, int size, string username, ClientRpcParams _ = default)
+        long firstSeen, bool claimed, int rank, int size, string username, string accountName, int avatarIndex,
+        ClientRpcParams _ = default)
     {
-        PlayerStats.ApplyServerAccount(key, iq, bestIQ, played, won, lost, firstSeen, claimed, rank, size, username);
+        PlayerStats.ApplyServerAccount(key, iq, bestIQ, played, won, lost, firstSeen, claimed, rank, size,
+            username, accountName, avatarIndex);
     }
 
     // A Unity login, checked against Unity's own keys before it is tied to anything. The player id is
@@ -331,7 +346,11 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         if (accepted)
         {
             PlayerAccounts.LinkLogin(clientId, unityPlayerId, username);
-            SendAccount(clientId);
+            PlayerAccounts.Save();
+
+            // The whole point of signing in on a second phone: the record, the name and the face that
+            // belong to the account come back down to it.
+            SendAccount(clientId, pushProfile: true);
         }
 
         LoginResultTargetedClientRpc(accepted, OnlyTo(clientId));

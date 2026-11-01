@@ -32,6 +32,7 @@ public static class PlayerAccounts
         public string id;          // public and safe to show; never used to sign in
         public string keyHash;     // SHA-256 of the secret key the phone holds
         public string name;
+        public int avatarIndex = -1;   // -1 until the player has picked one
         public float iq = StartingIQ;
         public float bestIQ = StartingIQ;
         public int played;
