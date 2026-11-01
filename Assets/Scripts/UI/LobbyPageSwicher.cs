@@ -248,8 +248,8 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     [Header("--- PAGE TRANSITION ---")]
     [Tooltip("Seconds for a page to slide in when a bottom tab is tapped. 0 switches instantly.")]
-    [Range(0f, 0.8f)]
-    public float slideSeconds = 0.3f;
+    [Range(0f, 1.5f)]
+    public float slideSeconds = 0.6f;
 
     [Tooltip("How heavily the slide eases in and out. 2 is gentle, 5 is a long glide that almost " +
              "stops at each end.")]
