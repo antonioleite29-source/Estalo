@@ -1,0 +1,381 @@
+<title>Estalo Music Picker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: four slot panels, one row per track, each row carrying its own player, licence chips and the path to copy. */
+:root{
+  --paper:#f4f6f9;
+  --panel:#ffffff;
+  --ink:#141a24;
+  --line:#d3dae4;
+  --blue:#1457c8;      /* side 1 on the duel board */
+  --coral:#c8441f;     /* side 2, used for anything needing a credit line */
+  --ok:#1b7a4b;
+
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Source Sans 3",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0e131b; --panel:#161d28; --ink:#e7ecf3;
+    --line:#2a3545; --blue:#6aa2ff; --coral:#ff8a63; --ok:#5fcf96; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0e131b; --panel:#161d28; --ink:#e7ecf3;
+  --line:#2a3545; --blue:#6aa2ff; --coral:#ff8a63; --ok:#5fcf96; color-scheme:dark;
+}
+
+body{background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 56px}
+.wrap{max-width:62rem;margin:0 auto}
+
+header{padding-block:40px 18px}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(2rem,6vw,3.1rem);line-height:1.04;margin:.3em 0 0;text-wrap:balance}
+.lede{max-width:42rem;font-size:1.03rem;margin-top:.7em}
+.note{font-size:.9rem;opacity:.75;margin-top:.6em;max-width:42rem}
+
+.summary{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:26px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sumcell .slot{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+.sumcell .val{font-weight:600;font-size:.95rem;min-width:0;overflow-wrap:anywhere}
+.sumcell .val.empty{font-weight:400;opacity:.5}
+
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:22px;font-size:.92rem}
+.controls label{display:flex;gap:7px;align-items:center}
+
+section.slot-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:22px;overflow:hidden}
+.slot-head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:16px 16px 12px;border-bottom:1px solid var(--line)}
+.slot-head h2{font-family:var(--display);font-size:1.35rem;margin:0}
+.slot-file{font-family:var(--mono);font-size:.82rem;color:var(--blue)}
+.slot-brief{flex:1 1 16rem;min-width:0;font-size:.9rem;opacity:.78}
+
+ul{list-style:none;margin:0;padding:0}
+li.opt{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:6px 12px;align-items:start;
+  padding:14px 16px;border-bottom:1px solid var(--line)}
+li.opt:last-child{border-bottom:0}
+li.opt.picked{background:color-mix(in srgb,var(--blue) 9%,transparent)}
+.num{font-family:var(--mono);font-size:.85rem;opacity:.55;padding-top:.15rem;font-variant-numeric:tabular-nums}
+.body{min-width:0}
+.name{font-weight:600;overflow-wrap:anywhere}
+.who{font-size:.88rem;opacity:.75;margin-top:.15em}
+.why{font-size:.88rem;margin-top:.35em}
+audio{width:100%;max-width:34rem;margin-top:.6em;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:.55em;align-items:center}
+.chip{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;padding:2px 7px;border-radius:999px;border:1px solid var(--line)}
+.chip.free{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
+.chip.credit{color:var(--coral);border-color:color-mix(in srgb,var(--coral) 45%,var(--line))}
+.chip.rec{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 45%,var(--line))}
+.path{font-family:var(--mono);font-size:.74rem;opacity:.8;margin-top:.5em;overflow-wrap:anywhere}
+.actions{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+a.open,button.btn{font:inherit;font-size:.86rem;padding:7px 12px;border-radius:9px;border:1px solid var(--line);
+  background:transparent;color:var(--ink);text-decoration:none;text-align:center;cursor:pointer;white-space:nowrap}
+a.open:hover,button.btn:hover{border-color:var(--blue);color:var(--blue)}
+button.btn[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.steps,.checks{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 16px;margin-bottom:22px}
+.steps h2,.checks h2{font-family:var(--display);font-size:1.3rem;margin:0 0 .5em}
+ol{margin:0;padding-left:1.3em}
+ol li,.checks li{margin-bottom:.5em}
+code{font-family:var(--mono);font-size:.86em;background:color-mix(in srgb,var(--blue) 10%,transparent);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+.checks ul{padding-left:1.1em}
+.checks ul li{list-style:disc}
+footer{font-size:.86rem;opacity:.7}
+@media (max-width:560px){
+  li.opt{grid-template-columns:1.6rem minmax(0,1fr)}
+  .actions{grid-column:1 / -1;flex-direction:row}
+  a.open,button.btn{flex:1}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Estalo · trilha sonora</div>
+  <h1>Estalo Music Picker</h1>
+  <p class="lede">Twenty-one sounds already downloaded and playable here: four music slots and the button click.
+  Listen, pick one per slot, then copy that file into the game.</p>
+  <p class="note">The players use 96 kbps previews. Copy the full-quality original named under each track, not
+  the preview. Twenty of the twenty-one are CC0, so nothing to credit. Only Heart of Machine, marked in orange,
+  needs a credit line in the Créditos panel. No chiptune left in the list.</p>
+</header>
+
+<div class="summary" id="summary"></div>
+
+<div class="controls">
+  <label><input type="checkbox" id="freeOnly"> Hide tracks that need a credit line</label>
+  <button class="btn" type="button" id="reset">Clear picks</button>
+</div>
+
+<div id="slots"></div>
+
+<section class="steps">
+  <h2>From a pick to the game</h2>
+  <ol>
+    <li><strong>Music.</strong> Copy the original named under your pick into
+    <code>Assets/Resources/Music</code> and rename it to the slot, keeping its extension:
+    <code>Lobby</code>, <code>Match</code>, <code>Win</code>, <code>Lose</code>.</li>
+    <li><strong>Click.</strong> The game ships five tuned notes in <code>Assets/Resources/Click</code>
+    — folders <code>C</code>, <code>D</code>, <code>E</code>, <code>G</code>, <code>A</code>, five
+    variations each — and each button plays the note it was given. <code>E</code> is the neutral tap,
+    so copying your pick over <code>Click/E/01.wav</code> through <code>05.wav</code> changes most of
+    the game and leaves the tuning elsewhere. Copy it into all five folders and every button sounds
+    the same, which is the usual app behaviour but drops the pentatonic idea.</li>
+    <li>Import settings: the two loops get Load Type <strong>Streaming</strong> with Vorbis; stings and
+    clicks get <strong>Decompress On Load</strong> with ADPCM, so they start instantly. Leave Force To
+    Mono off for music.</li>
+    <li>Press Play. Music runs at volume 0.35 against 0.8 for the effects, and <em>Som: desligado</em>
+    on the More page silences everything.</li>
+  </ol>
+</section>
+
+<section class="checks">
+  <h2>Licences, as downloaded</h2>
+  <ul>
+    <li><strong>CC0</strong> — Kenney's Music Jingles and UI SFX set, the 87 Clickety Clips, and the
+    OpenGameArt loops. Free for a paid app, no credit needed. Kenney asks only that a mention "would be
+    nice".</li>
+    <li><strong>Battle Theme A</strong> is offered under several licences on its page, CC0 among them.
+    Take the CC0 option and nothing is owed.</li>
+    <li><strong>CC BY 3.0</strong> — Heart of Machine only. Usable commercially, but the credit line is
+    required in the Créditos panel.</li>
+    <li>Originals sit in <code>Tools/Audio/clips</code> with every pack unpacked beside them: 85 Kenney
+    jingles, 52 Kenney UI sounds and 87 clickety clips. If none of my picks fit, the alternatives are
+    already on disk.</li>
+  </ul>
+  <footer>Players here are 96 kbps previews. Pixabay is not represented: it blocks direct downloads, so
+  those tracks have to be fetched by hand from the site.</footer>
+</section>
+</div>
+
+<script>
+const SLOTS = [
+  { id:"Lobby", title:"Lobby loop", brief:"Calm, no strong melody. Plays on every page outside a match.", options:[
+    { name:"Loading screen loop", who:"Trevor Lentz \u00b7 OpenGameArt", lic:"CC0", credit:false, rec:true, len:"21 s",
+      why:"The one you kept. Tremolo pad, almost ambient, nothing pixel about it.",
+      file:"clips/web/lobby1.mp4", disk:"Tools/Audio/clips/oga-loading-loop.wav", url:"https://opengameart.org/content/loading-screen-loop" },
+    { name:"Chill lofi (loop edit)", who:"OpenGameArt", lic:"CC0", credit:false, len:"97 s",
+      why:"Lofi beat, soft keys. Closest thing here to a study playlist, which is what the lobby is.",
+      file:"clips/web/lobby2.mp4", disk:"Tools/Audio/clips/oga-chill-lofi.ogg", url:"https://opengameart.org/content/chill-lofi-inspired-loop-edit" },
+    { name:"Chill main menu music", who:"OpenGameArt", lic:"CC0", credit:false, len:"99 s",
+      why:"Written as menu music, warm synth pads, no melody to get stuck on.",
+      file:"clips/web/lobby3.mp4", disk:"Tools/Audio/clips/oga-chill-menu.ogg", url:"https://opengameart.org/content/chill-main-menu-music" },
+    { name:"Emotional piano loop", who:"OpenGameArt", lic:"CC0", credit:false, len:"28 s",
+      why:"Solo piano. Quietest option, and it suits the learning path more than the duel lobby.",
+      file:"clips/web/lobby4.mp4", disk:"Tools/Audio/clips/oga-piano-loop.wav", url:"https://opengameart.org/content/emotional-piano-loop" },
+    { name:"Another August", who:"OpenGameArt", lic:"CC0", credit:false, len:"207 s",
+      why:"Long and slow, so it repeats less often than the others. Trim before importing.",
+      file:"clips/web/lobby5.mp4", disk:"Tools/Audio/clips/oga-another-august.mp3", url:"https://opengameart.org/content/another-august" },
+    { name:"Night Prowler", who:"OpenGameArt", lic:"CC0", credit:false, len:"153 s",
+      why:"Electronic, a pulse under it. The most modern of the six; brighter than a lobby needs.",
+      file:"clips/web/lobby6.mp4", disk:"Tools/Audio/clips/oga-night-prowler.ogg", url:"https://opengameart.org/content/night-prowler" }
+  ]},
+  { id:"Match", title:"Match loop", brief:"Faster, steady pulse. Plays in 1v1, 2v2, lessons and the tutorial.", options:[
+    { name:"Fast fight battle music (looped)", who:"OpenGameArt", lic:"CC0", credit:false, rec:true, len:"25 s",
+      why:"Drums and strings, loops clean, no chiptune. My pick.",
+      file:"clips/web/match1.mp4", disk:"Tools/Audio/clips/oga-fast-fight.wav", url:"https://opengameart.org/content/fast-fight-battle-music-looped" },
+    { name:"Battle Theme A", who:"cynicmusic \u00b7 OpenGameArt", lic:"CC0 (page lists several)", credit:false, len:"96 s",
+      why:"Orchestral-ish battle loop. The page offers CC0 alongside CC-BY, so take the CC0 option.",
+      file:"clips/web/match2.mp4", disk:"Tools/Audio/clips/oga-battle-theme-a.mp3", url:"https://opengameart.org/content/battle-theme-a" },
+    { name:"Heart of Machine", who:"OpenGameArt", lic:"CC BY 3.0", credit:true, len:"233 s",
+      why:"Driving electronic, the most grown-up of the three. Needs a credit line.",
+      file:"clips/web/match3.mp4", disk:"Tools/Audio/clips/oga-heart-of-machine.mp3", url:"https://opengameart.org/content/heart-of-machine" }
+  ]},
+  { id:"Win", title:"Win sting", brief:"Under a second here. Plays once when this player wins.", options:[
+    { name:"jingles_PIZZA00", who:"Kenney \u00b7 Music Jingles", lic:"CC0", credit:false, rec:true, len:"0.5 s",
+      why:"Plucked strings going up. Acoustic, not 8-bit. My pick.",
+      file:"clips/web/win1.mp4", disk:"Tools/Audio/clips/kenney/OGG/jingles_PIZZA/jingles_PIZZA00.ogg", url:"https://kenney.nl/assets/music-jingles" },
+    { name:"jingles_SAX00", who:"Kenney \u00b7 Music Jingles", lic:"CC0", credit:false, len:"0.4 s",
+      why:"Saxophone. Warmer, and stands apart from whatever loop is playing.",
+      file:"clips/web/win2.mp4", disk:"Tools/Audio/clips/kenney/OGG/jingles_SAX/jingles_SAX00.ogg", url:"https://kenney.nl/assets/music-jingles" },
+    { name:"jingles_STEEL00", who:"Kenney \u00b7 Music Jingles", lic:"CC0", credit:false, len:"0.9 s",
+      why:"Steel drum. Longest of the three, so it reads as a small celebration.",
+      file:"clips/web/win3.mp4", disk:"Tools/Audio/clips/kenney/OGG/jingles_STEEL/jingles_STEEL00.ogg", url:"https://kenney.nl/assets/music-jingles" }
+  ]},
+  { id:"Lose", title:"Lose sting", brief:"Under a second, falling, and light. These are students doing maths; a grim sting reads as being told off.", options:[
+    { name:"jingles_PIZZA01", who:"Kenney \u00b7 Music Jingles", lic:"CC0", credit:false, rec:true, len:"1.0 s",
+      why:"The falling partner to PIZZA00, same instrument. Pair them. My pick.",
+      file:"clips/web/lose1.mp4", disk:"Tools/Audio/clips/kenney/OGG/jingles_PIZZA/jingles_PIZZA01.ogg", url:"https://kenney.nl/assets/music-jingles" },
+    { name:"jingles_SAX01", who:"Kenney \u00b7 Music Jingles", lic:"CC0", credit:false, len:"0.9 s",
+      why:"Saxophone falling. Use with SAX00 so win and loss match.",
+      file:"clips/web/lose2.mp4", disk:"Tools/Audio/clips/kenney/OGG/jingles_SAX/jingles_SAX01.ogg", url:"https://kenney.nl/assets/music-jingles" },
+    { name:"jingles_HIT00", who:"Kenney \u00b7 Music Jingles", lic:"CC0", credit:false, len:"0.3 s",
+      why:"One soft hit. Barely a sting, which is the gentlest way to say you lost.",
+      file:"clips/web/lose3.mp4", disk:"Tools/Audio/clips/kenney/OGG/jingles_HIT/jingles_HIT00.ogg", url:"https://kenney.nl/assets/music-jingles" }
+  ]},
+  { id:"Click", title:"Button click", brief:"Every tap in the game. Replaces the five tuned notes in Resources/Click \u2014 see the note under this panel.", options:[
+    { name:"click1", who:"Kenney \u00b7 UI SFX set", lic:"CC0", credit:false, rec:true, len:"0.09 s",
+      why:"Short, dry, no pitch of its own, so it never clashes with the music. My pick.",
+      file:"clips/web/click1.mp4", disk:"Tools/Audio/clips/ui51/click1.wav", url:"https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks" },
+    { name:"click3", who:"Kenney \u00b7 UI SFX set", lic:"CC0", credit:false, len:"0.09 s",
+      why:"Same family, a shade higher. Good for answer buttons if nav keeps click1.",
+      file:"clips/web/click2.mp4", disk:"Tools/Audio/clips/ui51/click3.wav", url:"https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks" },
+    { name:"switch2", who:"Kenney \u00b7 UI SFX set", lic:"CC0", credit:false, len:"0.30 s",
+      why:"A switch flipping. Heavier; suits the mode buttons more than a question.",
+      file:"clips/web/click3.mp4", disk:"Tools/Audio/clips/ui51/switch2.wav", url:"https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks" },
+    { name:"mouseclick1", who:"Kenney \u00b7 UI SFX set", lic:"CC0", credit:false, len:"0.06 s",
+      why:"The quietest option. Almost a tick, which on a phone reads as fast.",
+      file:"clips/web/click4.mp4", disk:"Tools/Audio/clips/ui51/mouseclick1.wav", url:"https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks" },
+    { name:"click7", who:"87 Clickety Clips \u00b7 OpenGameArt", lic:"CC0", credit:false, len:"0.40 s",
+      why:"Wooden and rounder. Noticeably softer than the Kenney set.",
+      file:"clips/web/click5.mp4", disk:"Tools/Audio/clips/clickety/click7.wav", url:"https://opengameart.org/content/87-clickety-clips" },
+    { name:"click34", who:"87 Clickety Clips \u00b7 OpenGameArt", lic:"CC0", credit:false, len:"0.36 s",
+      why:"Deeper, with a little body to it. The most \u201cbutton\u201d of the six.",
+      file:"clips/web/click6.mp4", disk:"Tools/Audio/clips/clickety/click34.wav", url:"https://opengameart.org/content/87-clickety-clips" }
+  ]}
+];
+
+const KEY = "estalo.music.picks";
+let picks = {};
+try { picks = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { picks = {}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) {} }
+
+const slotsEl = document.getElementById("slots");
+const summaryEl = document.getElementById("summary");
+const freeOnly = document.getElementById("freeOnly");
+
+// One track at a time, so comparing two is a single tap rather than a tap and a pause.
+function soloPlayback(playing){
+  document.querySelectorAll("audio").forEach(a => { if (a !== playing) a.pause(); });
+}
+
+function renderSummary(){
+  summaryEl.textContent = "";
+  for (const slot of SLOTS){
+    const cell = document.createElement("div");
+    cell.className = "sumcell";
+    const chosen = picks[slot.id];
+    cell.innerHTML = `<div class="slot">${slot.id}</div><div class="val${chosen ? "" : " empty"}">${chosen || "not picked"}</div>`;
+    summaryEl.appendChild(cell);
+  }
+}
+
+function render(){
+  slotsEl.textContent = "";
+
+  for (const slot of SLOTS){
+    const section = document.createElement("section");
+    section.className = "slot-panel";
+
+    const head = document.createElement("div");
+    head.className = "slot-head";
+    head.innerHTML = `<h2>${slot.title}</h2><span class="slot-file">${slot.id}</span>`;
+    const brief = document.createElement("p");
+    brief.className = "slot-brief";
+    brief.textContent = slot.brief;
+    head.appendChild(brief);
+    section.appendChild(head);
+
+    const list = document.createElement("ul");
+    let shown = 0;
+
+    slot.options.forEach((opt, i) => {
+      if (freeOnly.checked && opt.credit) return;
+      shown++;
+
+      const li = document.createElement("li");
+      li.className = "opt" + (picks[slot.id] === opt.name ? " picked" : "");
+
+      const num = document.createElement("div");
+      num.className = "num";
+      num.textContent = String(i + 1).padStart(2, "0");
+
+      const body = document.createElement("div");
+      body.className = "body";
+      const chips = [
+        `<span class="chip ${opt.credit ? "credit" : "free"}">${opt.lic}</span>`,
+        `<span class="chip ${opt.credit ? "credit" : "free"}">${opt.credit ? "credit required" : "no attribution"}</span>`
+      ];
+      if (opt.len) chips.push(`<span class="chip">${opt.len}</span>`);
+      if (opt.rec) chips.push('<span class="chip rec">recommended</span>');
+      body.innerHTML = `<div class="name">${opt.name}</div><div class="who">${opt.who}</div>` +
+        `<div class="why">${opt.why}</div>`;
+
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.preload = "none";
+      audio.src = opt.file;
+      audio.addEventListener("play", () => soloPlayback(audio));
+      body.appendChild(audio);
+
+      const chipRow = document.createElement("div");
+      chipRow.className = "chips";
+      chipRow.innerHTML = chips.join("");
+      body.appendChild(chipRow);
+
+      const path = document.createElement("div");
+      path.className = "path";
+      path.textContent = "original: " + opt.disk;
+      body.appendChild(path);
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const link = document.createElement("a");
+      link.className = "open";
+      link.href = opt.url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Source page";
+
+      const pick = document.createElement("button");
+      pick.className = "btn";
+      pick.type = "button";
+      const chosen = picks[slot.id] === opt.name;
+      pick.setAttribute("aria-pressed", chosen ? "true" : "false");
+      pick.textContent = chosen ? "Picked" : `Use as ${slot.id}`;
+      pick.addEventListener("click", () => {
+        if (picks[slot.id] === opt.name) delete picks[slot.id];
+        else picks[slot.id] = opt.name;
+        save();
+        render();
+      });
+
+      const copy = document.createElement("button");
+      copy.className = "btn";
+      copy.type = "button";
+      copy.textContent = "Copy path";
+      copy.addEventListener("click", () => {
+        const done = () => { copy.textContent = "Copied"; setTimeout(() => { copy.textContent = "Copy path"; }, 1600); };
+        try {
+          navigator.clipboard.writeText(opt.disk).then(done).catch(() => {
+            const range = document.createRange();
+            range.selectNodeContents(path);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            copy.textContent = "Selected";
+            setTimeout(() => { copy.textContent = "Copy path"; }, 1600);
+          });
+        } catch (e) {
+          copy.textContent = "Copy path";
+        }
+      });
+
+      actions.append(link, pick, copy);
+      li.append(num, body, actions);
+      list.appendChild(li);
+    });
+
+    if (shown === 0){
+      const li = document.createElement("li");
+      li.className = "opt";
+      li.innerHTML = '<div class="num">—</div><div class="body"><div class="why">Every option in this slot needs a credit line. Untick the filter to see them.</div></div>';
+      list.appendChild(li);
+    }
+
+    section.appendChild(list);
+    slotsEl.appendChild(section);
+  }
+
+  renderSummary();
+}
+
+freeOnly.addEventListener("change", render);
+document.getElementById("reset").addEventListener("click", () => { picks = {}; save(); render(); });
+render();
+</script>

@@ -1,0 +1,4 @@
+# Source packs and 96 kbps previews for Tools/Audio/music-picker.html: ~45 MB of audio that only
+# exists to choose from. The four chosen tracks live in Assets/Resources/Music instead.
+*
+!.gitignore
