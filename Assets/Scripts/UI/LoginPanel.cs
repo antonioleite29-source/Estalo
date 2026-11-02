@@ -30,6 +30,11 @@ public class LoginPanel : MonoBehaviour
     [Tooltip("Mostra ou esconde a senha. Made by the same menu.")]
     public Button showPasswordButton;
 
+    [Tooltip("Deleta a conta de vez, depois de confirmar tres vezes. Made by the same menu.")]
+    public Button deleteAccountButton;
+
+    private StagedConfirm deleteConfirm;
+
     private string pendingUsername;
     private bool wired;
 
@@ -74,6 +79,7 @@ public class LoginPanel : MonoBehaviour
         transform.SetAsLastSibling();
         FitSubtitle();
         SetBusy(false, string.Empty);
+        deleteConfirm?.Reset();
     }
 
     // The subtitle wraps onto as many lines as it needs, at its own size, instead of shrinking or
@@ -132,11 +138,18 @@ public class LoginPanel : MonoBehaviour
         Wire();
         FitSubtitle();
         PlayerStats.LoginFinished += OnLoginFinished;
+        PlayerStats.Deleted += OnAccountDeleted;
+    }
+
+    private void Update()
+    {
+        deleteConfirm?.Tick();
     }
 
     private void OnDisable()
     {
         PlayerStats.LoginFinished -= OnLoginFinished;
+        PlayerStats.Deleted -= OnAccountDeleted;
         CancelInvoke(nameof(Hide));
     }
 
@@ -153,6 +166,9 @@ public class LoginPanel : MonoBehaviour
         if (createAccountButton != null) createAccountButton.onClick.AddListener(() => Submit(true));
         if (closeButton != null) closeButton.onClick.AddListener(Hide);
         if (showPasswordButton != null) showPasswordButton.onClick.AddListener(TogglePasswordVisible);
+
+        if (deleteAccountButton != null)
+            deleteConfirm = new StagedConfirm(deleteAccountButton, SettingsPage.DeleteLabels, DeleteAccount);
 
         if (passwordField != null)
             passwordField.contentType = TMP_InputField.ContentType.Password;
@@ -283,6 +299,29 @@ public class LoginPanel : MonoBehaviour
             : "Ocultar senha";
     }
 
+    // The third tap on "Deletar conta". The record goes from the server, and this phone forgets
+    // everything it kept. Offline nothing is deleted: wiping only the phone's copy would leave the
+    // record standing on the server, so the player is told instead.
+    private void DeleteAccount()
+    {
+        if (PlayerStats.RequestDelete())
+        {
+            deleteConfirm.ShowNotice("Deletando...");
+            SetStatus("Deletando sua conta...");
+            return;
+        }
+
+        deleteConfirm.ShowNotice("Sem conexão");
+        SetStatus("Sem conexão com o servidor. Tente de novo em instantes.");
+    }
+
+    private void OnAccountDeleted()
+    {
+        deleteConfirm?.Reset();
+        SetStatus("Sua conta foi deletada.");
+        Invoke(nameof(Hide), 2f);
+    }
+
     private void SetStatus(string message)
     {
         if (statusText != null)
@@ -293,7 +332,8 @@ public class LoginPanel : MonoBehaviour
     {
         SetStatus(message);
 
-        foreach (Button button in new[] { signInButton, createAccountButton, closeButton, showPasswordButton })
+        foreach (Button button in new[] { signInButton, createAccountButton, closeButton, showPasswordButton,
+                                         deleteAccountButton })
             if (button != null)
                 button.interactable = !busy;
     }
@@ -333,6 +373,7 @@ public class LoginPanel : MonoBehaviour
         panel.signInButton = MakeButton(rect, "EntrarButton", "Entrar", ref y, font);
         panel.createAccountButton = MakeButton(rect, "CriarContaButton", "Criar conta", ref y, font);
         panel.closeButton = MakeButton(rect, "FecharButton", "Fechar", ref y, font);
+        panel.deleteAccountButton = MakeButton(rect, "DeletarContaButton", SettingsPage.DeleteLabels[0], ref y, font, 0.72f);
 
         panel.statusText = Label(rect, "Status", string.Empty, 44f, ref y, 260f, font);
         return panel;
@@ -397,12 +438,14 @@ public class LoginPanel : MonoBehaviour
         return field;
     }
 
-    private static Button MakeButton(RectTransform parent, string name, string text, ref float y, TMP_FontAsset font)
+    private static Button MakeButton(RectTransform parent, string name, string text, ref float y,
+        TMP_FontAsset font, float heightScale = 1f)
     {
         GameObject go = TMP_DefaultControls.CreateButton(new TMP_DefaultControls.Resources());
         go.name = name;
 
         Vector2 size = JogarButtonStyle.Size;
+        size.y *= heightScale;
         RectTransform rect = (RectTransform)go.transform;
         rect.SetParent(parent, false);
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -419,6 +462,9 @@ public class LoginPanel : MonoBehaviour
 
         Button button = go.GetComponent<Button>();
         JogarButtonStyle.ApplyTo(button);
+
+        // ApplyTo stamps the Jogar button's own size back on, so a shorter button is set again after it.
+        rect.sizeDelta = size;
         return button;
     }
 }
