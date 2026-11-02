@@ -17,16 +17,17 @@ public class WaitingScreenController : MonoBehaviour
     [Tooltip("How many players are queued out of the group size, e.g. \"Players: 3 / 4\".")]
     public TMP_Text playersText;
 
-    [FormerlySerializedAs("liveGamesText")]
-    [Tooltip("The rules this player is queued under, e.g. \"Modo: Clássico\". This is the line that " +
-             "used to count the live matches, which told a waiting player nothing about their own wait.")]
-    public TMP_Text modeText;
+    [Tooltip("How many matches are already under way, e.g. \"Partidas em andamento: 2\".")]
+    public TMP_Text liveGamesText;
 
     [Header("--- LABELS ---")]
     [Tooltip("Text placed before the player numbers. Clear this if you have a separate label object.")]
     public string playersPrefix = "Jogadores: ";
 
-    [Tooltip("Text placed before the mode name. Clear this if you have a separate label object.")]
+    [Tooltip("Text placed before the live-games number. Clear this if you have a separate label object.")]
+    public string liveGamesPrefix = "Partidas em andamento: ";
+
+    [Tooltip("Text placed before the mode name, on its own line under the player count.")]
     public string modePrefix = "Modo: ";
 
     [Tooltip("Separator between queued and required, e.g. the \" / \" in \"3 / 4\".")]
@@ -64,7 +65,7 @@ public class WaitingScreenController : MonoBehaviour
 
     // What is currently on screen, so a redraw only happens when the numbers actually move.
     private string lastPlayersLine;
-    private string lastModeLine;
+    private string lastLiveGamesLine;
 
     private void Awake()
     {
@@ -122,7 +123,7 @@ public class WaitingScreenController : MonoBehaviour
         matchFound = false;
         queuedSince = Time.unscaledTime;
         lastPlayersLine = null;
-        lastModeLine = null;
+        lastLiveGamesLine = null;
         SetVisible(true);
 
         // Draw order inside a Canvas is sibling order, and this screen sits earlier than PageArea,
@@ -183,7 +184,8 @@ public class WaitingScreenController : MonoBehaviour
         MatchMode mode = lobbyPageSwitcher != null ? lobbyPageSwitcher.SelectedMode : MatchMode.OneVsOne;
         int required = Matchmaker.RequiredPlayersFor(mode);
 
-        lastPlayersLine = playersPrefix + required + playersSeparator + required;
+        lastPlayersLine = playersPrefix + required + playersSeparator + required +
+                          "\n" + modePrefix + GameRuleSetChoice.ChosenName;
         playersText.text = lastPlayersLine;
     }
 
@@ -239,7 +241,8 @@ public class WaitingScreenController : MonoBehaviour
                 ? sync.NetQueuedTeamFour.Value
                 : sync.NetQueuedOneVsOne.Value;
 
-            string line = playersPrefix + queued + playersSeparator + Matchmaker.RequiredPlayersFor(mode);
+            string line = playersPrefix + queued + playersSeparator + Matchmaker.RequiredPlayersFor(mode) +
+                          "\n" + modePrefix + GameRuleSetChoice.ChosenName;
 
             if (line != lastPlayersLine)
             {
@@ -248,16 +251,14 @@ public class WaitingScreenController : MonoBehaviour
             }
         }
 
-        // Under the count, what they are queued for. A player who picked Sem perdao and then waited
-        // a while has no other way of checking they are waiting for the right thing.
-        if (modeText != null)
+        if (liveGamesText != null)
         {
-            string line = modePrefix + GameRuleSetChoice.ChosenName;
+            string line = liveGamesPrefix + sync.NetLiveMatches.Value;
 
-            if (line != lastModeLine)
+            if (line != lastLiveGamesLine)
             {
-                lastModeLine = line;
-                modeText.text = line;
+                lastLiveGamesLine = line;
+                liveGamesText.text = line;
             }
         }
     }

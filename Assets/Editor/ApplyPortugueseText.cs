@@ -35,6 +35,7 @@ public static class ApplyPortugueseText
         {
             Undo.RecordObject(waiting, "Portuguese waiting screen");
             changed += Set(ref waiting.playersPrefix, "Jogadores: ");
+            changed += Set(ref waiting.liveGamesPrefix, "Partidas em andamento: ");
             changed += Set(ref waiting.modePrefix, "Modo: ");
             EditorUtility.SetDirty(waiting);
         }
