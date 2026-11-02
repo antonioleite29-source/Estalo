@@ -1,6 +1,7 @@
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 // Shown from the moment a player presses Start until their match is formed. Matchmaking groups
@@ -16,15 +17,17 @@ public class WaitingScreenController : MonoBehaviour
     [Tooltip("How many players are queued out of the group size, e.g. \"Players: 3 / 4\".")]
     public TMP_Text playersText;
 
-    [Tooltip("How many matches are already under way, e.g. \"Live games: 2\".")]
-    public TMP_Text liveGamesText;
+    [FormerlySerializedAs("liveGamesText")]
+    [Tooltip("The rules this player is queued under, e.g. \"Modo: Clássico\". This is the line that " +
+             "used to count the live matches, which told a waiting player nothing about their own wait.")]
+    public TMP_Text modeText;
 
     [Header("--- LABELS ---")]
     [Tooltip("Text placed before the player numbers. Clear this if you have a separate label object.")]
     public string playersPrefix = "Jogadores: ";
 
-    [Tooltip("Text placed before the live-games number. Clear this if you have a separate label object.")]
-    public string liveGamesPrefix = "Partidas em andamento: ";
+    [Tooltip("Text placed before the mode name. Clear this if you have a separate label object.")]
+    public string modePrefix = "Modo: ";
 
     [Tooltip("Separator between queued and required, e.g. the \" / \" in \"3 / 4\".")]
     public string playersSeparator = " / ";
@@ -61,7 +64,7 @@ public class WaitingScreenController : MonoBehaviour
 
     // What is currently on screen, so a redraw only happens when the numbers actually move.
     private string lastPlayersLine;
-    private string lastLiveGamesLine;
+    private string lastModeLine;
 
     private void Awake()
     {
@@ -119,7 +122,7 @@ public class WaitingScreenController : MonoBehaviour
         matchFound = false;
         queuedSince = Time.unscaledTime;
         lastPlayersLine = null;
-        lastLiveGamesLine = null;
+        lastModeLine = null;
         SetVisible(true);
 
         // Draw order inside a Canvas is sibling order, and this screen sits earlier than PageArea,
@@ -245,14 +248,16 @@ public class WaitingScreenController : MonoBehaviour
             }
         }
 
-        if (liveGamesText != null)
+        // Under the count, what they are queued for. A player who picked Sem perdao and then waited
+        // a while has no other way of checking they are waiting for the right thing.
+        if (modeText != null)
         {
-            string line = liveGamesPrefix + sync.NetLiveMatches.Value;
+            string line = modePrefix + GameRuleSetChoice.ChosenName;
 
-            if (line != lastLiveGamesLine)
+            if (line != lastModeLine)
             {
-                lastLiveGamesLine = line;
-                liveGamesText.text = line;
+                lastModeLine = line;
+                modeText.text = line;
             }
         }
     }
