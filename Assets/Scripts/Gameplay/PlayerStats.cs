@@ -99,6 +99,35 @@ public static class PlayerStats
         LoginFinished?.Invoke(accepted);
     }
 
+    // --- the password hint ----------------------------------------------
+
+    // Raised when the server answers with the hint for a username: the username asked about, and the
+    // hint, which is empty when that account has none or does not exist.
+    public static event Action<string, string> PasswordHintArrived;
+
+    public static bool SendPasswordHint(string hint)
+    {
+        if (!CanReachServer(out TriviaNetworkSync sync))
+            return false;
+
+        sync.SetPasswordHintServerRpc(hint ?? string.Empty);
+        return true;
+    }
+
+    public static bool RequestPasswordHint(string username)
+    {
+        if (!CanReachServer(out TriviaNetworkSync sync))
+            return false;
+
+        sync.RequestPasswordHintServerRpc(username ?? string.Empty);
+        return true;
+    }
+
+    public static void ApplyPasswordHint(string username, string hint)
+    {
+        PasswordHintArrived?.Invoke(username ?? string.Empty, hint ?? string.Empty);
+    }
+
     // --- deleting the account -------------------------------------------
 
     // Raised once the server has thrown the account away and this phone has forgotten it.

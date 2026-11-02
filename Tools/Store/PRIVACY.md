@@ -1,6 +1,6 @@
 # Política de Privacidade — Estalo
 
-Última atualização: 1 de novembro de 2026.
+Última atualização: 2 de novembro de 2026.
 
 Estalo é um jogo de perguntas de matemática desenvolvido por Tom de Leite como projeto escolar
 (Capstone). Esta política explica quais dados o jogo coleta, por que, e o que você pode fazer
@@ -39,8 +39,17 @@ chave aleatória e o apelido que a pessoa escolher. Use um apelido, não o nome 
 
 ## Por quanto tempo guardamos
 
-Os dados da conta ficam no servidor enquanto o jogo existir. Para apagar os seus, mande um e-mail
-para o endereço acima com o nome de usuário ou o apelido, e a conta é removida em até 30 dias.
+Os dados da conta ficam no servidor enquanto o jogo existir, ou até você apagá-los.
+
+Para apagar: no jogo, abra **Conta** e toque em **Deletar conta** (o botão pede confirmação três
+vezes). A conta, a pontuação e todo o histórico saem do servidor na hora, e o celular esquece o que
+tinha guardado. Também é possível pedir por e-mail, no endereço acima, com o nome de usuário ou o
+apelido; nesse caso a remoção acontece em até 30 dias.
+
+## Dica da senha
+
+Se você escrever uma dica da senha, ela fica guardada com a sua conta e qualquer pessoa que saiba o
+seu nome de usuário pode vê-la na tela de login. Não escreva a senha na dica.
 
 ## Mudanças
 
@@ -53,8 +62,10 @@ Se esta política mudar, a data no topo muda junto e a versão nova fica neste m
 Estalo is a maths trivia game made by Tom de Leite as a school Capstone project. It collects a
 random account key created on first launch (the server stores only a SHA-256 hash of it), the
 display name and avatar you choose, your score and match record, your username if you create an
-account through Unity Authentication, and your IP address while you are connected. Passwords are
+account through Unity Authentication, an optional password hint you write yourself (readable by
+anyone who knows your username), and your IP address while you are connected. Passwords are
 handled by Unity Authentication and never reach the Estalo server. No ads, no data sales, no
 third-party behavioural analytics. The game is intended for players aged 13 and over and is not
-directed to children under 13. To have your data deleted, email the address above; removal within
-30 days.
+directed to children under 13. To delete your data, open Conta in the game and tap Deletar conta: the account and its
+whole history leave the server immediately. You can also email the address above; removal within 30
+days.

@@ -44,6 +44,11 @@ public static class PlayerAccounts
         // Set once the player logs in. Each phone signed into this account holds a key of its own.
         public string unityPlayerId;
         public string username;
+
+        // A reminder the player wrote for themselves. Unity's username-and-password login has no
+        // email, so there is no reset link anywhere: a forgotten password is a lost account, and this
+        // is the only thing standing between the two.
+        public string passwordHint;
         public List<string> otherKeyHashes = new List<string>();
     }
 
@@ -288,6 +293,45 @@ public static class PlayerAccounts
 
         Save();
         return owner;
+    }
+
+    // --- the password hint ----------------------------------------------
+
+    // The most a hint may be. Long enough for a sentence, short enough not to be a second password
+    // field or somewhere to write at other players.
+    public const int MaxHintLength = 60;
+
+    public static void SetHint(ulong clientId, string hint)
+    {
+        Account account = For(clientId);
+
+        if (account == null)
+            return;
+
+        hint = (hint ?? string.Empty).Trim();
+
+        if (hint.Length > MaxHintLength)
+            hint = hint.Substring(0, MaxHintLength);
+
+        account.passwordHint = hint;
+        Save();
+    }
+
+    // Looked up by username, because the player asking has not signed in -- that is the whole point
+    // of a hint. Anyone who knows a username can read its hint, so the phone warns the player of
+    // that before they write one.
+    public static string HintForUsername(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return string.Empty;
+
+        Load();
+
+        username = username.Trim();
+        Account account = table.accounts.Find(a => a != null && !string.IsNullOrEmpty(a.username) &&
+                                                   string.Equals(a.username, username, StringComparison.OrdinalIgnoreCase));
+
+        return account != null ? account.passwordHint ?? string.Empty : string.Empty;
     }
 
     // 1 is the top. Players on equal points share a position.

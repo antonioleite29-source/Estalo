@@ -33,6 +33,12 @@ public class LoginPanel : MonoBehaviour
     [Tooltip("Deleta a conta de vez, depois de confirmar tres vezes. Made by the same menu.")]
     public Button deleteAccountButton;
 
+    [Tooltip("Dica da senha, guardada na conta. Opcional.")]
+    public TMP_InputField hintField;
+
+    [Tooltip("\"Ver dica da senha\": pergunta ao servidor a dica do usuario digitado.")]
+    public Button hintButton;
+
     private StagedConfirm deleteConfirm;
 
     private string pendingUsername;
@@ -139,6 +145,7 @@ public class LoginPanel : MonoBehaviour
         FitSubtitle();
         PlayerStats.LoginFinished += OnLoginFinished;
         PlayerStats.Deleted += OnAccountDeleted;
+        PlayerStats.PasswordHintArrived += OnPasswordHintArrived;
     }
 
     private void Update()
@@ -150,6 +157,7 @@ public class LoginPanel : MonoBehaviour
     {
         PlayerStats.LoginFinished -= OnLoginFinished;
         PlayerStats.Deleted -= OnAccountDeleted;
+        PlayerStats.PasswordHintArrived -= OnPasswordHintArrived;
         CancelInvoke(nameof(Hide));
     }
 
@@ -169,6 +177,18 @@ public class LoginPanel : MonoBehaviour
 
         if (deleteAccountButton != null)
             deleteConfirm = new StagedConfirm(deleteAccountButton, SettingsPage.DeleteLabels, DeleteAccount);
+
+        if (hintButton != null) hintButton.onClick.AddListener(AskForHint);
+
+        if (hintField != null)
+        {
+            hintField.characterLimit = PlayerAccounts.MaxHintLength;
+
+            if (hintField.placeholder is TMP_Text hintPlaceholder)
+                hintPlaceholder.text = "Dica da senha (opcional)";
+
+            MobileInputField.MakeSafeForPhones(hintField);
+        }
 
         if (passwordField != null)
             passwordField.contentType = TMP_InputField.ContentType.Password;
@@ -231,6 +251,9 @@ public class LoginPanel : MonoBehaviour
 
     private void OnLoginFinished(bool accepted)
     {
+        if (accepted)
+            SendHintIfWritten();
+
         SetBusy(false, accepted
             ? "Pronto! Você entrou como " + pendingUsername + "."
             : "O servidor não aceitou o login. Tente de novo.");
@@ -299,6 +322,46 @@ public class LoginPanel : MonoBehaviour
             : "Ocultar senha";
     }
 
+    // --- the password hint ----------------------------------------------
+
+    // Unity's username-and-password login has no email, so there is no reset link to send: a
+    // forgotten password is a lost account. The hint the player writes here is the only way back,
+    // and it is kept with the account so it is there on a new phone.
+    private void AskForHint()
+    {
+        string username = usernameField != null ? usernameField.text.Trim() : string.Empty;
+
+        if (string.IsNullOrEmpty(username))
+        {
+            SetStatus("Digite seu nome de usuário para ver a dica.");
+            return;
+        }
+
+        if (!PlayerStats.RequestPasswordHint(username))
+        {
+            SetStatus("Sem conexão com o servidor. Tente de novo em instantes.");
+            return;
+        }
+
+        SetStatus("Procurando a dica...");
+    }
+
+    private void OnPasswordHintArrived(string username, string hint)
+    {
+        SetStatus(string.IsNullOrEmpty(hint)
+            ? "Nenhuma dica salva para esse usuário."
+            : "Dica: " + hint);
+    }
+
+    // Sent after the server has tied the login to the account, so it lands on the right one.
+    private void SendHintIfWritten()
+    {
+        string hint = hintField != null ? hintField.text.Trim() : string.Empty;
+
+        if (!string.IsNullOrEmpty(hint))
+            PlayerStats.SendPasswordHint(hint);
+    }
+
     // The third tap on "Deletar conta". The record goes from the server, and this phone forgets
     // everything it kept. Offline nothing is deleted: wiping only the phone's copy would leave the
     // record standing on the server, so the player is told instead.
@@ -333,7 +396,7 @@ public class LoginPanel : MonoBehaviour
         SetStatus(message);
 
         foreach (Button button in new[] { signInButton, createAccountButton, closeButton, showPasswordButton,
-                                         deleteAccountButton })
+                                         deleteAccountButton, hintButton })
             if (button != null)
                 button.interactable = !busy;
     }
@@ -360,42 +423,109 @@ public class LoginPanel : MonoBehaviour
 
         LoginPanel panel = root.AddComponent<LoginPanel>();
 
-        // Centred in the space above the bottom bar (about 380 tall), not on the whole page.
-        float y = 890f;
+        Label(rect, "Title", "Sua conta", 110f, 170f, font);
+        panel.subtitleText = Label(rect, "Subtitle", "Entre para recuperar seu progresso em outro celular.", 50f, 150f, font);
 
-        Label(rect, "Title", "Sua conta", 110f, ref y, 200f, font);
-        panel.subtitleText = Label(rect, "Subtitle", "Entre para recuperar seu progresso em outro celular.", 50f, ref y, 160f, font);
+        panel.usernameField = Field(rect, "UsernameField", "Nome de usuário", false, font);
+        panel.passwordField = Field(rect, "PasswordField", "Senha", true, font);
+        panel.hintField = Field(rect, "DicaField", "Dica da senha (opcional)", false, font);
 
-        panel.usernameField = Field(rect, "UsernameField", "Nome de usuário", false, ref y, font);
-        panel.passwordField = Field(rect, "PasswordField", "Senha", true, ref y, font);
+        panel.showPasswordButton = MakeButton(rect, "MostrarSenhaButton", "Mostrar senha", font);
+        panel.hintButton = MakeButton(rect, "VerDicaButton", "Ver dica da senha", font);
+        panel.signInButton = MakeButton(rect, "EntrarButton", "Entrar", font);
+        panel.createAccountButton = MakeButton(rect, "CriarContaButton", "Criar conta", font);
+        panel.closeButton = MakeButton(rect, "FecharButton", "Fechar", font);
+        panel.deleteAccountButton = MakeButton(rect, "DeletarContaButton", SettingsPage.DeleteLabels[0], font);
 
-        panel.showPasswordButton = MakeButton(rect, "MostrarSenhaButton", "Mostrar senha", ref y, font);
-        panel.signInButton = MakeButton(rect, "EntrarButton", "Entrar", ref y, font);
-        panel.createAccountButton = MakeButton(rect, "CriarContaButton", "Criar conta", ref y, font);
-        panel.closeButton = MakeButton(rect, "FecharButton", "Fechar", ref y, font);
-        panel.deleteAccountButton = MakeButton(rect, "DeletarContaButton", SettingsPage.DeleteLabels[0], ref y, font, 0.72f);
+        panel.statusText = Label(rect, "Status", string.Empty, 44f, 200f, font);
 
-        panel.statusText = Label(rect, "Status", string.Empty, 44f, ref y, 260f, font);
+        panel.LayOutPanel();
         return panel;
     }
 
-    private static RectTransform Row(RectTransform parent, string name, ref float y, float width, float height)
+    // Everything the panel holds, in one column, in the space above the bottom bar. Two pairs share a
+    // row -- Mostrar senha with Ver dica, Fechar with Deletar conta -- because eleven things stacked
+    // one per row do not fit on a phone.
+    //
+    // Called when the panel is built and by the editor setup, never on every open: a panel moved by
+    // hand in the scene stays where it was put.
+    public void LayOutPanel()
+    {
+        const float gap = 24f;
+        float top = 890f;
+
+        Transform title = transform.Find("Title");
+
+        PlaceFull(title, ref top, gap);
+        PlaceFull(subtitleText, ref top, gap);
+        PlaceFull(usernameField, ref top, gap);
+        PlaceFull(passwordField, ref top, gap);
+        PlaceFull(hintField, ref top, gap);
+        PlaceRow(showPasswordButton, hintButton, ref top, gap, 100f);
+        PlaceFull(signInButton, ref top, gap);
+        PlaceFull(createAccountButton, ref top, gap);
+        PlaceRow(closeButton, deleteAccountButton, ref top, gap, 110f);
+        PlaceFull(statusText, ref top, gap);
+    }
+
+    private static void PlaceFull(Component thing, ref float top, float gap)
+    {
+        RectTransform rect = thing != null ? thing.transform as RectTransform : null;
+
+        if (rect == null)
+            return;
+
+        float height = rect.sizeDelta.y > 1f ? rect.sizeDelta.y : 150f;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0f, top - height * 0.5f);
+        top -= height + gap;
+    }
+
+    private static void PlaceRow(Component left, Component right, ref float top, float gap, float height)
+    {
+        RectTransform leftRect = left != null ? left.transform as RectTransform : null;
+        RectTransform rightRect = right != null ? right.transform as RectTransform : null;
+
+        // With only one of the pair there, it takes the whole row.
+        if (leftRect == null || rightRect == null)
+        {
+            RectTransform only = leftRect ?? rightRect;
+
+            if (only != null)
+            {
+                only.sizeDelta = new Vector2(only.sizeDelta.x, height);
+                PlaceFull(only, ref top, gap);
+            }
+
+            return;
+        }
+
+        const float rowWidth = 900f;
+        float half = (rowWidth - 20f) * 0.5f;
+
+        foreach (RectTransform rect in new[] { leftRect, rightRect })
+        {
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(half, height);
+            rect.anchoredPosition = new Vector2(rect == leftRect ? -(half + 20f) * 0.5f : (half + 20f) * 0.5f,
+                top - height * 0.5f);
+        }
+
+        top -= height + gap;
+    }
+
+    private static TMP_Text Label(RectTransform parent, string name, string text, float size, float height,
+        TMP_FontAsset font)
     {
         GameObject go = new GameObject(name, typeof(RectTransform));
         RectTransform rect = (RectTransform)go.transform;
         rect.SetParent(parent, false);
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(width, height);
-        rect.anchoredPosition = new Vector2(0f, y - height * 0.5f);
-        y -= height + 30f;
-        return rect;
-    }
+        rect.sizeDelta = new Vector2(900f, height);
 
-    private static TMP_Text Label(RectTransform parent, string name, string text, float size, ref float y,
-        float height, TMP_FontAsset font)
-    {
-        TextMeshProUGUI label = Row(parent, name, ref y, 900f, height).gameObject.AddComponent<TextMeshProUGUI>();
+        TextMeshProUGUI label = go.AddComponent<TextMeshProUGUI>();
 
         if (font != null)
             label.font = font;
@@ -411,18 +541,15 @@ public class LoginPanel : MonoBehaviour
     }
 
     private static TMP_InputField Field(RectTransform parent, string name, string placeholder, bool password,
-        ref float y, TMP_FontAsset font)
+        TMP_FontAsset font)
     {
-        float height = 150f;
         GameObject go = TMP_DefaultControls.CreateInputField(new TMP_DefaultControls.Resources());
         go.name = name;
 
         RectTransform rect = (RectTransform)go.transform;
         rect.SetParent(parent, false);
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(900f, height);
-        rect.anchoredPosition = new Vector2(0f, y - height * 0.5f);
-        y -= height + 30f;
+        rect.sizeDelta = new Vector2(900f, 150f);
 
         TMP_InputField field = go.GetComponent<TMP_InputField>();
         field.contentType = password ? TMP_InputField.ContentType.Password : TMP_InputField.ContentType.Standard;
@@ -438,20 +565,14 @@ public class LoginPanel : MonoBehaviour
         return field;
     }
 
-    private static Button MakeButton(RectTransform parent, string name, string text, ref float y,
-        TMP_FontAsset font, float heightScale = 1f)
+    private static Button MakeButton(RectTransform parent, string name, string text, TMP_FontAsset font)
     {
         GameObject go = TMP_DefaultControls.CreateButton(new TMP_DefaultControls.Resources());
         go.name = name;
 
-        Vector2 size = JogarButtonStyle.Size;
-        size.y *= heightScale;
         RectTransform rect = (RectTransform)go.transform;
         rect.SetParent(parent, false);
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = size;
-        rect.anchoredPosition = new Vector2(0f, y - size.y * 0.5f);
-        y -= size.y + 30f;
 
         TMP_Text label = go.GetComponentInChildren<TMP_Text>();
         label.text = text;
@@ -463,8 +584,8 @@ public class LoginPanel : MonoBehaviour
         Button button = go.GetComponent<Button>();
         JogarButtonStyle.ApplyTo(button);
 
-        // ApplyTo stamps the Jogar button's own size back on, so a shorter button is set again after it.
-        rect.sizeDelta = size;
+        // LayOutPanel sets the real size and place; this is only so a new button is not 0 x 0.
+        rect.sizeDelta = JogarButtonStyle.Size;
         return button;
     }
 }

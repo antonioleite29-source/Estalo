@@ -420,6 +420,32 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         SendAccount(sender);
     }
 
+    // The hint the player wrote for their own password, kept with their account so it is there on a
+    // new phone -- which is the only place it is any use.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void SetPasswordHintServerRpc(string hint, RpcParams rpcParams = default)
+    {
+        PlayerAccounts.SetHint(rpcParams.Receive.SenderClientId, hint);
+    }
+
+    // Asked for by username, before signing in, because a player who remembered their password would
+    // not be asking. Only the hint goes back, never anything else about the account.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void RequestPasswordHintServerRpc(string username, RpcParams rpcParams = default)
+    {
+        if (!CanSendRpc)
+            return;
+
+        PasswordHintTargetedClientRpc(username ?? string.Empty,
+            PlayerAccounts.HintForUsername(username), OnlyTo(rpcParams.Receive.SenderClientId));
+    }
+
+    [ClientRpc]
+    private void PasswordHintTargetedClientRpc(string username, string hint, ClientRpcParams _ = default)
+    {
+        PlayerStats.ApplyPasswordHint(username, hint);
+    }
+
     // Deleting the sender's own account, and nobody else's. Whose account it is comes from who sent
     // the message; there is nothing in it to point at anyone.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
