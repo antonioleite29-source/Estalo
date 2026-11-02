@@ -187,14 +187,14 @@ public class LobbyPageSwitcher : MonoBehaviour
         return null;
     }
 
-    // "Modo: Clássico", so the lobby says what the next match will be played by without opening
-    // anything.
+    // The button wears the rules it will start: "Clássico", "Sem perdão". Not the word "Modo" --
+    // the button is the mode, and a label that says so says nothing about which one is chosen.
     private void RefreshRuleSetLabel()
     {
         TMP_Text label = ruleSetButton != null ? ruleSetButton.GetComponentInChildren<TMP_Text>(true) : null;
 
         if (label != null)
-            label.text = "Modo: " + GameRuleSetChoice.ChosenName;
+            label.text = GameRuleSetChoice.ChosenName;
     }
 
     public void OpenRuleSets()
