@@ -1017,24 +1017,19 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             rightPlayerPfpImage.sprite = sprite;
     }
 
-    // How long the computer takes to answer.
+    // How long the computer takes to answer: how much there is to read, and luck. Nothing else.
     //
-    // Three things decide it. Reading: every character of the question and of the four answers
-    // costs time, so a wordy problem takes longer than "7 x 8" for the computer as it does for the
-    // player. Solving: the level the player is on, where a level 1 opponent dithers and a level 7
-    // one barely pauses. And luck: the whole thing is scaled by a random factor, so the same
-    // question is not answered at the same instant twice and the player cannot learn its timing.
+    // The level decides how often it is right (BotAnswerIndex), not how fast it is -- a wordy
+    // problem takes longer than "7 x 8" whoever is reading it, and that is the only thing here that
+    // should move the clock. The total is then scaled by a random factor, so the same question is
+    // never answered at the same instant twice and its timing cannot be learned.
+    private const float BotWordsPerSecond = 5f;
+    private const float BotSolvingSeconds = 0.6f;
+
     private float BotThinkingTime()
     {
-        // A fastish adult reader is around 20 characters a second; this is deliberately slower at
-        // low levels and quicker at high ones.
-        float charactersPerSecond = Mathf.Lerp(14f, 34f, (currentDifficultyLevel - 1) / 6f);
-        float reading = CharactersInTheQuestion() / charactersPerSecond;
-
-        // Then the sum itself, which is where the level tells most.
-        float solving = Mathf.Lerp(1.6f, 0.4f, (currentDifficultyLevel - 1) / 6f);
-
-        float think = (reading + solving) * Random.Range(0.75f, 1.45f);
+        float think = (WordsInTheQuestion() / BotWordsPerSecond + BotSolvingSeconds)
+                      * Random.Range(0.75f, 1.45f);
 
         // In its own solo turn it has a time limit, so it has to decide inside that -- and
         // sometimes it does not, which is a miss, exactly as it would be for a player.
@@ -1046,21 +1041,28 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     }
 
     // The question and its four answers: all of it has to be read before any of it can be answered.
-    private int CharactersInTheQuestion()
+    private int WordsInTheQuestion()
     {
         if (currentQuestion == null)
             return 0;
 
-        int characters = currentQuestion.question != null ? currentQuestion.question.Length : 0;
+        int words = CountWords(currentQuestion.question);
 
         if (currentQuestion.answers == null)
-            return characters;
+            return words;
 
         foreach (string answer in currentQuestion.answers)
-            if (answer != null)
-                characters += answer.Length;
+            words += CountWords(answer);
 
-        return characters;
+        return words;
+    }
+
+    private static int CountWords(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return 0;
+
+        return text.Split((char[])null, System.StringSplitOptions.RemoveEmptyEntries).Length;
     }
 
     private int BotAnswerIndex()
