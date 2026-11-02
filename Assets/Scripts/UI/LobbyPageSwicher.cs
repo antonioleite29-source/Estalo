@@ -150,26 +150,59 @@ public class LobbyPageSwitcher : MonoBehaviour
     // Call this from the Start Game button in the Inspector (onClick)
     // ---------------------------------------------------------------
     // The two buttons added to the lobby after everything else: Solo, and the one that opens the
-    // game-mode dropdown. Found by name when they are not wired in the Inspector, so dropping them
-    // into the scene is enough to make them work.
+    // game-mode dropdown.
+    //
+    // Searched for across the whole scene, inactive objects included, rather than only under this
+    // object: the lobby pages are not always children of whatever the switcher sits on. Any button
+    // whose name mentions mode or modo counts, so ModeButton, ModoButton and GameModeButton all
+    // work -- and dragging them into the slots above skips the guessing altogether.
+    private bool ruleSetWired;
+    private bool soloWired;
+    private bool listeningForRuleChanges;
+
+    // Called when the lobby starts and every time the Lobby page is shown, because a button added
+    // to the scene later, or one switched on later, is not there to be found at Start.
     private void WireLobbyButtons()
     {
+        if (ruleSetWired && soloWired)
+            return;
+
         if (ruleSetButton == null)
-            ruleSetButton = FindChildButton("ModeButton", "ModoButton", "GameModeButton", "ModosButton");
+            ruleSetButton = FindButtonNamed("mode", "modo");
 
         if (soloButton == null)
-            soloButton = FindChildButton("SoloButton", "SozinhoButton");
+            soloButton = FindButtonNamed("solo", "sozinho");
 
-        if (ruleSetButton != null)
+        if (ruleSetButton != null && !ruleSetWired)
         {
+            ruleSetWired = true;
             ruleSetButton.onClick.AddListener(OpenRuleSets);
             RefreshRuleSetLabel();
+            Debug.Log($"LobbyPageSwitcher: the game-mode button is \"{ruleSetButton.name}\".", ruleSetButton);
+        }
+        else if (ruleSetButton == null)
+        {
+            Debug.LogWarning("LobbyPageSwitcher: no game-mode button found. Name it ModeButton, or drag " +
+                             "it into Rule Set Button, or wire its On Click to OpenRuleSets().", this);
         }
 
-        if (soloButton != null)
+        if (soloButton != null && !soloWired)
+        {
+            soloWired = true;
             soloButton.onClick.AddListener(StartSoloGame);
+            Debug.Log($"LobbyPageSwitcher: the solo button is \"{soloButton.name}\".", soloButton);
+        }
+        else if (soloButton == null)
+        {
+            Debug.LogWarning("LobbyPageSwitcher: no solo button found. Name it SoloButton, or drag it " +
+                             "into Solo Button, or wire its On Click to StartSoloGame().", this);
+        }
 
-        GameRuleSetChoice.Changed += RefreshRuleSetLabel;
+        if (!listeningForRuleChanges)
+        {
+            listeningForRuleChanges = true;
+            GameRuleSetChoice.Changed += RefreshRuleSetLabel;
+        }
     }
 
     private void OnDestroy()
@@ -177,12 +210,27 @@ public class LobbyPageSwitcher : MonoBehaviour
         GameRuleSetChoice.Changed -= RefreshRuleSetLabel;
     }
 
-    private Button FindChildButton(params string[] names)
+    // Anything already spoken for -- the 1x1 and 2x2 buttons, a highlight object -- is never taken,
+    // so "mode" in a name cannot steal the controls that already work.
+    private Button FindButtonNamed(params string[] words)
     {
-        foreach (Button button in GetComponentsInChildren<Button>(true))
-            foreach (string name in names)
-                if (button.gameObject.name == name)
+        Button oneVsOne = oneVsOneButtonImage != null ? oneVsOneButtonImage.GetComponent<Button>() : null;
+        Button teamFour = teamFourButtonImage != null ? teamFourButtonImage.GetComponent<Button>() : null;
+
+        foreach (Button button in FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (button == oneVsOne || button == teamFour || button == soloButton || button == ruleSetButton)
+                continue;
+
+            string name = button.gameObject.name.ToLowerInvariant();
+
+            if (name.Contains("highlight") || name.Contains("destaque"))
+                continue;
+
+            foreach (string word in words)
+                if (name.Contains(word))
                     return button;
+        }
 
         return null;
     }
@@ -455,6 +503,10 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     public void ShowPage(LobbyPage page)
     {
+        // A button dropped into the scene after this object woke up is found the next time its page
+        // is opened rather than never.
+        WireLobbyButtons();
+
         // Hide everything first, then show the one we want. Written this way rather than as one
         // SetActive per page with a == test, because two fields are allowed to point at the SAME
         // object — Connect and More share a page so the Connect UI inherits More's background.
