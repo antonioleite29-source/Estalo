@@ -85,10 +85,20 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     private float nextPulse;
 
+    // The queue is drained when somebody joins or leaves it, which is not enough on its own: two
+    // players on different levels sit there until one of them waits out Matchmaker.PatienceSeconds,
+    // and nothing else would come along to notice that it had passed.
+    private const float QueueSweepSeconds = 0.5f;
+
+    private float nextQueueSweep;
+
     private void Update()
     {
         if (IsServer)
+        {
             PulseIfDue();
+            SweepQueueIfDue();
+        }
 
         if (!IsServer || liveMatches.Count == 0)
             return;
@@ -112,6 +122,16 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     // line has quietly died still reports IsListening true, so the reconnect loop -- which only
     // acts when IsListening is false -- sits and waits forever. That is the disconnection that
     // does not recover. This gives NetworkBootstrap something it can miss.
+    private void SweepQueueIfDue()
+    {
+        if (matchmaker.QueuedCount == 0 || Time.unscaledTime < nextQueueSweep)
+            return;
+
+        nextQueueSweep = Time.unscaledTime + QueueSweepSeconds;
+        DrainQueue();
+        PublishQueueStatus();
+    }
+
     private void PulseIfDue()
     {
         if (Time.unscaledTime < nextPulse || !CanSendRpc)
