@@ -97,3 +97,42 @@ public static class LobbyModeButtonsFix
         return button;
     }
 }
+
+// Two menu items for pointing the lobby at buttons that are already in the scene: select the button
+// in the Hierarchy, then pick the one it is. Quicker than finding the slot on the switcher, and it
+// leaves the name alone.
+public static class UseSelectedLobbyButton
+{
+    [MenuItem("Trivia Duel/Setup/Use Selected Button As The Mode Button")]
+    private static void AsMode() => Assign(mode: true);
+
+    [MenuItem("Trivia Duel/Setup/Use Selected Button As The Solo Button")]
+    private static void AsSolo() => Assign(mode: false);
+
+    private static void Assign(bool mode)
+    {
+        LobbyPageSwitcher switcher = Object.FindAnyObjectByType<LobbyPageSwitcher>(FindObjectsInactive.Include);
+        Button button = Selection.activeGameObject != null
+            ? Selection.activeGameObject.GetComponent<Button>()
+            : null;
+
+        if (switcher == null || button == null)
+        {
+            Debug.LogWarning("UseSelectedLobbyButton: select a GameObject with a Button on it first.");
+            return;
+        }
+
+        Undo.RecordObject(switcher, "Point the lobby at a button");
+
+        if (mode)
+            switcher.ruleSetButton = button;
+        else
+            switcher.soloButton = button;
+
+        EditorUtility.SetDirty(switcher);
+        EditorSceneManager.MarkSceneDirty(switcher.gameObject.scene);
+
+        Debug.Log($"UseSelectedLobbyButton: \"{button.name}\" is the {(mode ? "mode" : "solo")} button now. " +
+                  "Save the scene.", button);
+    }
+}

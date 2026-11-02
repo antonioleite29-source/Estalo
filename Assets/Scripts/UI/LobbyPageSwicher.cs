@@ -57,9 +57,6 @@ public class LobbyPageSwitcher : MonoBehaviour
              "SoloButton is used.")]
     public Button soloButton;
 
-    [Tooltip("The dropdown itself. Built under the lobby page the first time it is opened.")]
-    public RuleSetPanel ruleSetPanel;
-
     [Header("--- LOBBY PAGES ---")]
     [Tooltip("The GameObject for the Profile page. Drag it here.")]
     public GameObject profilePage;
@@ -318,16 +315,108 @@ public class LobbyPageSwitcher : MonoBehaviour
             label.text = GameRuleSetChoice.ChosenName;
     }
 
+    // --- choosing the rules on the buttons that are already there -------
+    //
+    // Tapping the mode button turns the four lobby buttons into the four rule sets: 1x1 becomes
+    // Clássico, 2x2 becomes Sem perdão, Solo becomes Relâmpago and the mode button itself becomes
+    // Sequência. Tap one and the lobby goes back to normal with that set chosen.
+    //
+    // Nothing is rewired to do it. Each button's own handler asks first whether the lobby is in the
+    // middle of choosing, which is why this works even for the two buttons whose On Click was wired
+    // in the Inspector years ago.
+    private bool choosingRules;
+    private readonly Dictionary<Button, string> labelsBeforeChoosing = new Dictionary<Button, string>();
+
+    private static readonly GameRuleSet[] SetOnEachButton =
+    {
+        GameRuleSet.Classic,    // 1x1
+        GameRuleSet.NoMercy,    // 2x2
+        GameRuleSet.Lightning,  // Solo
+        GameRuleSet.Streak,     // the mode button itself
+    };
+
+    private Button[] ChooserButtons() => new[]
+    {
+        oneVsOneButtonImage != null ? oneVsOneButtonImage.GetComponent<Button>() : null,
+        teamFourButtonImage != null ? teamFourButtonImage.GetComponent<Button>() : null,
+        soloButton,
+        ruleSetButton,
+    };
+
     public void OpenRuleSets()
     {
-        if (ruleSetPanel == null)
+        // The mode button is one of the four while they are showing rule sets: tapping it again is
+        // choosing Sequência, not opening anything.
+        if (choosingRules)
         {
-            TMP_Text anyLabel = GetComponentInChildren<TMP_Text>(true);
-            Transform page = lobbyPage != null ? lobbyPage.transform : transform;
-            ruleSetPanel = RuleSetPanel.CreateUnder(page, anyLabel != null ? anyLabel.font : null);
+            ChooseRuleSet(GameRuleSet.Streak);
+            return;
         }
 
-        ruleSetPanel.Open();
+        choosingRules = true;
+        labelsBeforeChoosing.Clear();
+
+        Button[] buttons = ChooserButtons();
+
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            if (buttons[i] == null)
+                continue;
+
+            TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>(true);
+
+            if (label == null)
+                continue;
+
+            labelsBeforeChoosing[buttons[i]] = label.text;
+            label.text = GameRuleSets.NameOf(SetOnEachButton[i]);
+            label.color = SetOnEachButton[i] == GameRuleSetChoice.Chosen ? selectedModeColor : unselectedModeColor;
+
+            Image art = buttons[i].GetComponent<Image>();
+
+            if (art != null)
+                art.color = SetOnEachButton[i] == GameRuleSetChoice.Chosen ? selectedModeColor : unselectedModeColor;
+        }
+    }
+
+    private void ChooseRuleSet(GameRuleSet set)
+    {
+        GameRuleSetChoice.Chosen = set;
+        StopChoosingRules();
+    }
+
+    // Every button back to the word it had, the mode button to whichever set is now chosen, and the
+    // 1x1 / 2x2 tints back to showing which mode is selected.
+    private void StopChoosingRules()
+    {
+        if (!choosingRules)
+            return;
+
+        choosingRules = false;
+
+        foreach (KeyValuePair<Button, string> entry in labelsBeforeChoosing)
+        {
+            if (entry.Key == null)
+                continue;
+
+            TMP_Text label = entry.Key.GetComponentInChildren<TMP_Text>(true);
+
+            if (label != null)
+                label.text = entry.Value;
+
+            if (entry.Key == soloButton)
+                label.color = Color.white;
+        }
+
+        labelsBeforeChoosing.Clear();
+
+        Image soloArt = soloButton != null ? soloButton.GetComponent<Image>() : null;
+
+        if (soloArt != null)
+            soloArt.color = Color.white;
+
+        RefreshRuleSetLabel();
+        RefreshModeHighlight();
     }
 
     // Solo: no queue, no server, no waiting screen. The match runs on this phone with the other
@@ -335,14 +424,17 @@ public class LobbyPageSwitcher : MonoBehaviour
     // online. It counts for nothing -- see TriviaDuelManager.StartSoloMatch.
     public void StartSoloGame()
     {
+        if (choosingRules)
+        {
+            ChooseRuleSet(GameRuleSet.Lightning);
+            return;
+        }
+
         if (triviaManager == null)
         {
             Debug.LogWarning("LobbyPageSwitcher: no TriviaDuelManager, so Solo has nothing to start.");
             return;
         }
-
-        if (ruleSetPanel != null)
-            ruleSetPanel.Close();
 
         HideAllPages();
         waitingScreen?.HideWaiting();
@@ -351,6 +443,7 @@ public class LobbyPageSwitcher : MonoBehaviour
 
     public void StartGame()
     {
+        StopChoosingRules();
         HideAllPages();
 
         // This device's own choice, and only this device's. The mode was briefly server-wide so
@@ -403,8 +496,27 @@ public class LobbyPageSwitcher : MonoBehaviour
     // ---------------------------------------------------------------
     // Mode selection — wire these to the 1v1 / 2v2 toggle buttons in the Inspector
     // ---------------------------------------------------------------
-    public void SelectOneVsOneMode() { SelectMode(MatchMode.OneVsOne); }
-    public void SelectTeamFourMode() { SelectMode(MatchMode.TeamFour); }
+    public void SelectOneVsOneMode()
+    {
+        if (choosingRules)
+        {
+            ChooseRuleSet(GameRuleSet.Classic);
+            return;
+        }
+
+        SelectMode(MatchMode.OneVsOne);
+    }
+
+    public void SelectTeamFourMode()
+    {
+        if (choosingRules)
+        {
+            ChooseRuleSet(GameRuleSet.NoMercy);
+            return;
+        }
+
+        SelectMode(MatchMode.TeamFour);
+    }
 
     private void SelectMode(MatchMode mode)
     {
