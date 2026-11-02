@@ -27,6 +27,9 @@ public class LoginPanel : MonoBehaviour
     public Button createAccountButton;
     public Button closeButton;
 
+    [Tooltip("Mostra ou esconde a senha. Made by the same menu.")]
+    public Button showPasswordButton;
+
     private string pendingUsername;
     private bool wired;
 
@@ -149,9 +152,12 @@ public class LoginPanel : MonoBehaviour
         if (signInButton != null) signInButton.onClick.AddListener(() => Submit(false));
         if (createAccountButton != null) createAccountButton.onClick.AddListener(() => Submit(true));
         if (closeButton != null) closeButton.onClick.AddListener(Hide);
+        if (showPasswordButton != null) showPasswordButton.onClick.AddListener(TogglePasswordVisible);
 
         if (passwordField != null)
             passwordField.contentType = TMP_InputField.ContentType.Password;
+
+        RefreshShowPasswordLabel();
 
         if (usernameField != null) MobileInputField.MakeSafeForPhones(usernameField);
         if (passwordField != null) MobileInputField.MakeSafeForPhones(passwordField);
@@ -246,6 +252,37 @@ public class LoginPanel : MonoBehaviour
         return upper && lower && digit && symbol;
     }
 
+    // A password nobody can see is where most failed logins come from on a phone keyboard.
+    private void TogglePasswordVisible()
+    {
+        if (passwordField == null)
+            return;
+
+        bool hidden = passwordField.contentType == TMP_InputField.ContentType.Password;
+
+        passwordField.contentType = hidden
+            ? TMP_InputField.ContentType.Standard
+            : TMP_InputField.ContentType.Password;
+
+        // The field only redraws what it is holding when it is told to.
+        passwordField.ForceLabelUpdate();
+        RefreshShowPasswordLabel();
+    }
+
+    private void RefreshShowPasswordLabel()
+    {
+        TMP_Text label = showPasswordButton != null
+            ? showPasswordButton.GetComponentInChildren<TMP_Text>(true)
+            : null;
+
+        if (label == null || passwordField == null)
+            return;
+
+        label.text = passwordField.contentType == TMP_InputField.ContentType.Password
+            ? "Mostrar senha"
+            : "Ocultar senha";
+    }
+
     private void SetStatus(string message)
     {
         if (statusText != null)
@@ -256,7 +293,7 @@ public class LoginPanel : MonoBehaviour
     {
         SetStatus(message);
 
-        foreach (Button button in new[] { signInButton, createAccountButton, closeButton })
+        foreach (Button button in new[] { signInButton, createAccountButton, closeButton, showPasswordButton })
             if (button != null)
                 button.interactable = !busy;
     }
@@ -292,6 +329,7 @@ public class LoginPanel : MonoBehaviour
         panel.usernameField = Field(rect, "UsernameField", "Nome de usuário", false, ref y, font);
         panel.passwordField = Field(rect, "PasswordField", "Senha", true, ref y, font);
 
+        panel.showPasswordButton = MakeButton(rect, "MostrarSenhaButton", "Mostrar senha", ref y, font);
         panel.signInButton = MakeButton(rect, "EntrarButton", "Entrar", ref y, font);
         panel.createAccountButton = MakeButton(rect, "CriarContaButton", "Criar conta", ref y, font);
         panel.closeButton = MakeButton(rect, "FecharButton", "Fechar", ref y, font);

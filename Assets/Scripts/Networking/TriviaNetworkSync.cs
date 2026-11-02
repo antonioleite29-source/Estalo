@@ -253,8 +253,44 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     private void AttachAccount(ulong clientId)
     {
-        PlayerAccounts.Attach(clientId);
+        PlayerAccounts.Account account = PlayerAccounts.Attach(clientId);
+
+        // The same account opened on a second device: the one that was already playing is sent away.
+        // The newcomer is the one the player is holding, so it keeps the account.
+        if (PlayerAccounts.TryFindOtherDevice(account, clientId, out ulong other))
+            SendAway(other);
+
         SendAccount(clientId);
+    }
+
+    // Tells a device its account has been opened somewhere else, then drops it. The message goes
+    // first, because a disconnect on its own looks like the Wi-Fi.
+    private void SendAway(ulong clientId)
+    {
+        if (CanSendRpc)
+            AccountOpenedElsewhereClientRpc(OnlyTo(clientId));
+
+        PlayerAccounts.Detach(clientId);
+
+        // A beat for the message to leave before the socket closes under it.
+        StartCoroutine(DisconnectShortly(clientId));
+    }
+
+    private System.Collections.IEnumerator DisconnectShortly(ulong clientId)
+    {
+        yield return new WaitForSecondsRealtime(0.4f);
+
+        if (IsServer && NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.ConnectedClients.ContainsKey(clientId))
+        {
+            NetworkManager.Singleton.DisconnectClient(clientId);
+        }
+    }
+
+    [ClientRpc]
+    private void AccountOpenedElsewhereClientRpc(ClientRpcParams _ = default)
+    {
+        PlayerStats.NoteAccountOpenedElsewhere();
     }
 
     // Every participant's record changes here, on the server, from the result the server itself
@@ -347,6 +383,10 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         {
             PlayerAccounts.LinkLogin(clientId, unityPlayerId, username);
             PlayerAccounts.Save();
+
+            // Signing in here takes the account off whichever device had it open.
+            if (PlayerAccounts.TryFindOtherDevice(PlayerAccounts.For(clientId), clientId, out ulong other))
+                SendAway(other);
 
             // The whole point of signing in on a second phone: the record, the name and the face that
             // belong to the account come back down to it.

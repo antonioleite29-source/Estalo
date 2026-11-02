@@ -128,6 +128,28 @@ public static class PlayerAccounts
 
     public static Account For(ulong clientId) => online.TryGetValue(clientId, out Account account) ? account : null;
 
+    // Whoever else is already playing on this account, if anybody is. One account, one device at a
+    // time: two phones on the same record would both write to it, and a match between them would be
+    // a player against themselves.
+    public static bool TryFindOtherDevice(Account account, ulong exceptClient, out ulong otherClient)
+    {
+        otherClient = 0;
+
+        if (account == null)
+            return false;
+
+        foreach (KeyValuePair<ulong, Account> entry in online)
+        {
+            if (entry.Key != exceptClient && entry.Value == account)
+            {
+                otherClient = entry.Key;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // The new key for this client if it has not been sent yet, otherwise empty. Taken exactly once.
     public static string TakeUnsentKey(ulong clientId)
     {

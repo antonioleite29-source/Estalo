@@ -53,6 +53,7 @@ public class ConnectPageController : MonoBehaviour
 
     private void OnEnable()
     {
+        PlayerStats.AccountOpenedElsewhere += ShowOpenedElsewhere;
         RefreshMyAddress();
         RestoreLastAddress();
         SetInteractable(true);
@@ -61,7 +62,15 @@ public class ConnectPageController : MonoBehaviour
 
     private void OnDisable()
     {
+        PlayerStats.AccountOpenedElsewhere -= ShowOpenedElsewhere;
         StopSearchingForGames();
+    }
+
+    // One account, one device. The other phone keeps the account; this one is told why it stopped
+    // rather than being left looking like the Wi-Fi dropped.
+    private void ShowOpenedElsewhere()
+    {
+        SetStatus("Sua conta foi aberta em outro aparelho.");
     }
 
     private void OnDestroy()

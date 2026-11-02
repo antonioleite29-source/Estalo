@@ -72,3 +72,59 @@ public static class SettingsLayoutFix
         return moved;
     }
 }
+
+// Adds the "Mostrar senha" button to a login panel that was built before it existed, under the
+// password field, and lays the panel out again so nothing lands on top of anything else.
+[InitializeOnLoad]
+public static class ShowPasswordButtonFix
+{
+    private const string DoneKey = "EstaloShowPasswordButton";
+
+    static ShowPasswordButtonFix()
+    {
+        if (EditorPrefs.GetBool(DoneKey, false))
+            return;
+
+        EditorApplication.delayCall += () =>
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode && Add())
+                EditorPrefs.SetBool(DoneKey, true);
+        };
+    }
+
+    [MenuItem("Trivia Duel/Setup/Add Show Password Button")]
+    private static bool Add()
+    {
+        LoginPanel panel = Object.FindAnyObjectByType<LoginPanel>(FindObjectsInactive.Include);
+
+        if (panel == null || panel.showPasswordButton != null || panel.signInButton == null)
+            return false;
+
+        GameObject copy = Object.Instantiate(panel.signInButton.gameObject, panel.signInButton.transform.parent);
+        copy.name = "MostrarSenhaButton";
+        Undo.RegisterCreatedObjectUndo(copy, "Add show password button");
+
+        RectTransform rect = (RectTransform)copy.transform;
+        RectTransform sign = (RectTransform)panel.signInButton.transform;
+        RectTransform password = panel.passwordField != null ? (RectTransform)panel.passwordField.transform : sign;
+
+        // Between the password field and Entrar, taking half the gap each.
+        rect.anchoredPosition = new Vector2(sign.anchoredPosition.x,
+                                            (password.anchoredPosition.y + sign.anchoredPosition.y) * 0.5f);
+        rect.sizeDelta = new Vector2(sign.sizeDelta.x, sign.sizeDelta.y * 0.72f);
+        copy.transform.SetSiblingIndex(panel.signInButton.transform.GetSiblingIndex());
+
+        TMPro.TMP_Text label = copy.GetComponentInChildren<TMPro.TMP_Text>(true);
+
+        if (label != null)
+            label.text = "Mostrar senha";
+
+        Undo.RecordObject(panel, "Add show password button");
+        panel.showPasswordButton = copy.GetComponent<Button>();
+        EditorUtility.SetDirty(panel);
+        EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
+
+        Debug.Log("ShowPasswordButtonFix: Mostrar senha is on the login panel. Save the scene.", panel);
+        return true;
+    }
+}

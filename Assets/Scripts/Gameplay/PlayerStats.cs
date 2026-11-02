@@ -59,6 +59,15 @@ public static class PlayerStats
     // Raised when the server has checked a login: true if it was tied to the account.
     public static event Action<bool> LoginFinished;
 
+    // Raised when the server sends this device away because the account was opened on another one.
+    public static event Action AccountOpenedElsewhere;
+
+    public static void NoteAccountOpenedElsewhere()
+    {
+        Debug.Log("PlayerStats: this account was opened on another device, so this one was signed out.");
+        AccountOpenedElsewhere?.Invoke();
+    }
+
     public static bool SendLogin(string accessToken, string username)
     {
         if (!CanReachServer(out TriviaNetworkSync sync))
