@@ -295,11 +295,24 @@ public class LobbyPageSwitcher : MonoBehaviour
     // Clássico, 2x2 becomes Sem perdão, Solo becomes Relâmpago and the mode button itself becomes
     // Sequência. Tap one and the lobby goes back to normal with that set chosen.
     //
-    // Nothing is rewired to do it. Each button's own handler asks first whether the lobby is in the
-    // middle of choosing, which is why this works even for the two buttons whose On Click was wired
-    // in the Inspector years ago.
+    // While they are showing rule sets their own On Click is taken away from them and given back
+    // afterwards. Guarding each handler was not enough: a button wired in the Inspector straight to
+    // another object's method never passes through here at all, which is how tapping Relâmpago
+    // started a solo match.
     private bool choosingRules;
-    private readonly Dictionary<Button, string> labelsBeforeChoosing = new Dictionary<Button, string>();
+
+    private class ButtonAsRuleSet
+    {
+        public Button button;
+        public TMP_Text label;
+        public string text;
+        public Color labelColour;
+        public Color artColour;
+        public Button.ButtonClickedEvent click;
+        public Selectable.Transition transition;
+    }
+
+    private readonly List<ButtonAsRuleSet> borrowed = new List<ButtonAsRuleSet>();
 
     private static readonly GameRuleSet[] SetOnEachButton =
     {
@@ -328,29 +341,59 @@ public class LobbyPageSwitcher : MonoBehaviour
         }
 
         choosingRules = true;
-        labelsBeforeChoosing.Clear();
+        borrowed.Clear();
 
         Button[] buttons = ChooserButtons();
 
         for (int i = 0; i < buttons.Length; i++)
         {
-            if (buttons[i] == null)
+            Button button = buttons[i];
+
+            if (button == null)
                 continue;
 
-            TMP_Text label = buttons[i].GetComponentInChildren<TMP_Text>(true);
+            GameRuleSet set = SetOnEachButton[i];
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            Image art = button.GetComponent<Image>();
 
-            if (label == null)
-                continue;
+            ButtonAsRuleSet lent = new ButtonAsRuleSet
+            {
+                button = button,
+                label = label,
+                text = label != null ? label.text : string.Empty,
+                labelColour = label != null ? label.color : Color.white,
+                artColour = art != null ? art.color : Color.white,
+                click = button.onClick,
+                transition = button.transition,
+            };
 
-            labelsBeforeChoosing[buttons[i]] = label.text;
-            label.text = GameRuleSets.NameOf(SetOnEachButton[i]);
-            label.color = SetOnEachButton[i] == GameRuleSetChoice.Chosen ? selectedModeColor : unselectedModeColor;
+            borrowed.Add(lent);
 
-            Image art = buttons[i].GetComponent<Image>();
+            // Nothing it used to do, only this.
+            button.onClick = new Button.ButtonClickedEvent();
+            button.onClick.AddListener(() => ChooseRuleSet(set));
 
-            if (art != null)
-                art.color = SetOnEachButton[i] == GameRuleSetChoice.Chosen ? selectedModeColor : unselectedModeColor;
+            // Unity's own colour tint would paint over the highlight on the next pointer event.
+            button.transition = Selectable.Transition.None;
+
+            if (label != null)
+                label.text = GameRuleSets.NameOf(set);
+
+            PaintAsRuleSet(label, art, set == GameRuleSetChoice.Chosen);
         }
+    }
+
+    // The same blue the chosen mode wears on the 1x1 and 2x2 buttons, so one highlight means one
+    // thing everywhere on the lobby.
+    private void PaintAsRuleSet(TMP_Text label, Image art, bool isChosen)
+    {
+        Color tint = isChosen ? selectedModeColor : unselectedModeColor;
+
+        if (label != null)
+            label.color = tint;
+
+        if (art != null)
+            art.color = tint;
     }
 
     private void ChooseRuleSet(GameRuleSet set)
@@ -359,8 +402,8 @@ public class LobbyPageSwitcher : MonoBehaviour
         StopChoosingRules();
     }
 
-    // Every button back to the word it had, the mode button to whichever set is now chosen, and the
-    // 1x1 / 2x2 tints back to showing which mode is selected.
+    // Every button back to the word it had, the colour it had and the click it had. The mode button
+    // then takes the name of whichever set was just chosen.
     private void StopChoosingRules()
     {
         if (!choosingRules)
@@ -368,26 +411,27 @@ public class LobbyPageSwitcher : MonoBehaviour
 
         choosingRules = false;
 
-        foreach (KeyValuePair<Button, string> entry in labelsBeforeChoosing)
+        foreach (ButtonAsRuleSet lent in borrowed)
         {
-            if (entry.Key == null)
+            if (lent.button == null)
                 continue;
 
-            TMP_Text label = entry.Key.GetComponentInChildren<TMP_Text>(true);
+            lent.button.onClick = lent.click;
+            lent.button.transition = lent.transition;
 
-            if (label != null)
-                label.text = entry.Value;
+            if (lent.label != null)
+            {
+                lent.label.text = lent.text;
+                lent.label.color = lent.labelColour;
+            }
 
-            if (entry.Key == soloButton)
-                label.color = Color.white;
+            Image art = lent.button.GetComponent<Image>();
+
+            if (art != null)
+                art.color = lent.artColour;
         }
 
-        labelsBeforeChoosing.Clear();
-
-        Image soloArt = soloButton != null ? soloButton.GetComponent<Image>() : null;
-
-        if (soloArt != null)
-            soloArt.color = Color.white;
+        borrowed.Clear();
 
         RefreshRuleSetLabel();
         RefreshModeHighlight();
