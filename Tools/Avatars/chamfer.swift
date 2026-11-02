@@ -5,13 +5,17 @@ import UniformTypeIdentifiers
 
 // Cuts the corners off a square avatar at 45 degrees, in the same proportion the game's buttons use.
 //
-// Startbutton2.png cuts 118 of its 500 pixels, so the cut is 23.6% of the short side; a 256-pixel
-// avatar loses 60. The corners become transparent, nothing else is touched, and running it twice
-// changes nothing, since what it would cut is already gone.
+// Startbutton2.png cuts 118 of its 500 pixels. A face is not a button, and that much off a 256-pixel
+// avatar ate into it, so the avatars take half of that share -- 59 of 500, which is 30 pixels. The
+// corners become transparent, nothing else is touched, and running it twice changes nothing, since
+// what it would cut is already gone.
+//
+// Cut from the squares in Tools/Avatars/source, never from an avatar that has been cut already: a
+// smaller cut cannot put back a corner a larger one removed.
 //
 //   swift Tools/Avatars/chamfer.swift Assets/Art/Avatars/Robo1.png [more...]
 
-let cutFraction: CGFloat = 118.0 / 500.0
+let cutFraction: CGFloat = 59.0 / 500.0
 
 func octagon(_ side: CGFloat, _ cut: CGFloat) -> CGPath {
     let path = CGMutablePath()
