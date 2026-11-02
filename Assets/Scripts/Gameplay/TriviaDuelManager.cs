@@ -1081,21 +1081,26 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     // problem takes longer than "7 x 8" whoever is reading it, and that is the only thing here that
     // should move the clock. The total is then scaled by a random factor, so the same question is
     // never answered at the same instant twice and its timing cannot be learned.
-    private const float BotWordsPerSecond = 5f;
-    private const float BotSolvingSeconds = 0.6f;
+    // Deliberately slower than a person reading well: the computer is an opponent to beat, not a
+    // wall. At five words a second with half a second's thought it buzzed before the player had
+    // finished reading, and solo was unwinnable.
+    private const float BotWordsPerSecond = 3.2f;
+    private const float BotSolvingSeconds = 1f;
 
     private float BotThinkingTime()
     {
         float think = (WordsInTheQuestion() / BotWordsPerSecond + BotSolvingSeconds)
-                      * Random.Range(0.75f, 1.45f);
+                      * Random.Range(0.8f, 1.6f);
 
         // In its own solo turn it has a time limit, so it has to decide inside that -- and
         // sometimes it does not, which is a miss, exactly as it would be for a player.
+        // In its own solo turn it has a time limit, and often enough it does not make it: a player
+        // who missed should get the point back more often than not.
         if (roundState == RoundState.SoloRight)
-            think = Mathf.Min(think, soloTimeSeconds * Random.Range(0.55f, 1.15f));
+            think = Mathf.Min(think, soloTimeSeconds * Random.Range(0.6f, 1.6f));
 
-        // Never instant, and never so long that the round dies waiting for it.
-        return Mathf.Clamp(think, 0.45f, 7f);
+        // Never so fast the player cannot have read the question, never so long the round dies.
+        return Mathf.Clamp(think, 1.1f, 7f);
     }
 
     // The question and its four answers: all of it has to be read before any of it can be answered.
@@ -1125,7 +1130,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
     private int BotAnswerIndex()
     {
-        float accuracy = Mathf.Clamp01(0.52f + 0.045f * currentDifficultyLevel);
+        // Beatable at every level: a little under half right at level 1, around six in ten at
+        // level 7. It was getting five in six right at the top, which with its old speed meant it
+        // took nearly every round.
+        float accuracy = Mathf.Clamp01(0.40f + 0.03f * currentDifficultyLevel);
         int correct = currentQuestion != null ? currentQuestion.correctAnswerIndex : 0;
 
         if (Random.value < accuracy)
