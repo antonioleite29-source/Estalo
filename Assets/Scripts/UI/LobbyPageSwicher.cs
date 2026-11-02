@@ -165,15 +165,10 @@ public class LobbyPageSwitcher : MonoBehaviour
             return;
 
         if (ruleSetButton == null)
-            ruleSetButton = FindButton("mode", "modo", "clássico", "classico");
+            ruleSetButton = FindButton("mode", "modo", "clássico", "classico") ?? FindButtonUnderOneVsOne();
 
         if (soloButton == null)
             soloButton = FindButton("solo", "sozinho");
-
-        // Still nothing: the buttons are made here, under Jogar, rather than leaving the lobby
-        // without them. A scene where they were added by hand never reaches this.
-        if (ruleSetButton == null || soloButton == null)
-            BuildMissingLobbyButtons();
 
         if (ruleSetButton != null && !ruleSetWired)
         {
@@ -184,8 +179,8 @@ public class LobbyPageSwitcher : MonoBehaviour
         }
         else if (ruleSetButton == null)
         {
-            Debug.LogWarning("LobbyPageSwitcher: no game-mode button, and none could be built -- there is " +
-                             "no lobby page to build it on.", this);
+            Debug.LogWarning("LobbyPageSwitcher: no game-mode button. Select it in the Hierarchy and use " +
+                             "Trivia Duel > Setup > Use Selected Button As The Mode Button.", this);
         }
 
         if (soloButton != null && !soloWired)
@@ -196,8 +191,8 @@ public class LobbyPageSwitcher : MonoBehaviour
         }
         else if (soloButton == null)
         {
-            Debug.LogWarning("LobbyPageSwitcher: no solo button, and none could be built -- there is no " +
-                             "lobby page to build it on.", this);
+            Debug.LogWarning("LobbyPageSwitcher: no solo button. Select it in the Hierarchy and use " +
+                             "Trivia Duel > Setup > Use Selected Button As The Solo Button.", this);
         }
 
         if (!listeningForRuleChanges)
@@ -243,66 +238,45 @@ public class LobbyPageSwitcher : MonoBehaviour
         return null;
     }
 
-    // Built the way the settings buttons are: copied from Jogar so they match, and stacked under it.
-    private void BuildMissingLobbyButtons()
+    // The mode button sits directly under the 1x1 button, so that is where it is looked for: the
+    // nearest button below it among its own neighbours, skipping the ones already spoken for. A
+    // button added to the lobby by hand rarely has a name worth searching for, but it does have a
+    // place.
+    private Button FindButtonUnderOneVsOne()
     {
-        Button jogar = JogarButtonStyle.Template;
-        RectTransform anchorButton = jogar != null ? (RectTransform)jogar.transform : null;
-        Transform parent = anchorButton != null ? anchorButton.parent
-                         : lobbyPage != null ? lobbyPage.transform : null;
+        Button oneVsOne = oneVsOneButtonImage != null ? oneVsOneButtonImage.GetComponent<Button>() : null;
+        Button teamFour = teamFourButtonImage != null ? teamFourButtonImage.GetComponent<Button>() : null;
+
+        if (oneVsOne == null)
+            return null;
+
+        RectTransform anchorRect = (RectTransform)oneVsOne.transform;
+        Transform parent = anchorRect.parent;
 
         if (parent == null)
-            return;
+            return null;
 
-        Vector2 size = JogarButtonStyle.Size;
-        float step = size.y * 0.78f + 26f;
-        Vector2 start = anchorButton != null
-            ? anchorButton.anchoredPosition - new Vector2(0f, size.y * 0.5f + 26f)
-            : new Vector2(0f, -320f);
+        Button best = null;
+        float bestDrop = float.MaxValue;
 
-        TMP_Text anyLabel = jogar != null ? jogar.GetComponentInChildren<TMP_Text>(true) : null;
-        TMP_FontAsset font = anyLabel != null ? anyLabel.font : null;
-
-        if (ruleSetButton == null)
+        foreach (Transform child in parent)
         {
-            ruleSetButton = BuildLobbyButton(parent, "ModeButton", GameRuleSetChoice.ChosenName, font,
-                size, start - new Vector2(0f, step * 0.5f));
+            Button candidate = child.GetComponent<Button>();
+
+            if (candidate == null || candidate == oneVsOne || candidate == teamFour ||
+                candidate == soloButton || candidate == ruleSetButton)
+                continue;
+
+            float drop = anchorRect.anchoredPosition.y - ((RectTransform)child).anchoredPosition.y;
+
+            if (drop <= 0f || drop >= bestDrop)
+                continue;
+
+            best = candidate;
+            bestDrop = drop;
         }
 
-        if (soloButton == null)
-        {
-            soloButton = BuildLobbyButton(parent, "SoloButton", "Solo", font,
-                size, start - new Vector2(0f, step * 1.5f));
-        }
-
-        Debug.Log("LobbyPageSwitcher: built the mode and solo buttons under Jogar, because the scene had " +
-                  "none. Move them wherever you like -- they are ordinary objects now.", this);
-    }
-
-    private static Button BuildLobbyButton(Transform parent, string name, string text, TMP_FontAsset font,
-        Vector2 size, Vector2 position)
-    {
-        GameObject go = TMP_DefaultControls.CreateButton(new TMP_DefaultControls.Resources());
-        go.name = name;
-
-        RectTransform rect = (RectTransform)go.transform;
-        rect.SetParent(parent, false);
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-
-        TMP_Text label = go.GetComponentInChildren<TMP_Text>();
-        label.text = text;
-        label.fontSize = 54f;
-        label.color = Color.white;
-
-        if (font != null)
-            label.font = font;
-
-        Button button = go.GetComponent<Button>();
-        JogarButtonStyle.ApplyTo(button);
-
-        rect.sizeDelta = new Vector2(size.x * 0.72f, size.y * 0.78f);
-        rect.anchoredPosition = position;
-        return button;
+        return best;
     }
 
     // The button wears the rules it will start: "Clássico", "Sem perdão". Not the word "Modo" --
