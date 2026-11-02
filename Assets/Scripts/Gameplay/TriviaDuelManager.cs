@@ -967,6 +967,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
     // refereed this.
     private bool soloVsBot;
     private bool passAndPlayBeforeSolo;
+    private Sprite botAvatar;
     private Coroutine botRoutine;
 
     public const string BotName = "Estalinho";
@@ -1009,8 +1010,8 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         RectTransform rect = (RectTransform)go.transform;
         rect.SetParent(triviaGameplayRoot.transform, false);
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(240f, 110f);
-        rect.anchoredPosition = new Vector2(-430f, 1120f);
+        rect.sizeDelta = new Vector2(220f, 96f);
+        rect.anchoredPosition = new Vector2(-452f, 1215f);
 
         TMP_Text label = go.GetComponentInChildren<TMP_Text>();
         label.text = "Sair";
@@ -1022,7 +1023,11 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         soloLeaveButton = go.GetComponent<Button>();
         JogarButtonStyle.ApplyTo(soloLeaveButton);
-        rect.sizeDelta = new Vector2(240f, 110f);
+
+        // ApplyTo stamps the Jogar size back on; this one has to stay small and out of the way, so
+        // it is set again after. The question box reaches y 1120, so it sits above that.
+        rect.sizeDelta = new Vector2(220f, 96f);
+        rect.anchoredPosition = new Vector2(-452f, 1215f);
         soloLeaveButton.onClick.AddListener(LeaveSoloMatch);
     }
 
@@ -1069,38 +1074,77 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         int mine = profile.GetLocalAvatarIndex();
         int theirs = count > 1 ? (mine + Random.Range(1, count)) % count : mine;
 
-        Sprite sprite = profile.GetAvatarSprite(theirs);
+        botAvatar = profile.GetAvatarSprite(theirs);
 
-        if (sprite != null)
-            rightPlayerPfpImage.sprite = sprite;
+        if (botAvatar != null)
+            rightPlayerPfpImage.sprite = botAvatar;
     }
 
-    // How long the computer takes to answer: how much there is to read, and luck. Nothing else.
+    // How long the computer takes to answer: how much there is to read, how hard the question is,
+    // and luck.
     //
-    // The level decides how often it is right (BotAnswerIndex), not how fast it is -- a wordy
-    // problem takes longer than "7 x 8" whoever is reading it, and that is the only thing here that
-    // should move the clock. The total is then scaled by a random factor, so the same question is
-    // never answered at the same instant twice and its timing cannot be learned.
-    // Deliberately slower than a person reading well: the computer is an opponent to beat, not a
-    // wall. At five words a second with half a second's thought it buzzed before the player had
-    // finished reading, and solo was unwinnable.
-    private const float BotWordsPerSecond = 3.2f;
-    private const float BotSolvingSeconds = 1f;
+    // The level decides how often it is right (BotAnswerIndex), never how fast it is. What moves
+    // the clock is the question itself: 7 + 8 comes back almost at once, a percentage of a
+    // three-digit number or a two-step equation takes it as long as it takes a person. The total is
+    // scaled by a random factor, so the same question is never answered at the same instant twice
+    // and its timing cannot be learned.
+    private const float BotWordsPerSecond = 4.5f;
+    private const float BotSolvingSeconds = 0.75f;
 
     private float BotThinkingTime()
     {
-        float think = (WordsInTheQuestion() / BotWordsPerSecond + BotSolvingSeconds)
-                      * Random.Range(0.8f, 1.6f);
+        float think = (WordsInTheQuestion() / BotWordsPerSecond + BotSolvingSeconds * HowHardTheQuestionIs())
+                      * Random.Range(0.8f, 1.5f);
 
-        // In its own solo turn it has a time limit, so it has to decide inside that -- and
-        // sometimes it does not, which is a miss, exactly as it would be for a player.
         // In its own solo turn it has a time limit, and often enough it does not make it: a player
         // who missed should get the point back more often than not.
         if (roundState == RoundState.SoloRight)
             think = Mathf.Min(think, soloTimeSeconds * Random.Range(0.6f, 1.6f));
 
         // Never so fast the player cannot have read the question, never so long the round dies.
-        return Mathf.Clamp(think, 1.1f, 7f);
+        return Mathf.Clamp(think, 0.9f, 7f);
+    }
+
+    // What the question costs to work out, as a multiplier on the thinking: a table fact is well
+    // under one, a two-step equation on big numbers is over two. Read off the question itself,
+    // since every question in a match comes from the same level and the level therefore says
+    // nothing about which of them is the hard one.
+    private float HowHardTheQuestionIs()
+    {
+        if (currentQuestion == null || string.IsNullOrEmpty(currentQuestion.question))
+            return 1f;
+
+        string text = currentQuestion.question.ToLowerInvariant();
+        float hardness = 1f;
+
+        int biggest = 0;
+
+        foreach (System.Text.RegularExpressions.Match found in
+                 System.Text.RegularExpressions.Regex.Matches(text, @"\d+"))
+        {
+            if (int.TryParse(found.Value, out int value) && value > biggest)
+                biggest = value;
+        }
+
+        if (biggest >= 1000) hardness += 1.1f;
+        else if (biggest >= 100) hardness += 0.6f;
+        else if (biggest >= 25) hardness += 0.25f;
+        else if (biggest <= 12) hardness -= 0.25f;
+
+        // Multiplying, dividing and taking a percentage are all slower than adding, whatever the
+        // numbers are.
+        if (text.Contains("×") || text.Contains(" x ") || text.Contains("÷") || text.Contains("%"))
+            hardness += 0.3f;
+
+        if (text.Contains("quadrado") || text.Contains("raiz") || text.Contains("resto"))
+            hardness += 0.35f;
+
+        // Something to set up before anything can be worked out.
+        if (text.Contains("resolva") || text.Contains("razão") || text.Contains("média") ||
+            text.Contains("quantos") || text.Contains("quanto custa"))
+            hardness += 0.4f;
+
+        return Mathf.Clamp(hardness, 0.55f, 2.4f);
     }
 
     // The question and its four answers: all of it has to be read before any of it can be answered.
@@ -1133,7 +1177,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         // Beatable at every level: a little under half right at level 1, around six in ten at
         // level 7. It was getting five in six right at the top, which with its old speed meant it
         // took nearly every round.
-        float accuracy = Mathf.Clamp01(0.40f + 0.03f * currentDifficultyLevel);
+        float accuracy = Mathf.Clamp01(0.45f + 0.035f * currentDifficultyLevel);
         int correct = currentQuestion != null ? currentQuestion.correctAnswerIndex : 0;
 
         if (Random.value < accuracy)
@@ -1486,6 +1530,16 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
                 if (rightPlayerPfpImage != null)
                     rightPlayerPfpImage.sprite = localAvatar;
             }
+        }
+
+        // Solo: the other seat is the computer, not whatever placeholder the duel pairs hold. This
+        // runs every round, which is why setting the name once when the match began was not enough.
+        if (soloVsBot)
+        {
+            rightBaseName = BotName;
+
+            if (rightPlayerPfpImage != null && botAvatar != null)
+                rightPlayerPfpImage.sprite = botAvatar;
         }
 
         RestorePlayerNames();
