@@ -48,13 +48,29 @@ public class ProfilePageController : MonoBehaviour
         PlayerStats.Changed += RefreshStats;
 
         // Asks the server for a fresh copy of the record and leaderboard position; the answer lands
-        // through Changed.
-        PlayerStats.RequestRefresh();
+        // through Changed. The connection is often a second or two behind the page, so this keeps
+        // asking until one gets through.
+        StartCoroutine(AskUntilAnswered());
     }
 
     private void OnDisable()
     {
         PlayerStats.Changed -= RefreshStats;
+        StopAllCoroutines();
+    }
+
+    private System.Collections.IEnumerator AskUntilAnswered()
+    {
+        // Ten seconds of trying, then stop: by that point the phone really is offline, and the page
+        // says so.
+        for (int attempt = 0; attempt < 20; attempt++)
+        {
+            if (PlayerStats.TryRequestRefresh())
+                yield break;
+
+            RefreshStats();
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
     }
 
     private void Start()
@@ -147,9 +163,12 @@ public class ProfilePageController : MonoBehaviour
         if (statsText == null)
             return;
 
+        // Three states, not two: a position, a wait while the server answers, and being offline.
+        // These were one state before, so a phone that was online but had not been answered yet said
+        // "sem conexão" while it was perfectly able to play.
         string rank = PlayerStats.LeaderboardRank > 0
             ? $"#{PlayerStats.LeaderboardRank} de {PlayerStats.LeaderboardSize}"
-            : "sem conexão";
+            : PlayerStats.ServerReachable ? "calculando..." : "sem conexão";
 
         // Labels in grey, numbers in white: the row reads as "this is the thing" then "this is the
         // figure", which is what makes a column of seven lines scannable.

@@ -41,8 +41,25 @@ public static class PlayerStats
     public static float BestIQ => Mathf.Max(PlayerPrefs.GetFloat(BestIQKey, 0f), CurrentIQ);
 
     // 0 until the server has answered this session.
-    public static int LeaderboardRank { get; private set; }
-    public static int LeaderboardSize { get; private set; }
+    // Remembered between launches: the Profile page used to say "sem conexão" for the whole second
+    // between opening it and the server answering, on a phone that was plainly online.
+    private static string RankKey => "EstaloRank" + Suffix;
+    private static string RankSizeKey => "EstaloRankSize" + Suffix;
+
+    public static int LeaderboardRank
+    {
+        get => PlayerPrefs.GetInt(RankKey, 0);
+        private set => PlayerPrefs.SetInt(RankKey, value);
+    }
+
+    public static int LeaderboardSize
+    {
+        get => PlayerPrefs.GetInt(RankSizeKey, 0);
+        private set => PlayerPrefs.SetInt(RankSizeKey, value);
+    }
+
+    // Whether the server can be reached right now, so a page can tell "not known yet" from "offline".
+    public static bool ServerReachable => CanReachServer(out _);
 
     // --- the account key ------------------------------------------------
 
@@ -89,6 +106,17 @@ public static class PlayerStats
     {
         if (CanReachServer(out TriviaNetworkSync sync))
             sync.RequestAccountServerRpc();
+    }
+
+    // True if the ask went out. A page that opens before the connection is up uses this to try again
+    // rather than showing the player an error that is really just a wait.
+    public static bool TryRequestRefresh()
+    {
+        if (!CanReachServer(out TriviaNetworkSync sync))
+            return false;
+
+        sync.RequestAccountServerRpc();
+        return true;
     }
 
     // Called by the server whenever this player's account changes: on connecting, after each match,
