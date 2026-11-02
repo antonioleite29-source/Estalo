@@ -958,6 +958,148 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         localIdentity?.RequestSubmitAnswer(answerIndex);
     }
 
+    // --- solo, against the computer -------------------------------------
+
+    // Nobody online, a bus with no signal, or a player who would rather warm up alone: Solo runs
+    // the whole match on the phone, with the right-hand seat played by this coroutine. The rules
+    // and the state machine are the ones a real match uses, so a solo win feels like a win --
+    // except that it counts for nothing: the IQ and the record are the server's, and no server
+    // refereed this.
+    private bool soloVsBot;
+    private bool passAndPlayBeforeSolo;
+    private Coroutine botRoutine;
+
+    public const string BotName = "Estalinho";
+
+    public bool IsSoloMatch => soloVsBot;
+
+    public void StartSoloMatch()
+    {
+        if (!ValidateSetup())
+            return;
+
+        soloVsBot = true;
+        passAndPlayBeforeSolo = localPassAndPlayMode;
+
+        // The local state machine runs the match, and a tap is the player on the left.
+        localPassAndPlayMode = true;
+        debugMouseOwner = 1;
+        RegisterLocalPlayerSide(1);
+
+        BeginMatchAuthoritative();
+        ShowTheBotOpponent();
+
+        botRoutine = StartCoroutine(PlayAsTheBot());
+    }
+
+    private void ShowTheBotOpponent()
+    {
+        if (rightPlayerNameText != null)
+            rightPlayerNameText.text = BotName;
+
+        PlayerProfileManager profile = PlayerProfileManager.Instance;
+
+        if (profile == null || rightPlayerPfpImage == null)
+            return;
+
+        int count = profile.availableAvatars != null ? profile.availableAvatars.Length : 0;
+
+        if (count <= 0)
+            return;
+
+        // Never the player's own face on the other side of the board.
+        int mine = profile.GetLocalAvatarIndex();
+        int theirs = count > 1 ? (mine + Random.Range(1, count)) % count : mine;
+
+        Sprite sprite = profile.GetAvatarSprite(theirs);
+
+        if (sprite != null)
+            rightPlayerPfpImage.sprite = sprite;
+    }
+
+    // How long the computer takes to answer, and how often it is right, both from the difficulty
+    // the player is already on: at level 1 it is slow and misses plenty, at level 7 it is quick and
+    // misses little. Beating it should mean something at every level without being hopeless.
+    private float BotThinkingTime()
+    {
+        float fast = Mathf.Lerp(2.2f, 0.9f, (currentDifficultyLevel - 1) / 6f);
+        float think = Random.Range(fast * 0.7f, fast * 1.5f);
+
+        // In its own solo turn it has a time limit, so it has to decide inside that.
+        if (roundState == RoundState.SoloRight)
+            think = Mathf.Min(think, soloTimeSeconds * 0.8f);
+
+        return think;
+    }
+
+    private int BotAnswerIndex()
+    {
+        float accuracy = Mathf.Clamp01(0.52f + 0.045f * currentDifficultyLevel);
+        int correct = currentQuestion != null ? currentQuestion.correctAnswerIndex : 0;
+
+        if (Random.value < accuracy)
+            return correct;
+
+        // A wrong one, chosen the way a person gets it wrong: one of the others, not a blank.
+        int wrong = Random.Range(0, 3);
+        return wrong >= correct ? wrong + 1 : wrong;
+    }
+
+    private IEnumerator PlayAsTheBot()
+    {
+        while (triviaRunning && soloVsBot)
+        {
+            if (!BotMayAnswer())
+            {
+                yield return null;
+                continue;
+            }
+
+            int questionWhenItStarted = currentQuestionIndex;
+            float think = BotThinkingTime();
+            float waited = 0f;
+
+            // Thinking. The player answering first, or the round moving on, cancels it.
+            while (waited < think && triviaRunning && soloVsBot &&
+                   currentQuestionIndex == questionWhenItStarted && BotMayAnswer())
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+
+            if (!triviaRunning || !soloVsBot || currentQuestionIndex != questionWhenItStarted || !BotMayAnswer())
+                continue;
+
+            SubmitAnswer(2, BotAnswerIndex());
+            yield return null;
+        }
+
+        botRoutine = null;
+    }
+
+    private bool BotMayAnswer()
+    {
+        if (currentQuestion == null || !inputEnabled || isTransitioning)
+            return false;
+
+        return roundState == RoundState.OpenBuzz || roundState == RoundState.SoloRight;
+    }
+
+    private void StopBeingTheBot()
+    {
+        if (botRoutine != null)
+        {
+            StopCoroutine(botRoutine);
+            botRoutine = null;
+        }
+
+        if (!soloVsBot)
+            return;
+
+        soloVsBot = false;
+        localPassAndPlayMode = passAndPlayBeforeSolo;
+    }
+
     private void SubmitAnswer(int playerSide, int answerIndex)
     {
         if (!IsPlayerAllowedToAnswer(playerSide))
@@ -1701,8 +1843,13 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
         if (rightPlayerNameText != null)
             rightPlayerNameText.text = string.Empty;
 
-        if (hasWinner && PlayerIQManager.Instance != null)
+        // A solo match is not refereed by anything, so it changes nothing: the IQ and the record
+        // belong to the server, and letting a game against this phone's own coroutine move them
+        // would be a way to grind points with no opponent at all.
+        if (hasWinner && !soloVsBot && PlayerIQManager.Instance != null)
             PlayerIQManager.Instance.AdjustLocalIQAfterMatch(winnerSide == localViewPlayerSide);
+
+        StopBeingTheBot();
 
         // NOT gated on hasWinner any more. A match that ends without one — the inactivity
         // timeout, or an opponent abandoning — used to skip this entirely and leave the player

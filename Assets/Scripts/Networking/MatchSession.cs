@@ -43,6 +43,10 @@ public class MatchSession
     private float inactivityTimer;
     private float resolveTimer;
     private int pendingSoloSide;
+
+    // Sequencia only: who took the last point, and how many they have taken in a row.
+    private int lastScoringTeam;
+    private int streak;
     private ResolveThen resolveThen = ResolveThen.Nothing;
 
     // Seats kept empty for players whose phone dropped, by account id, and how long the match will
@@ -97,6 +101,8 @@ public class MatchSession
         IsFinished = false;
         teamAScore = 0;
         teamBScore = 0;
+        lastScoringTeam = 0;
+        streak = 0;
         activeSlotA = 1;
         activeSlotB = 3;
         router.MatchStarted(this);
@@ -175,12 +181,11 @@ public class MatchSession
         roundState = RoundState.Resolving;
         router.LockAllButtons(this);
 
+        int team = TeamForSeat(seat);
+
         if (answerIndex == correctAnswerIndex)
         {
-            if (TeamForSeat(seat) == 1)
-                teamAScore++;
-            else
-                teamBScore++;
+            Score(team, PointsFor(team));
 
             router.AnswerMarked(this, answerIndex, true, seat);
             router.PublishState(this);
@@ -193,6 +198,26 @@ public class MatchSession
         router.AnswerMarked(this, answerIndex, false, seat);
         resolveTimer = rules.wrongFlashSeconds;
 
+        // Sem perdao: no turn on their own for the other side, the point is simply theirs. One
+        // mistake costs a point outright, which is the whole idea of the rule set.
+        if (rules.missGivesThePoint)
+        {
+            lastScoringTeam = 0;
+            streak = 0;
+            Score(OpposingSideOf(seat), 1);
+            router.PublishState(this);
+            resolveThen = ResolveThen.NextRound;
+            resolveTimer = rules.wrongFlashSeconds + rules.nextRoundDelaySeconds;
+            return;
+        }
+
+        // Their run is over, whoever takes the next point.
+        if (rules.streakScoring && team == lastScoringTeam)
+        {
+            lastScoringTeam = 0;
+            streak = 0;
+        }
+
         // Missing during your own solo hands the round back to open buzz rather than starting
         // another solo — otherwise two players trading misses loop forever.
         if (wasInSolo)
@@ -204,6 +229,25 @@ public class MatchSession
             resolveThen = ResolveThen.BeginSolo;
             pendingSoloSide = OpposingSideOf(seat);
         }
+    }
+
+    // Sequencia: 1 for the first, 2 for the second in a row, 3 for the third and anything after.
+    private int PointsFor(int team)
+    {
+        if (!rules.streakScoring)
+            return 1;
+
+        streak = team == lastScoringTeam ? streak + 1 : 1;
+        lastScoringTeam = team;
+        return Mathf.Clamp(streak, 1, 3);
+    }
+
+    private void Score(int team, int points)
+    {
+        if (team == 1)
+            teamAScore += points;
+        else
+            teamBScore += points;
     }
 
     private bool IsSeatAllowedToAnswer(int seat)
@@ -474,6 +518,14 @@ public struct MatchRules
     public float nextRoundDelaySeconds;
     public float inactivityEndSeconds;
 
+    // Sem perdao: a wrong answer hands the point straight to the other side instead of giving them
+    // a turn on their own to earn it.
+    public bool missGivesThePoint;
+
+    // Sequencia: correct answers in a row by the same side are worth 1, then 2, then 3. A miss by
+    // that side starts the counting again.
+    public bool streakScoring;
+
     public static MatchRules Default => new MatchRules
     {
         pointsToWin = 7,
@@ -481,6 +533,8 @@ public struct MatchRules
         wrongFlashSeconds = 0.5f,
         correctResolveSeconds = 1f,
         nextRoundDelaySeconds = 0.35f,
-        inactivityEndSeconds = 60f
+        inactivityEndSeconds = 60f,
+        missGivesThePoint = false,
+        streakScoring = false
     };
 }

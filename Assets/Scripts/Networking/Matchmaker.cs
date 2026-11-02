@@ -17,6 +17,10 @@ public class Matchmaker
         // mode: one person choosing 2v2 must not drag everyone else into it, and with concurrent
         // matches there is no reason it should — a 1v1 and a 2v2 can be forming at the same time.
         public MatchMode mode;
+
+        // And the rules they picked. Someone who chose Sem perdao never ends up in a Classico
+        // match: a rule set the player did not ask for would be a different game.
+        public GameRuleSet ruleSet;
     }
 
     private readonly List<QueuedPlayer> queue = new List<QueuedPlayer>();
@@ -35,9 +39,20 @@ public class Matchmaker
         return count;
     }
 
+    public int QueuedCountFor(MatchMode mode, GameRuleSet ruleSet)
+    {
+        int count = 0;
+
+        for (int i = 0; i < queue.Count; i++)
+            if (queue[i].mode == mode && queue[i].ruleSet == ruleSet)
+                count++;
+
+        return count;
+    }
+
     public static int RequiredPlayersFor(MatchMode mode) => mode == MatchMode.TeamFour ? 4 : 2;
 
-    public void Enqueue(ulong clientId, int difficultyLevel, MatchMode mode)
+    public void Enqueue(ulong clientId, int difficultyLevel, MatchMode mode, GameRuleSet ruleSet)
     {
         int existing = IndexOf(clientId);
 
@@ -48,11 +63,15 @@ public class Matchmaker
             QueuedPlayer updated = queue[existing];
             updated.difficultyLevel = difficultyLevel;
             updated.mode = mode;
+            updated.ruleSet = ruleSet;
             queue[existing] = updated;
             return;
         }
 
-        queue.Add(new QueuedPlayer { clientId = clientId, difficultyLevel = difficultyLevel, mode = mode });
+        queue.Add(new QueuedPlayer
+        {
+            clientId = clientId, difficultyLevel = difficultyLevel, mode = mode, ruleSet = ruleSet
+        });
     }
 
     public void Remove(ulong clientId)
@@ -65,7 +84,7 @@ public class Matchmaker
 
     // Pulls out every complete group the queue can currently form. Returns one list of client ids
     // per match, ordered so callers can hand out seats by position.
-    public List<List<ulong>> FormMatches(MatchMode mode)
+    public List<List<ulong>> FormMatches(MatchMode mode, GameRuleSet ruleSet)
     {
         List<List<ulong>> formed = new List<List<ulong>>();
         int required = RequiredPlayersFor(mode);
@@ -75,7 +94,7 @@ public class Matchmaker
         List<QueuedPlayer> sorted = new List<QueuedPlayer>();
 
         for (int i = 0; i < queue.Count; i++)
-            if (queue[i].mode == mode)
+            if (queue[i].mode == mode && queue[i].ruleSet == ruleSet)
                 sorted.Add(queue[i]);
 
         if (sorted.Count < required)
@@ -109,10 +128,10 @@ public class Matchmaker
 
     // How many more players this queue needs before another match can form. Drives the
     // "waiting for N more players" line on the waiting screen.
-    public int PlayersStillNeeded(MatchMode mode)
+    public int PlayersStillNeeded(MatchMode mode, GameRuleSet ruleSet)
     {
         int required = RequiredPlayersFor(mode);
-        int remainder = QueuedCountFor(mode) % required;
+        int remainder = QueuedCountFor(mode, ruleSet) % required;
         return remainder == 0 ? 0 : required - remainder;
     }
 

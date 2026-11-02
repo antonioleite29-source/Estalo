@@ -130,7 +130,8 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
     // Called instead of the old single-match ready gate. Queues the player, then drains the queue
     // into as many complete matches as it can fill.
-    public void EnqueueForMatch(ulong clientId, MatchMode requestedMode, int difficultyLevel)
+    public void EnqueueForMatch(ulong clientId, MatchMode requestedMode, int difficultyLevel,
+        GameRuleSet ruleSet)
     {
         if (!IsServer)
             return;
@@ -138,7 +139,7 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         // No queue-wiping on a mode change any more. The queue used to be single-mode, so one
         // player picking 2v2 emptied it and threw everyone already waiting back out. Modes are now
         // tracked per player, and both are drained below.
-        matchmaker.Enqueue(clientId, difficultyLevel, requestedMode);
+        matchmaker.Enqueue(clientId, difficultyLevel, requestedMode, ruleSet);
         DrainQueue();
         PublishQueueStatus();
     }
@@ -153,15 +154,20 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
     }
 
     // Drains both modes: a 1v1 and a 2v2 can be forming at the same time from different players.
+    // Every mode against every rule set: a 1v1 Classico, a 1v1 Sem perdao and a 2v2 Relampago can
+    // all be forming at the same time, and nobody crosses from one to another.
     private void DrainQueue()
     {
-        DrainQueueFor(MatchMode.OneVsOne);
-        DrainQueueFor(MatchMode.TeamFour);
+        foreach (GameRuleSet ruleSet in GameRuleSets.All)
+        {
+            DrainQueueFor(MatchMode.OneVsOne, ruleSet);
+            DrainQueueFor(MatchMode.TeamFour, ruleSet);
+        }
     }
 
-    private void DrainQueueFor(MatchMode mode)
+    private void DrainQueueFor(MatchMode mode, GameRuleSet ruleSet)
     {
-        List<List<ulong>> groups = matchmaker.FormMatches(mode);
+        List<List<ulong>> groups = matchmaker.FormMatches(mode, ruleSet);
 
         for (int g = 0; g < groups.Count; g++)
         {
@@ -170,7 +176,7 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
             MatchSession match = new MatchSession(
                 matchmaker.TakeNextMatchId(), mode, group, difficulty,
-                this, ResolveQuestionSource(), CurrentRules(mode));
+                this, ResolveQuestionSource(), GameRuleSets.Apply(ruleSet, CurrentRules(mode)));
 
             AssignSeatsForMatch(match);
             liveMatches.Add(match);
@@ -848,14 +854,14 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         PublishQueueStatus();
     }
 
-    public void MarkClientReady(ulong clientId)
+    public void MarkClientReady(ulong clientId, GameRuleSet ruleSet)
     {
-        MarkClientReadyForMode(clientId, MatchMode.OneVsOne);
+        MarkClientReadyForMode(clientId, MatchMode.OneVsOne, ruleSet);
     }
 
     // Pressing Start no longer starts "the" match — it joins the queue. The matchmaker then forms
     // as many concurrent matches as the queue can fill, grouping players by difficulty level.
-    public void MarkClientReadyForMode(ulong clientId, MatchMode requestedMode)
+    public void MarkClientReadyForMode(ulong clientId, MatchMode requestedMode, GameRuleSet ruleSet)
     {
         if (!IsServer)
             return;
@@ -863,13 +869,14 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         PlayerSideIdentity identity = FindIdentity(clientId);
         int difficultyLevel = identity != null ? identity.DifficultyLevel.Value : 1;
 
-        EnqueueForMatch(clientId, requestedMode, difficultyLevel);
+        EnqueueForMatch(clientId, requestedMode, difficultyLevel, ruleSet);
 
         // Kept (not a temp diagnostic): on a phone this one line via `adb logcat -s Unity` is the
         // only way to see why a match did or didn't form.
-        Debug.Log("Matchmaking: client " + clientId + " joined the " + requestedMode + " queue at level " +
-                  difficultyLevel + ". queued=" + matchmaker.QueuedCount +
-                  ", needs " + matchmaker.PlayersStillNeeded(requestedMode) + " more, live matches=" +
+        Debug.Log("Matchmaking: client " + clientId + " joined the " + requestedMode + " " +
+                  GameRuleSets.NameOf(ruleSet) + " queue at level " + difficultyLevel +
+                  ". queued=" + matchmaker.QueuedCount +
+                  ", needs " + matchmaker.PlayersStillNeeded(requestedMode, ruleSet) + " more, live matches=" +
                   liveMatches.Count);
     }
 }

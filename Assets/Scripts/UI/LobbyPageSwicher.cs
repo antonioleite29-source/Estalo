@@ -48,6 +48,18 @@ public class LobbyPageSwitcher : MonoBehaviour
     [Tooltip("Color applied to whichever mode button is NOT currently selected.")]
     public Color unselectedModeColor = Color.white;
 
+    [Header("--- GAME MODE AND SOLO ---")]
+    [Tooltip("The button that opens the game-mode dropdown. Left empty, a child called ModeButton, " +
+             "ModoButton or GameModeButton is used.")]
+    public Button ruleSetButton;
+
+    [Tooltip("The button that starts a match against the computer. Left empty, a child called " +
+             "SoloButton is used.")]
+    public Button soloButton;
+
+    [Tooltip("The dropdown itself. Built under the lobby page the first time it is opened.")]
+    public RuleSetPanel ruleSetPanel;
+
     [Header("--- LOBBY PAGES ---")]
     [Tooltip("The GameObject for the Profile page. Drag it here.")]
     public GameObject profilePage;
@@ -77,6 +89,7 @@ public class LobbyPageSwitcher : MonoBehaviour
     private void Start()
     {
         ReleaseModeButtonTints();
+        WireLobbyButtons();
         ShowStartupPage();
         RefreshModeHighlight();
     }
@@ -136,6 +149,85 @@ public class LobbyPageSwitcher : MonoBehaviour
     // ---------------------------------------------------------------
     // Call this from the Start Game button in the Inspector (onClick)
     // ---------------------------------------------------------------
+    // The two buttons added to the lobby after everything else: Solo, and the one that opens the
+    // game-mode dropdown. Found by name when they are not wired in the Inspector, so dropping them
+    // into the scene is enough to make them work.
+    private void WireLobbyButtons()
+    {
+        if (ruleSetButton == null)
+            ruleSetButton = FindChildButton("ModeButton", "ModoButton", "GameModeButton", "ModosButton");
+
+        if (soloButton == null)
+            soloButton = FindChildButton("SoloButton", "SozinhoButton");
+
+        if (ruleSetButton != null)
+        {
+            ruleSetButton.onClick.AddListener(OpenRuleSets);
+            RefreshRuleSetLabel();
+        }
+
+        if (soloButton != null)
+            soloButton.onClick.AddListener(StartSoloGame);
+
+        GameRuleSetChoice.Changed += RefreshRuleSetLabel;
+    }
+
+    private void OnDestroy()
+    {
+        GameRuleSetChoice.Changed -= RefreshRuleSetLabel;
+    }
+
+    private Button FindChildButton(params string[] names)
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+            foreach (string name in names)
+                if (button.gameObject.name == name)
+                    return button;
+
+        return null;
+    }
+
+    // "Modo: Clássico", so the lobby says what the next match will be played by without opening
+    // anything.
+    private void RefreshRuleSetLabel()
+    {
+        TMP_Text label = ruleSetButton != null ? ruleSetButton.GetComponentInChildren<TMP_Text>(true) : null;
+
+        if (label != null)
+            label.text = "Modo: " + GameRuleSetChoice.ChosenName;
+    }
+
+    public void OpenRuleSets()
+    {
+        if (ruleSetPanel == null)
+        {
+            TMP_Text anyLabel = GetComponentInChildren<TMP_Text>(true);
+            Transform page = lobbyPage != null ? lobbyPage.transform : transform;
+            ruleSetPanel = RuleSetPanel.CreateUnder(page, anyLabel != null ? anyLabel.font : null);
+        }
+
+        ruleSetPanel.Open();
+    }
+
+    // Solo: no queue, no server, no waiting screen. The match runs on this phone with the other
+    // seat played by the computer, which is what makes the game worth opening when nobody else is
+    // online. It counts for nothing -- see TriviaDuelManager.StartSoloMatch.
+    public void StartSoloGame()
+    {
+        if (triviaManager == null)
+        {
+            Debug.LogWarning("LobbyPageSwitcher: no TriviaDuelManager, so Solo has nothing to start.");
+            return;
+        }
+
+        if (ruleSetPanel != null)
+            ruleSetPanel.Close();
+
+        HideAllPages();
+        waitingScreen?.HideWaiting();
+        triviaManager.StartSoloMatch();
+    }
+
     public void StartGame()
     {
         HideAllPages();

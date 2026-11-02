@@ -215,15 +215,16 @@ public class PlayerSideIdentity : NetworkBehaviour
 
     public void RequestStartTrivia()
     {
-        RequestStartTriviaServerRpc();
+        RequestStartTriviaServerRpc((int)GameRuleSetChoice.Chosen);
     }
 
     // Any client may send this, not just the object's owner: a player readies up through their own
     // identity object, and the server needs the sender to know who it was.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    private void RequestStartTriviaServerRpc(RpcParams rpcParams = default)
+    private void RequestStartTriviaServerRpc(int ruleSet, RpcParams rpcParams = default)
     {
-        TriviaNetworkSync.Instance?.MarkClientReady(rpcParams.Receive.SenderClientId);
+        TriviaNetworkSync.Instance?.MarkClientReady(rpcParams.Receive.SenderClientId,
+            GameRuleSets.FromInt(ruleSet));
     }
 
     public void RequestLeaveQueue()
@@ -252,14 +253,15 @@ public class PlayerSideIdentity : NetworkBehaviour
 
     public void RequestStartTeamTrivia()
     {
-        RequestStartTeamTriviaServerRpc();
+        RequestStartTeamTriviaServerRpc((int)GameRuleSetChoice.Chosen);
     }
 
     // Any client may send this, not just the object's owner: a player readies up through their own
     // identity object, and the server needs the sender to know who it was.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    private void RequestStartTeamTriviaServerRpc(RpcParams rpcParams = default)
+    private void RequestStartTeamTriviaServerRpc(int ruleSet, RpcParams rpcParams = default)
     {
-        TriviaNetworkSync.Instance?.MarkClientReadyForMode(rpcParams.Receive.SenderClientId, MatchMode.TeamFour);
+        TriviaNetworkSync.Instance?.MarkClientReadyForMode(rpcParams.Receive.SenderClientId,
+            MatchMode.TeamFour, GameRuleSets.FromInt(ruleSet));
     }
 }
