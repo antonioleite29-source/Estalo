@@ -1017,19 +1017,50 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             rightPlayerPfpImage.sprite = sprite;
     }
 
-    // How long the computer takes to answer, and how often it is right, both from the difficulty
-    // the player is already on: at level 1 it is slow and misses plenty, at level 7 it is quick and
-    // misses little. Beating it should mean something at every level without being hopeless.
+    // How long the computer takes to answer.
+    //
+    // Three things decide it. Reading: every character of the question and of the four answers
+    // costs time, so a wordy problem takes longer than "7 x 8" for the computer as it does for the
+    // player. Solving: the level the player is on, where a level 1 opponent dithers and a level 7
+    // one barely pauses. And luck: the whole thing is scaled by a random factor, so the same
+    // question is not answered at the same instant twice and the player cannot learn its timing.
     private float BotThinkingTime()
     {
-        float fast = Mathf.Lerp(2.2f, 0.9f, (currentDifficultyLevel - 1) / 6f);
-        float think = Random.Range(fast * 0.7f, fast * 1.5f);
+        // A fastish adult reader is around 20 characters a second; this is deliberately slower at
+        // low levels and quicker at high ones.
+        float charactersPerSecond = Mathf.Lerp(14f, 34f, (currentDifficultyLevel - 1) / 6f);
+        float reading = CharactersInTheQuestion() / charactersPerSecond;
 
-        // In its own solo turn it has a time limit, so it has to decide inside that.
+        // Then the sum itself, which is where the level tells most.
+        float solving = Mathf.Lerp(1.6f, 0.4f, (currentDifficultyLevel - 1) / 6f);
+
+        float think = (reading + solving) * Random.Range(0.75f, 1.45f);
+
+        // In its own solo turn it has a time limit, so it has to decide inside that -- and
+        // sometimes it does not, which is a miss, exactly as it would be for a player.
         if (roundState == RoundState.SoloRight)
-            think = Mathf.Min(think, soloTimeSeconds * 0.8f);
+            think = Mathf.Min(think, soloTimeSeconds * Random.Range(0.55f, 1.15f));
 
-        return think;
+        // Never instant, and never so long that the round dies waiting for it.
+        return Mathf.Clamp(think, 0.45f, 7f);
+    }
+
+    // The question and its four answers: all of it has to be read before any of it can be answered.
+    private int CharactersInTheQuestion()
+    {
+        if (currentQuestion == null)
+            return 0;
+
+        int characters = currentQuestion.question != null ? currentQuestion.question.Length : 0;
+
+        if (currentQuestion.answers == null)
+            return characters;
+
+        foreach (string answer in currentQuestion.answers)
+            if (answer != null)
+                characters += answer.Length;
+
+        return characters;
     }
 
     private int BotAnswerIndex()
