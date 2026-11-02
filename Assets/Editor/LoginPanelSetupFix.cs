@@ -12,7 +12,7 @@ using UnityEngine.UI;
 [InitializeOnLoad]
 public static class LoginPanelSetupFix
 {
-    private const string DoneKey = "EstaloLoginPanelHintAndDelete";
+    private const string DoneKey = "EstaloLoginPanelHintDeleteAndLogOut";
     private const string UndoName = "Bring the account panel up to date";
 
     static LoginPanelSetupFix()
@@ -46,6 +46,9 @@ public static class LoginPanelSetupFix
         if (panel.deleteAccountButton == null)
             panel.deleteAccountButton = CopyButton(panel, "DeletarContaButton", SettingsPage.DeleteLabels[0]);
 
+        if (panel.logOutButton == null)
+            panel.logOutButton = CopyButton(panel, "SairDaContaButton", "Sair da conta");
+
         if (panel.hintField == null)
             panel.hintField = CopyHintField(panel);
 
@@ -58,7 +61,7 @@ public static class LoginPanelSetupFix
         EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
 
         Debug.Log("LoginPanelSetupFix: the account panel has Mostrar senha, a dica da senha with Ver dica, " +
-                  "and Deletar conta, laid out in one column. Save the scene.", panel);
+                  "Sair da conta and Deletar conta, laid out in one column. Save the scene.", panel);
         return true;
     }
 

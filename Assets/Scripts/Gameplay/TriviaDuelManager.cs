@@ -988,8 +988,66 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         BeginMatchAuthoritative();
         ShowTheBotOpponent();
+        ShowSoloLeaveButton(true);
 
         botRoutine = StartCoroutine(PlayAsTheBot());
+    }
+
+    // A way out. A networked match cannot be walked out of without leaving somebody staring at an
+    // empty seat, but a solo match has nobody to abandon, so it gets a Sair button for as long as
+    // it is running. Built here rather than placed in the scene: it exists only during Solo.
+    private Button soloLeaveButton;
+
+    private void EnsureSoloLeaveButton()
+    {
+        if (soloLeaveButton != null || triviaGameplayRoot == null)
+            return;
+
+        GameObject go = TMP_DefaultControls.CreateButton(new TMP_DefaultControls.Resources());
+        go.name = "SairSoloButton";
+
+        RectTransform rect = (RectTransform)go.transform;
+        rect.SetParent(triviaGameplayRoot.transform, false);
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = new Vector2(240f, 110f);
+        rect.anchoredPosition = new Vector2(-430f, 1120f);
+
+        TMP_Text label = go.GetComponentInChildren<TMP_Text>();
+        label.text = "Sair";
+        label.fontSize = 48f;
+        label.color = Color.white;
+
+        if (questionText != null)
+            label.font = questionText.font;
+
+        soloLeaveButton = go.GetComponent<Button>();
+        JogarButtonStyle.ApplyTo(soloLeaveButton);
+        rect.sizeDelta = new Vector2(240f, 110f);
+        soloLeaveButton.onClick.AddListener(LeaveSoloMatch);
+    }
+
+    private void ShowSoloLeaveButton(bool show)
+    {
+        if (show)
+            EnsureSoloLeaveButton();
+
+        if (soloLeaveButton != null)
+            soloLeaveButton.gameObject.SetActive(show);
+    }
+
+    // Ends the solo match where it stands and goes back to the lobby. Nothing is recorded, which is
+    // true of a solo match that runs to the end as well.
+    public void LeaveSoloMatch()
+    {
+        if (!soloVsBot)
+            return;
+
+        EndMatch("Você saiu da partida.", false, 0);
+
+        // EndMatch only heads for the lobby when the game is set to; this button has to get there
+        // either way, or leaving would leave the player on a dead board.
+        if (!returnToLobbyAfterWin)
+            returnToLobbyCoroutine = StartCoroutine(ReturnToLobbyAfterDelay());
     }
 
     private void ShowTheBotOpponent()
@@ -1131,6 +1189,7 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
 
         soloVsBot = false;
         localPassAndPlayMode = passAndPlayBeforeSolo;
+        ShowSoloLeaveButton(false);
     }
 
     private void SubmitAnswer(int playerSide, int answerIndex)

@@ -42,6 +42,9 @@ public class Matchmaker
 
     public int QueuedCount => queue.Count;
 
+    // For telling each waiting player about their own queue rather than about everybody's.
+    public IReadOnlyList<QueuedPlayer> Queued => queue;
+
     public int QueuedCountFor(MatchMode mode)
     {
         int count = 0;

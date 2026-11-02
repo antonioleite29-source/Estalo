@@ -27,12 +27,18 @@ public class NetworkBootstrap : MonoBehaviour
     public bool autoConnectToServer = true;
 
     [Tooltip("Seconds to wait before trying the server again after a failed or lost connection.")]
-    public float reconnectDelaySeconds = 5f;
+    public float reconnectDelaySeconds = 2f;
 
     [Tooltip("Give up on a connection that has gone quiet for this long and reconnect. The server " +
-             "pulses every 3 seconds, so anything past a few of those means the line is dead even " +
-             "if netcode has not noticed yet.")]
-    public float staleConnectionSeconds = 16f;
+             "pulses every 3 seconds, so this is many pulses: a phone on a weak signal, or one the " +
+             "OS has been starving in the background, is left alone rather than cut off.")]
+    public float staleConnectionSeconds = 60f;
+
+    // The scene's own saved value wins over the field above, and it was saved at 16 seconds -- a
+    // quiet stretch that a phone on a lift, on a train, or merely left alone reaches easily, and
+    // the drop looked to the player like the game kicking them off. Nothing is gained by cutting a
+    // line early: the connection costs nothing while it sits there.
+    private const float LeastPatience = 60f;
 
     [Tooltip("Editor only: automatically host (main Editor) or join 127.0.0.1 (virtual players) on Play, " +
              "so Multiplayer Play Mode testing needs no clicking. Never runs in a build.")]
@@ -131,6 +137,9 @@ public class NetworkBootstrap : MonoBehaviour
         // of having one.
         if (autoConnectToServer && !string.IsNullOrWhiteSpace(serverAddress))
         {
+            if (staleConnectionSeconds > 0f && staleConnectionSeconds < LeastPatience)
+                staleConnectionSeconds = LeastPatience;
+
             BeginAutoConnect();
             return;
         }
@@ -295,6 +304,12 @@ public class NetworkBootstrap : MonoBehaviour
 
         // A host is its own server and has nothing to wait for.
         if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer)
+            return false;
+
+        // Not while the app is in the background. The OS stops delivering packets to a suspended
+        // process, so the silence says nothing about the line -- and judging it there is what made
+        // a glance at another app end in a reconnect.
+        if (!Application.isFocused)
             return false;
 
         return Time.unscaledTime - lastServerPulse > staleConnectionSeconds;
@@ -589,6 +604,26 @@ public class NetworkBootstrap : MonoBehaviour
         {
             ReportStatus("Não foi possível conectar a " + address + ".");
         }
+    }
+
+    // Drops the line and lets the reconnect loop pick it straight back up -- used after the phone
+    // changes which account it is holding, since the account key travels in the connection request
+    // and the server only reads it when a connection is made.
+    public void ReconnectNow()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        if (NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
+
+        IsConnecting = false;
+
+        if (wantsServerConnection)
+            return;
+
+        // Not auto-connecting (a LAN session, or the Editor): put it back by hand.
+        BeginAutoConnect();
     }
 
     // Leaves the current session. Safe to call when not connected.

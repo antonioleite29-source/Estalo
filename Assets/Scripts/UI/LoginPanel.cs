@@ -33,6 +33,9 @@ public class LoginPanel : MonoBehaviour
     [Tooltip("Deleta a conta de vez, depois de confirmar tres vezes. Made by the same menu.")]
     public Button deleteAccountButton;
 
+    [Tooltip("Sai da conta e devolve a este celular o progresso que ele tinha antes do login.")]
+    public Button logOutButton;
+
     [Tooltip("Dica da senha, guardada na conta. Opcional.")]
     public TMP_InputField hintField;
 
@@ -86,6 +89,7 @@ public class LoginPanel : MonoBehaviour
         FitSubtitle();
         SetBusy(false, string.Empty);
         deleteConfirm?.Reset();
+        RefreshLogOutButton();
     }
 
     // The subtitle wraps onto as many lines as it needs, at its own size, instead of shrinking or
@@ -179,6 +183,7 @@ public class LoginPanel : MonoBehaviour
             deleteConfirm = new StagedConfirm(deleteAccountButton, SettingsPage.DeleteLabels, DeleteAccount);
 
         if (hintButton != null) hintButton.onClick.AddListener(AskForHint);
+        if (logOutButton != null) logOutButton.onClick.AddListener(LogOut);
 
         if (hintField != null)
         {
@@ -254,6 +259,8 @@ public class LoginPanel : MonoBehaviour
         if (accepted)
             SendHintIfWritten();
 
+        RefreshLogOutButton();
+
         SetBusy(false, accepted
             ? "Pronto! Você entrou como " + pendingUsername + "."
             : "O servidor não aceitou o login. Tente de novo.");
@@ -320,6 +327,34 @@ public class LoginPanel : MonoBehaviour
         label.text = passwordField.contentType == TMP_InputField.ContentType.Password
             ? "Mostrar senha"
             : "Ocultar senha";
+    }
+
+    // Signing out leaves the account exactly as it is on the server and gives this phone back the
+    // record it had before anyone signed in on it -- its own IQ, matches, name and face.
+    private void LogOut()
+    {
+        if (!PlayerStats.IsLoggedIn)
+        {
+            SetStatus("Você não está em nenhuma conta neste celular.");
+            return;
+        }
+
+        PlayerStats.LogOut();
+        SetStatus("Você saiu da conta. Este celular voltou ao progresso que tinha.");
+        RefreshLogOutButton();
+    }
+
+    private void RefreshLogOutButton()
+    {
+        if (logOutButton == null)
+            return;
+
+        logOutButton.gameObject.SetActive(PlayerStats.IsLoggedIn);
+
+        TMP_Text label = logOutButton.GetComponentInChildren<TMP_Text>(true);
+
+        if (label != null)
+            label.text = "Sair da conta";
     }
 
     // --- the password hint ----------------------------------------------
@@ -396,7 +431,7 @@ public class LoginPanel : MonoBehaviour
         SetStatus(message);
 
         foreach (Button button in new[] { signInButton, createAccountButton, closeButton, showPasswordButton,
-                                         deleteAccountButton, hintButton })
+                                         deleteAccountButton, hintButton, logOutButton })
             if (button != null)
                 button.interactable = !busy;
     }
@@ -432,6 +467,7 @@ public class LoginPanel : MonoBehaviour
 
         panel.showPasswordButton = MakeButton(rect, "MostrarSenhaButton", "Mostrar senha", font);
         panel.hintButton = MakeButton(rect, "VerDicaButton", "Ver dica da senha", font);
+        panel.logOutButton = MakeButton(rect, "SairDaContaButton", "Sair da conta", font);
         panel.signInButton = MakeButton(rect, "EntrarButton", "Entrar", font);
         panel.createAccountButton = MakeButton(rect, "CriarContaButton", "Criar conta", font);
         panel.closeButton = MakeButton(rect, "FecharButton", "Fechar", font);
@@ -464,7 +500,8 @@ public class LoginPanel : MonoBehaviour
         PlaceRow(showPasswordButton, hintButton, ref top, gap, 100f);
         PlaceFull(signInButton, ref top, gap);
         PlaceFull(createAccountButton, ref top, gap);
-        PlaceRow(closeButton, deleteAccountButton, ref top, gap, 110f);
+        PlaceRow(logOutButton, deleteAccountButton, ref top, gap, 110f);
+        PlaceFull(closeButton, ref top, gap);
         PlaceFull(statusText, ref top, gap);
     }
 

@@ -589,6 +589,23 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         NetQueuedOneVsOne.Value = matchmaker.QueuedCountFor(MatchMode.OneVsOne);
         NetQueuedTeamFour.Value = matchmaker.QueuedCountFor(MatchMode.TeamFour);
         NetLiveMatches.Value = liveMatches.Count;
+
+        if (!CanSendRpc)
+            return;
+
+        // And the numbers that actually answer "how long am I waiting": this player's own queue,
+        // which is their mode and their rule set, not the sum of everybody's.
+        foreach (Matchmaker.QueuedPlayer player in matchmaker.Queued)
+        {
+            QueueStatusTargetedClientRpc(matchmaker.QueuedCountFor(player.mode, player.ruleSet),
+                Matchmaker.RequiredPlayersFor(player.mode), (int)player.ruleSet, OnlyTo(player.clientId));
+        }
+    }
+
+    [ClientRpc]
+    private void QueueStatusTargetedClientRpc(int queued, int required, int ruleSet, ClientRpcParams _ = default)
+    {
+        QueueStatus.Note(queued, required, GameRuleSets.FromInt(ruleSet));
     }
 
     public MatchSession FindMatchFor(ulong clientId)

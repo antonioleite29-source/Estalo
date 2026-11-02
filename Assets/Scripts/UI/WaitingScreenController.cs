@@ -237,11 +237,26 @@ public class WaitingScreenController : MonoBehaviour
                 ? lobbyPageSwitcher.SelectedMode
                 : MatchMode.OneVsOne;
 
-            int queued = mode == MatchMode.TeamFour
-                ? sync.NetQueuedTeamFour.Value
-                : sync.NetQueuedOneVsOne.Value;
+            // What the server says about THIS player's queue -- their mode and their rule set -- in
+            // preference to the broadcast counts, which add every rule set together and so can show
+            // four people waiting while no match can form between any of them.
+            int queued;
+            int required;
 
-            string line = playersPrefix + queued + playersSeparator + Matchmaker.RequiredPlayersFor(mode) +
+            if (QueueStatus.IsFresh)
+            {
+                queued = QueueStatus.Queued;
+                required = QueueStatus.Required;
+            }
+            else
+            {
+                queued = mode == MatchMode.TeamFour
+                    ? sync.NetQueuedTeamFour.Value
+                    : sync.NetQueuedOneVsOne.Value;
+                required = Matchmaker.RequiredPlayersFor(mode);
+            }
+
+            string line = playersPrefix + queued + playersSeparator + required +
                           "\n" + modePrefix + GameRuleSetChoice.ChosenName;
 
             if (line != lastPlayersLine)
@@ -271,6 +286,7 @@ public class WaitingScreenController : MonoBehaviour
 
         playerObject?.GetComponent<PlayerSideIdentity>()?.RequestLeaveQueue();
 
+        QueueStatus.Forget();
         HideWaiting();
 
         if (lobbyPageSwitcher != null)

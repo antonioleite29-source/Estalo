@@ -90,6 +90,9 @@ public static class PlayerStats
         if (!CanReachServer(out TriviaNetworkSync sync))
             return false;
 
+        // Before the account's record lands on this phone, put aside what the phone had of its own.
+        RememberWhatThisPhoneWas();
+
         sync.LinkLoginServerRpc(accessToken, username);
         return true;
     }
@@ -97,6 +100,105 @@ public static class PlayerStats
     public static void ApplyLoginResult(bool accepted)
     {
         LoginFinished?.Invoke(accepted);
+    }
+
+    // --- logging out ------------------------------------------------------
+
+    // What this phone was before somebody signed in on it. Signing in moves the phone onto the
+    // account's record -- its IQ, its matches, its name and face -- and signing out has to give the
+    // phone back what it had, not leave it wearing somebody else's history.
+    //
+    // Kept in PlayerPrefs rather than in memory: the player may sign in, close the game, open it a
+    // week later and sign out, and the phone they get back should still be their own.
+    private static string BeforeLoginKey(string key) => key + "BeforeLogin";
+
+    private static readonly string[] PutAsideOnLogin =
+    {
+        "EstaloAccountKey", "EstaloMatchesPlayed", "EstaloMatchesWon", "EstaloMatchesLost",
+        "EstaloBestIQ", "EstaloServerFirstSeen", "EstaloRank", "EstaloRankSize", "EstaloUsername",
+        "PlayerProfileName", "PlayerProfileAvatarIndex", "PlayerIQ_Local",
+    };
+
+    public static bool IsLoggedIn => !string.IsNullOrEmpty(Username);
+
+    private static void RememberWhatThisPhoneWas()
+    {
+        // Only the first sign-in puts anything aside. Signing into a second account without signing
+        // out of the first must not overwrite the phone's own record with the first account's.
+        if (PlayerPrefs.GetInt(BeforeLoginKey("EstaloSaved") + Suffix, 0) == 1)
+            return;
+
+        foreach (string key in PutAsideOnLogin)
+            CopyPref(key + Suffix, BeforeLoginKey(key) + Suffix);
+
+        PlayerPrefs.SetInt(BeforeLoginKey("EstaloSaved") + Suffix, 1);
+        PlayerPrefs.Save();
+    }
+
+    // Signs out: the account stays on the server untouched, and this phone goes back to the record
+    // it had before it ever signed in. The connection is made again straight away, because the
+    // account key travels in the connection request and the server reads it only then.
+    public static void LogOut()
+    {
+        if (PlayerPrefs.GetInt(BeforeLoginKey("EstaloSaved") + Suffix, 0) != 1)
+        {
+            // Signed in on a phone that had nothing of its own to go back to -- a fresh install, or
+            // an account made here. It starts over as a new phone: the server opens an account for
+            // it on the next connection.
+            foreach (string key in PutAsideOnLogin)
+                PlayerPrefs.DeleteKey(key + Suffix);
+        }
+        else
+        {
+            foreach (string key in PutAsideOnLogin)
+            {
+                CopyPref(BeforeLoginKey(key) + Suffix, key + Suffix);
+                PlayerPrefs.DeleteKey(BeforeLoginKey(key) + Suffix);
+            }
+
+            PlayerPrefs.DeleteKey(BeforeLoginKey("EstaloSaved") + Suffix);
+        }
+
+        PlayerPrefs.Save();
+
+        foreach (IQBarController bar in UnityEngine.Object.FindObjectsByType<IQBarController>())
+            bar.RefreshFromManager();
+
+        Changed?.Invoke();
+
+        if (NetworkBootstrap.Instance != null)
+            NetworkBootstrap.Instance.ReconnectNow();
+
+        Debug.Log("PlayerStats: signed out, and this phone has its own record back.");
+    }
+
+    // PlayerPrefs has no "copy", and the type is only known by which getter returns something, so
+    // each value is carried over under the type it was stored as.
+    private static void CopyPref(string from, string to)
+    {
+        if (!PlayerPrefs.HasKey(from))
+        {
+            PlayerPrefs.DeleteKey(to);
+            return;
+        }
+
+        string asString = PlayerPrefs.GetString(from, null);
+
+        if (!string.IsNullOrEmpty(asString))
+        {
+            PlayerPrefs.SetString(to, asString);
+            return;
+        }
+
+        float asFloat = PlayerPrefs.GetFloat(from, float.NaN);
+
+        if (!float.IsNaN(asFloat))
+        {
+            PlayerPrefs.SetFloat(to, asFloat);
+            return;
+        }
+
+        PlayerPrefs.SetInt(to, PlayerPrefs.GetInt(from, 0));
     }
 
     // --- the password hint ----------------------------------------------
