@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class NetworkBootstrap : MonoBehaviour
 {
@@ -278,6 +279,35 @@ public class NetworkBootstrap : MonoBehaviour
         }
 
         autoConnectRoutine = null;
+    }
+
+    // A tap anywhere, while the line is down, tries the server again at once.
+    //
+    // The retry loop is on its own clock, so a player who opens the app and sees "sem conexão" can
+    // otherwise only stare at it until that clock comes round. Pressing the screen is what everyone
+    // does anyway, so it may as well be the thing that retries. Buttons are not involved: this
+    // reads the pointer directly, so it fires wherever the tap lands.
+    private const float LeastSecondsBetweenTapRetries = 1.5f;
+
+    private float nextTapRetry;
+
+    private void Update()
+    {
+        if (!wantsServerConnection || IsConnecting || Time.unscaledTime < nextTapRetry)
+            return;
+
+        if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsConnectedClient)
+            return;
+
+        // Pointer, not Mouse: a phone has no mouse, so Mouse.current is null there.
+        Pointer pointer = Pointer.current;
+
+        if (pointer == null || !pointer.press.wasPressedThisFrame)
+            return;
+
+        nextTapRetry = Time.unscaledTime + LeastSecondsBetweenTapRetries;
+        Debug.Log("Network: screen tapped while offline, trying the server again now.");
+        ReconnectNow();
     }
 
     // When the server was last heard from, or zero for "this server does not pulse".
