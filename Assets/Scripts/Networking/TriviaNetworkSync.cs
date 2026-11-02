@@ -420,6 +420,29 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         SendAccount(sender);
     }
 
+    // Deleting the sender's own account, and nobody else's. Whose account it is comes from who sent
+    // the message; there is nothing in it to point at anyone.
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    public void DeleteAccountServerRpc(RpcParams rpcParams = default)
+    {
+        ulong sender = rpcParams.Receive.SenderClientId;
+
+        if (!PlayerAccounts.Delete(sender) || !CanSendRpc)
+            return;
+
+        AccountDeletedClientRpc(OnlyTo(sender));
+
+        // The key that phone holds now points at nothing, so the line is dropped: reconnecting with
+        // what it has left opens a fresh account rather than the deleted one.
+        StartCoroutine(DisconnectShortly(sender));
+    }
+
+    [ClientRpc]
+    private void AccountDeletedClientRpc(ClientRpcParams _ = default)
+    {
+        PlayerStats.ForgetEverything();
+    }
+
     private PlayerSideIdentity FindIdentity(ulong clientId)
     {
         if (!NetworkManager.ConnectedClients.TryGetValue(clientId, out NetworkClient client))

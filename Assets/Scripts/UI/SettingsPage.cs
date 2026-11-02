@@ -16,12 +16,22 @@ public class SettingsPage : MonoBehaviour
     public Button tutorialButton;
     public Button teamTutorialButton;
     public Button creditsButton;
+    public Button deleteAccountButton;
 
     [Tooltip("Switched off until Créditos is tapped.")]
     public GameObject creditsPanel;
     public Button creditsCloseButton;
 
     private const float ButtonGap = 45f;
+
+    // Deleting an account cannot be undone, so the one button asks twice before it does it. Each tap
+    // moves the label on; leaving it alone for a few seconds puts it back to the start.
+    private static readonly string[] DeleteLabels = { "Deletar conta", "Certeza?", "Absoluta?" };
+    private const float DeleteForgetSeconds = 6f;
+    private const float NoticeSeconds = 3f;
+
+    private int deleteStage;
+    private float deleteResetAt;
 
     private bool wired;
 
@@ -41,7 +51,7 @@ public class SettingsPage : MonoBehaviour
         if (page == null)
             page = switcher.morePage.AddComponent<SettingsPage>();
 
-        if (page.soundButton == null)
+        if (page.soundButton == null || page.deleteAccountButton == null)
             page.Build(null);
     }
 
@@ -51,14 +61,29 @@ public class SettingsPage : MonoBehaviour
         Refresh();
         SetCreditsOpen(false);
 
+        deleteStage = 0;
+        deleteResetAt = 0f;
+
         PlayerStats.Changed += Refresh;
         PlayerStats.LoginFinished += OnLoginFinished;
+        PlayerStats.Deleted += OnAccountDeleted;
     }
 
     private void OnDisable()
     {
         PlayerStats.Changed -= Refresh;
         PlayerStats.LoginFinished -= OnLoginFinished;
+        PlayerStats.Deleted -= OnAccountDeleted;
+    }
+
+    private void Update()
+    {
+        if (deleteResetAt > 0f && Time.unscaledTime >= deleteResetAt)
+        {
+            deleteStage = 0;
+            deleteResetAt = 0f;
+            RefreshDeleteLabel();
+        }
     }
 
     private void Wire()
@@ -74,13 +99,15 @@ public class SettingsPage : MonoBehaviour
         if (tutorialButton != null) tutorialButton.onClick.AddListener(() => FirstRunTutorial.Replay());
         if (teamTutorialButton != null) teamTutorialButton.onClick.AddListener(() => TeamFirstRunTutorial.Replay());
         if (creditsButton != null) creditsButton.onClick.AddListener(() => SetCreditsOpen(true));
+        if (deleteAccountButton != null) deleteAccountButton.onClick.AddListener(OnDeleteTapped);
         if (creditsCloseButton != null) creditsCloseButton.onClick.AddListener(() => SetCreditsOpen(false));
     }
 
     // White labels on every settings button, whatever colour the Jogar style gave them.
     public void MakeLabelsWhite()
     {
-        foreach (Button button in new[] { soundButton, accountButton, tutorialButton, teamTutorialButton, creditsButton, creditsCloseButton })
+        foreach (Button button in new[] { soundButton, accountButton, tutorialButton, teamTutorialButton, creditsButton,
+                                        deleteAccountButton, creditsCloseButton })
         {
             TMP_Text label = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
 
@@ -108,6 +135,41 @@ public class SettingsPage : MonoBehaviour
         SetLabel(accountButton, string.IsNullOrEmpty(PlayerStats.Username)
             ? "Entrar ou criar conta"
             : "Conta: " + PlayerStats.Username);
+
+        if (deleteResetAt <= 0f)
+            RefreshDeleteLabel();
+    }
+
+    // Three taps: "Deletar conta", "Certeza?", "Absoluta?", and the third one does it.
+    private void OnDeleteTapped()
+    {
+        deleteStage++;
+        deleteResetAt = Time.unscaledTime + DeleteForgetSeconds;
+
+        if (deleteStage < DeleteLabels.Length)
+        {
+            RefreshDeleteLabel();
+            return;
+        }
+
+        deleteStage = 0;
+        deleteResetAt = Time.unscaledTime + NoticeSeconds;
+
+        // Offline the server never hears the ask, and deleting only this phone's copy would leave the
+        // record standing. The player is told rather than left thinking it is gone.
+        SetLabel(deleteAccountButton, PlayerStats.RequestDelete() ? "Deletando..." : "Sem conexão");
+    }
+
+    private void OnAccountDeleted()
+    {
+        deleteStage = 0;
+        deleteResetAt = 0f;
+        Refresh();
+    }
+
+    private void RefreshDeleteLabel()
+    {
+        SetLabel(deleteAccountButton, DeleteLabels[Mathf.Clamp(deleteStage, 0, DeleteLabels.Length - 1)]);
     }
 
     private static void SetLabel(Button button, string text)
@@ -150,11 +212,12 @@ public class SettingsPage : MonoBehaviour
         RectTransform page = (RectTransform)transform;
         float top = 640f;
 
-        if (soundButton == null) soundButton = MakeButton(page, "SoundButton", "Som: ligado", ref top, font, created);
-        if (accountButton == null) accountButton = MakeButton(page, "AccountButton", "Entrar ou criar conta", ref top, font, created);
-        if (tutorialButton == null) tutorialButton = MakeButton(page, "TutorialButton", "Rever tutorial", ref top, font, created);
-        if (teamTutorialButton == null) teamTutorialButton = MakeButton(page, "TeamTutorialButton", "Tutorial 2x2", ref top, font, created);
-        if (creditsButton == null) creditsButton = MakeButton(page, "CreditsButton", "Créditos", ref top, font, created);
+        soundButton = EnsureButton(page, soundButton, "SoundButton", "Som: ligado", ref top, font, created);
+        accountButton = EnsureButton(page, accountButton, "AccountButton", "Entrar ou criar conta", ref top, font, created);
+        tutorialButton = EnsureButton(page, tutorialButton, "TutorialButton", "Rever tutorial", ref top, font, created);
+        teamTutorialButton = EnsureButton(page, teamTutorialButton, "TeamTutorialButton", "Tutorial 2x2", ref top, font, created);
+        creditsButton = EnsureButton(page, creditsButton, "CreditsButton", "Créditos", ref top, font, created);
+        deleteAccountButton = EnsureButton(page, deleteAccountButton, "DeleteAccountButton", DeleteLabels[0], ref top, font, created);
 
         if (creditsPanel == null)
             creditsPanel = MakeCredits(page, font, created, out creditsCloseButton);
@@ -171,6 +234,20 @@ public class SettingsPage : MonoBehaviour
 
         if (content != null && content.gameObject.activeSelf)
             content.gameObject.SetActive(false);
+    }
+
+    // A button that is already in the scene is left exactly where it is; the column carries on below
+    // it, so a button added later -- Deletar conta -- lands under the others rather than on top of one.
+    private static Button EnsureButton(RectTransform parent, Button existing, string name, string text,
+        ref float top, TMP_FontAsset font, List<GameObject> created)
+    {
+        if (existing == null)
+            return MakeButton(parent, name, text, ref top, font, created);
+
+        RectTransform rect = (RectTransform)existing.transform;
+        float height = rect.sizeDelta.y > 1f ? rect.sizeDelta.y : JogarButtonStyle.Size.y;
+        top = rect.anchoredPosition.y - height * 0.5f - ButtonGap;
+        return existing;
     }
 
     private static Button MakeButton(RectTransform parent, string name, string text, ref float top,

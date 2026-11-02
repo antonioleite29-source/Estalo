@@ -99,6 +99,47 @@ public static class PlayerStats
         LoginFinished?.Invoke(accepted);
     }
 
+    // --- deleting the account -------------------------------------------
+
+    // Raised once the server has thrown the account away and this phone has forgotten it.
+    public static event Action Deleted;
+
+    // Asks the server to delete this account for good. False while offline: there is nothing to
+    // delete on the phone alone, and pretending otherwise would leave the record on the server.
+    public static bool RequestDelete()
+    {
+        if (!CanReachServer(out TriviaNetworkSync sync))
+            return false;
+
+        sync.DeleteAccountServerRpc();
+        return true;
+    }
+
+    // Called by the server once the record is gone. Everything this phone saved goes with it: the
+    // account key, the match record, the IQ, the name and face, and the flags that remember the
+    // tutorials. What is left is a phone in the state it was in the day Estalo was installed.
+    //
+    // DeleteAll covers the lot, including keys added later that nobody remembered to list here. In
+    // the Editor it also clears the virtual players' copies, which share this machine's PlayerPrefs.
+    public static void ForgetEverything()
+    {
+        PlayerPrefs.DeleteAll();
+        PlayerPrefs.Save();
+
+        // The name and face are read back from their defaults now, so the match in progress and the
+        // lobby stop showing whoever this used to be.
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.LocalClient != null)
+            NetworkManager.Singleton.LocalClient.PlayerObject?.GetComponent<PlayerSideIdentity>()?.PushLocalProfile();
+
+        foreach (IQBarController bar in UnityEngine.Object.FindObjectsByType<IQBarController>())
+            bar.RefreshFromManager();
+
+        Debug.Log("PlayerStats: the account was deleted, and this phone has forgotten everything it kept.");
+
+        Deleted?.Invoke();
+        Changed?.Invoke();
+    }
+
     // --- talking to the server ------------------------------------------
 
     // Asks for a fresh copy, e.g. when the Profile page opens. Does nothing while offline.

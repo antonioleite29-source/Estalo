@@ -150,6 +150,44 @@ public static class PlayerAccounts
         return false;
     }
 
+    // Throws the account away, with every key that reached it. A player may delete their account --
+    // Google Play requires it of any app you can sign into -- and that has to mean the record is gone
+    // from the server, not hidden. The phone that asked is left holding a key that points at nothing,
+    // so its next connection opens a brand-new account.
+    public static bool Delete(ulong clientId)
+    {
+        Account account = For(clientId);
+
+        if (account == null)
+            return false;
+
+        Load();
+
+        // One account, one device, so this is normally just the caller. Anyone else on it loses it too.
+        List<ulong> holders = new List<ulong>();
+
+        foreach (KeyValuePair<ulong, Account> entry in online)
+            if (entry.Value == account)
+                holders.Add(entry.Key);
+
+        foreach (ulong holder in holders)
+            online.Remove(holder);
+
+        if (!string.IsNullOrEmpty(account.keyHash))
+            byKeyHash.Remove(account.keyHash);
+
+        if (account.otherKeyHashes != null)
+            foreach (string hash in account.otherKeyHashes)
+                if (!string.IsNullOrEmpty(hash))
+                    byKeyHash.Remove(hash);
+
+        table.accounts.Remove(account);
+        presentedKeys.Remove(clientId);
+        unsentKeys.Remove(clientId);
+        Save();
+        return true;
+    }
+
     // The new key for this client if it has not been sent yet, otherwise empty. Taken exactly once.
     public static string TakeUnsentKey(ulong clientId)
     {
