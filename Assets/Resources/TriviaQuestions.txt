@@ -517,14 +517,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	raciocinio	Um taco e uma bola custam R$1,10. O taco custa R$1,00 a mais. Quanto custa a bola?	R$0,10	R$0,05	R$0,15	R$0,20	1
 3	raciocinio	Qual mês tem número diferente de dias: Fevereiro, Abril, Agosto, Novembro?	Fevereiro	Abril	Agosto	Novembro	0
 3	raciocinio	Você ultrapassa a pessoa em 2º lugar numa corrida. Em qual posição você fica?	1º	2º	3º	4º	1
-3	raciocinio	Um caracol sobe 3m por dia e desce 2m por noite. O muro tem 10m. Em quantos dias ele chega ao topo?	8	7	10	9	0
 3	raciocinio	Numa sala com 23 pessoas, todos se cumprimentam uma vez. Quantos apertos de mão ocorrem?	253	230	231	256	0
 3	raciocinio	Qual é a soma de C + A + B se A=1, B=2, C=3?	6	5	7	8	0
 3	raciocinio	A caixa com rótulo Misto está errada. Qual caixa você abre primeiro para rotular tudo corretamente?	Caixa de Maçãs	Caixa de Laranjas	Caixa Mista	Qualquer caixa	2
-3	raciocinio	Em lógica, se Ana é mais alta que Bob e Bob é mais alto que Cal, Ana é mais alta que Cal?	Não	Sim	Informação insuficiente	Às vezes	1
 3	raciocinio	Tom tem o dobro de bolinhas de gude de Jerry. Juntos têm 30. Quantas Tom tem?	15	20	10	25	1
 3	raciocinio	Se E é a 5ª letra e você espelha o alfabeto (A=Z), o que EGG se torna?	VTT	UVU	WTU	VUV	0
-3	raciocinio	Dan está mais à esquerda. Ana está à esquerda de Bob. Bob está diretamente à esquerda de Cal. Quem é o segundo da esquerda?	Ana	Bob	Cal	Dan	0
 3	sequencias	Qual vem a seguir? 1, 8, 27, 64, ___ (cubos perfeitos)	125	100	128	216	0
 3	sequencias	Qual vem a seguir? 2, 5, 10, 17, 26, ___	37	33	35	39	0
 3	sequencias	Qual vem a seguir? 0, 3, 8, 15, 24, ___ (n² - 1)	35	33	37	30	0
@@ -590,18 +587,15 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 4	multiplicacao	Quanto é 9 + 5 × 6?	39	84	42	34	0
 4	multiplicacao	Quanto é 11 × 16?	176	165	187	160	0
 4	multiplicacao	Quanto é 13 × 4?	39	52	65	48	1
-4	multiplicacao	Quanto é 13 × 13?	156	169	182	619	1
 4	multiplicacao	Quanto é 3 × 15?	42	45	48	30	1
 4	multiplicacao	Quanto é 13 × 15?	180	182	208	195	3
 4	multiplicacao	Quanto é 7 × 15?	98	105	112	90	1
-4	multiplicacao	Quanto é 14 × 13?	182	168	196	169	0
 4	multiplicacao	Quanto é 5 × 16?	75	80	85	64	1
 4	multiplicacao	Quanto é 14 × 5?	65	56	84	70	3
 4	multiplicacao	Quanto é 14 × 12?	156	154	182	168	3
 4	multiplicacao	Quanto é 14 × 3?	42	28	56	39	0
 4	multiplicacao	Quanto é 14 × 7?	84	98	112	91	1
 4	multiplicacao	Quanto é 6 × 16?	90	96	102	80	1
-4	multiplicacao	Quanto é 14 × 14?	210	182	196	916	2
 4	multiplicacao	Quanto é 5 × 15?	80	70	75	60	2
 4	multiplicacao	Quanto é 8 × 16?	136	120	128	112	2
 4	multiplicacao	Quanto é 13 × 10?	143	117	130	120	2
@@ -611,13 +605,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 4	multiplicacao	Quanto é 2 × 16?	16	30	34	32	3
 4	multiplicacao	Quanto é 2 × 15?	30	28	32	15	0
 4	multiplicacao	Quanto é 4 × 15?	45	56	64	60	3
-4	multiplicacao	Quanto é 13 × 16?	208	195	221	192	0
 4	multiplicacao	Quanto é 14 × 4?	70	42	56	52	2
 4	multiplicacao	Quanto é 9 × 15?	126	135	144	120	1
 4	multiplicacao	Quanto é 13 × 7?	78	91	104	84	1
 4	multiplicacao	Quanto é 13 × 12?	169	143	156	144	2
 4	multiplicacao	Quanto é 10 × 15?	140	150	160	135	1
-4	multiplicacao	Quanto é 13 × 14?	168	169	195	182	3
 4	multiplicacao	Quanto é 10 × 16?	150	160	170	144	1
 4	multiplicacao	Quanto é 13 × 3?	26	39	52	36	1
 4	multiplicacao	Quanto é 14 × 2?	28	14	42	26	0
@@ -639,14 +631,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 4	multiplicacao	Quanto é 7 × 16?	112	105	119	96	0
 4	multiplicacao	Quanto é 14 × 15?	195	196	224	210	3
 4	multiplicacao	Quanto é 4 × 16?	64	60	68	48	0
-4	multiplicacao	Quanto é 14 × 16?	208	210	238	224	3
-4	probabilidade	Você joga uma moeda justa 3 vezes e sai cara toda vez. Qual é a probabilidade de cara na próxima?	1/16	1/4	1/2	1/8	2
 4	probabilidade	Um saco tem 3 bolinhas vermelhas e 2 azuis. Qual é a probabilidade de sortear uma vermelha?	2/5	1/2	3/4	3/5	3
 4	raciocinio	Um fazendeiro tem 17 ovelhas. Todas menos 9 morrem. Quantas sobram?	8	9	17	0	1
 4	raciocinio	Se A implica B, B implica C e A é verdadeiro, o que se pode concluir?	C é falso	B é falso	A é falso	C é verdadeiro	3
 4	raciocinio	Qual é o próximo primo? 2, 3, 5, 7, 11, 13, 17, ___	18	19	21	23	1
 4	raciocinio	64 jogadores competem em eliminatória simples. Quantas partidas são necessárias?	32	128	64	63	3
-4	raciocinio	O trem A parte a 60 km/h. O trem B parte 1 hora depois a 90 km/h. Em quantas horas B alcança A?	3	2	1,5	4	1
 4	raciocinio	Anteontem era quinta-feira. Que dia é amanhã?	Segunda-feira	Sábado	Domingo	Terça-feira	2
 4	raciocinio	Qual destes é um palíndromo? LEVEL, RADAR, CIVIC	Apenas RADAR	Apenas LEVEL	Apenas CIVIC	Todos eles	3
 4	raciocinio	5 pessoas pintam 5 casas em 5 dias. Quantas pessoas são necessárias para 100 casas em 100 dias?	10	100	50	5	3
@@ -685,53 +674,16 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 5	potencias	Quanto é 18 ao quadrado?	324	306	342	36	0
 5	potencias	Quanto é 19 ao quadrado?	380	342	361	38	2
 5	potencias	Quanto é 20 ao quadrado?	380	400	420	40	1
-5	potencias	Quanto é 21 ao quadrado?	462	420	441	42	2
-5	potencias	Quanto é 22 ao quadrado?	484	462	506	44	0
-5	potencias	Quanto é 23 ao quadrado?	529	506	552	46	0
-5	potencias	Quanto é 24 ao quadrado?	576	552	600	48	0
-5	potencias	Quanto é 25 ao quadrado?	650	600	625	50	2
-5	potencias	Quanto é 26 ao quadrado?	702	650	676	52	2
-5	potencias	Quanto é 27 ao quadrado?	702	729	756	54	1
-5	potencias	Quanto é 28 ao quadrado?	784	756	812	56	0
-5	potencias	Quanto é 29 ao quadrado?	841	812	870	58	0
-5	potencias	Quanto é 30 ao quadrado?	60	870	930	900	3
-5	potencias	Quanto é 31 ao quadrado?	62	930	992	961	3
-5	potencias	Quanto é 32 ao quadrado?	64	992	1056	1024	3
-5	potencias	Quanto é 33 ao quadrado?	1056	1089	1122	66	1
-5	potencias	Quanto é 34 ao quadrado?	1190	1122	1156	68	2
-5	potencias	Quanto é 35 ao quadrado?	1190	1225	1260	70	1
-5	potencias	Quanto é 36 ao quadrado?	1296	1260	1332	72	0
-5	potencias	Quanto é 37 ao quadrado?	1332	1369	1406	74	1
-5	potencias	Quanto é 38 ao quadrado?	1444	1406	1482	76	0
-5	potencias	Quanto é 39 ao quadrado?	1560	1482	1521	78	2
-5	potencias	Quanto é 40 ao quadrado?	1640	1560	1600	80	2
-5	potencias	Quanto é 41 ao quadrado?	1640	1681	1722	82	1
-5	potencias	Quanto é 42 ao quadrado?	84	1722	1806	1764	3
-5	potencias	Quanto é 43 ao quadrado?	1849	1806	1892	86	0
-5	potencias	Quanto é 44 ao quadrado?	1980	1892	1936	88	2
-5	potencias	Quanto é 45 ao quadrado?	2025	1980	2070	90	0
-5	potencias	Quanto é 46 ao quadrado?	92	2070	2162	2116	3
-5	potencias	Quanto é 47 ao quadrado?	94	2162	2256	2209	3
-5	potencias	Quanto é 48 ao quadrado?	2304	2256	2352	96	0
-5	potencias	Quanto é 49 ao quadrado?	2352	2401	2450	98	1
-5	potencias	Quanto é 50 ao quadrado?	2450	2500	2550	100	1
-5	potencias	Quanto é 51 ao quadrado?	102	2550	2652	2601	3
-5	potencias	Quanto é 52 ao quadrado?	2704	2652	2756	104	0
-5	potencias	Quanto é 53 ao quadrado?	2809	2756	2862	106	0
-5	potencias	Quanto é 54 ao quadrado?	2970	2862	2916	108	2
 5	potencias	2 elevado a 20 é quantas vezes maior que 2 elevado a 10?	10	20	100	1024	3
 5	potencias	Quanto é 4 ao quadrado?	8	12	20	16	3
 5	raciocinio	Um caracol dobra sua distância diária começando em 1mm. Em qual dia ultrapassa 1000mm?	Dia 10	Dia 12	Dia 11	Dia 9	2
 5	raciocinio	Cartas mostram 3, 8, Vermelho, Azul. Regra: números pares têm verso vermelho. Quais você deve virar?	3 e Vermelho	8 e Azul	8 e Vermelho	3 e 8	1
-5	raciocinio	Alex tem o dobro do dinheiro de Ben. Carol tem R$10 a mais que Alex. Juntos têm R$60. Quanto Ben tem?	R$15	R$10	R$20	R$12	1
 5	raciocinio	Número mínimo de movimentos para resolver a Torre de Hanói com 3 discos?	6	8	9	7	3
 5	raciocinio	Qual porta lógica produz VERDADEIRO somente quando AMBAS as entradas são FALSAS?	AND	OR	NOR	NAND	2
-5	raciocinio	Acenda a corda 1 em ambas as pontas (queima em 30min). Depois acenda a corda 2 em ambas as pontas. Tempo total até ambas queimarem?	60 min	90 min	45 min	30 min	2
 5	raciocinio	Qual é logicamente equivalente a: Se chove, levo guarda-chuva?	Se levo guarda-chuva, então chove	Se não chove, não levo guarda-chuva	Se não levo guarda-chuva, então não choveu	Levo guarda-chuva e chove	2
 5	raciocinio	Quantas diagonais tem um hexágono?	6	12	15	9	3
 5	raciocinio	Qual é o 10º número triangular? (n × (n+1) / 2)	45	50	55	60	2
 5	raciocinio	Quantas vezes os ponteiros do relógio se sobrepõem em 12 horas?	11	12	24	22	0
-5	raciocinio	Um carro vai de A a B a 60 km/h e volta a 40 km/h. Qual é a velocidade média total?	50	48	45	52	1
 5	raciocinio	Quantos arranjos ordenados de 3 livros escolhidos de 5 livros diferentes são possíveis?	15	30	120	60	3
 5	raciocinio	Para garantir um par combinando de 10 meias vermelhas e 10 azuis no escuro, quantas você deve pegar?	2	10	3	11	2
 5	raciocinio	Qual é um exemplo de contradição lógica?	P OU NÃO P	P E NÃO P	P implica P	NÃO NÃO P	1
@@ -741,7 +693,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 5	sequencias	Qual vem a seguir? 15, 18, 21, 24, ___	24	30	27	28	2
 5	sequencias	Qual vem a seguir? 15, 19, 23, 27, ___	32	35	27	31	3
 5	sequencias	Qual vem a seguir? 13, 18, 23, 28, ___	33	38	28	34	0
-6	adicao	Em binário, quanto é 1011 + 0110?	1101	10001	10011	1111	1
 6	adicao	Quanto é 34 + 45?	78	80	79	81	2
 6	adicao	Quanto é 58 + 52?	109	111	110	112	2
 6	divisao	Qual é o resto de 20 dividido por 3?	2	0	1	5	0
@@ -795,45 +746,32 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	divisao	Qual é o resto de 84 dividido por 6?	1	4	0	2	2
 6	divisao	Qual é o resto de 87 dividido por 7?	4	5	3	6	2
 6	divisao	Qual é o resto de 77 dividido por 10?	7	3	2	0	0
-6	divisao	Qual é o resto de 140 dividido por 3?	1	0	2	5	2
 6	divisao	Qual é o resto de 131 dividido por 10?	9	1	2	5	1
-6	divisao	Qual é o resto de 107 dividido por 8?	1	6	3	4	2
 6	divisao	Qual é o resto de 49 dividido por 10?	8	9	1	2	1
-6	divisao	Qual é o resto de 131 dividido por 6?	0	5	3	4	1
 6	divisao	Qual é o resto de 41 dividido por 4?	1	0	3	2	0
 6	divisao	Qual é o resto de 128 dividido por 10?	1	8	3	7	1
 6	divisao	Qual é o resto de 55 dividido por 6?	2	1	5	0	1
 6	divisao	Qual é o resto de 22 dividido por 8?	4	3	6	5	2
-6	divisao	Qual é o resto de 135 dividido por 7?	0	6	1	2	3
 6	divisao	Qual é o resto de 43 dividido por 11?	10	0	7	1	0
 6	divisao	Qual é o resto de 70 dividido por 3?	4	0	2	1	3
 6	divisao	Qual é o resto de 88 dividido por 5?	1	4	3	2	2
-6	divisao	Qual é o resto de 130 dividido por 8?	7	2	5	0	1
-6	divisao	Qual é o resto de 105 dividido por 11?	2	8	7	6	3
-6	divisao	Qual é o resto de 115 dividido por 11?	9	7	5	0	2
 6	divisao	Qual é o resto de 96 dividido por 10?	0	4	6	1	2
 6	divisao	Qual é o resto de 33 dividido por 3?	1	2	0	3	2
 6	divisao	Qual é o resto de 71 dividido por 4?	0	3	1	2	1
-6	divisao	Qual é o resto de 138 dividido por 11?	4	7	3	6	3
 6	divisao	Qual é o resto de 125 dividido por 5?	0	3	2	4	0
-6	divisao	Qual é o resto de 110 dividido por 6?	1	3	5	2	3
 6	divisao	Qual é o resto de 29 dividido por 8?	3	5	6	2	1
 6	divisao	Qual é o resto de 36 dividido por 10?	1	8	7	6	3
 6	divisao	Qual é o resto de 80 dividido por 11?	6	8	9	3	3
 6	divisao	Qual é o resto de 28 dividido por 11?	5	4	9	6	3
-6	divisao	Qual é o resto de 108 dividido por 11?	5	6	4	9	3
 6	divisao	Qual é o resto de 67 dividido por 10?	1	8	5	7	3
-6	divisao	Qual é o resto de 135 dividido por 4?	1	0	3	2	2
 6	divisao	Qual é o resto de 83 dividido por 10?	3	1	4	9	0
 6	divisao	Qual é o resto de 93 dividido por 11?	4	3	7	5	3
 6	divisao	Qual é o resto de 136 dividido por 10?	5	6	0	9	1
 6	divisao	Qual é o resto de 25 dividido por 4?	1	0	2	3	0
 6	divisao	Qual é o resto de 34 dividido por 9?	7	2	0	8	0
-6	divisao	Qual é o resto de 120 dividido por 3?	2	1	0	3	2
 6	divisao	Qual é o resto de 22 dividido por 5?	3	4	1	2	3
 6	divisao	Qual é o resto de 76 dividido por 7?	2	4	0	6	3
 6	divisao	Qual é o resto de 76 dividido por 4?	2	1	3	0	3
-6	divisao	Qual é o resto de 137 dividido por 8?	1	5	2	0	0
 6	divisao	Qual é o resto de 75 dividido por 10?	3	5	2	6	1
 6	divisao	Qual é o resto de 40 dividido por 5?	0	3	1	2	0
 6	divisao	Qual é o resto de 72 dividido por 3?	2	1	0	3	2
@@ -842,48 +780,33 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	divisao	Qual é o resto de 58 dividido por 9?	3	4	8	7	1
 6	divisao	Qual é o resto de 123 dividido por 5?	4	1	2	3	3
 6	divisao	Qual é o resto de 27 dividido por 6?	3	2	5	1	0
-6	divisao	Qual é o resto de 122 dividido por 6?	2	3	5	0	0
-6	divisao	Qual é o resto de 113 dividido por 8?	5	1	3	4	1
 6	divisao	Qual é o resto de 36 dividido por 4?	2	0	3	1	1
 6	divisao	Qual é o resto de 18 dividido por 10?	8	7	0	6	0
 6	divisao	Qual é o resto de 50 dividido por 9?	7	5	1	0	1
-6	divisao	Qual é o resto de 134 dividido por 6?	2	4	1	0	0
 6	divisao	Qual é o resto de 31 dividido por 6?	4	5	1	0	2
 6	divisao	Qual é o resto de 85 dividido por 4?	3	0	2	1	3
-6	divisao	Qual é o resto de 120 dividido por 11?	3	5	2	10	3
 6	divisao	Qual é o resto de 10 dividido por 4?	1	2	0	3	1
-6	divisao	Qual é o resto de 103 dividido por 7?	5	0	6	1	0
 6	divisao	Qual é o resto de 88 dividido por 8?	3	1	7	0	3
-6	divisao	Qual é o resto de 139 dividido por 6?	0	1	2	5	1
-6	divisao	Qual é o resto de 107 dividido por 4?	0	3	2	1	1
 6	divisao	Qual é o resto de 35 dividido por 9?	8	3	1	5	0
 6	divisao	Qual é o resto de 31 dividido por 3?	0	2	1	4	2
-6	divisao	Qual é o resto de 111 dividido por 4?	0	2	3	1	2
 6	divisao	Qual é o resto de 108 dividido por 5?	3	2	1	0	0
 6	divisao	Qual é o resto de 20 dividido por 7?	6	1	3	5	0
 6	divisao	Qual é o resto de 95 dividido por 6?	4	3	5	1	2
-6	divisao	Qual é o resto de 129 dividido por 11?	8	3	9	5	0
 6	divisao	Qual é o resto de 18 dividido por 3?	0	1	2	3	0
-6	divisao	Qual é o resto de 114 dividido por 4?	1	3	2	0	2
 6	divisao	Qual é o resto de 55 dividido por 7?	1	3	6	0	2
 6	divisao	Qual é o resto de 64 dividido por 9?	8	1	0	7	1
 6	divisao	Qual é o resto de 84 dividido por 5?	1	4	0	3	1
 6	divisao	Qual é o resto de 16 dividido por 8?	0	6	1	7	0
 6	divisao	Qual é o resto de 48 dividido por 10?	5	1	8	4	2
-6	divisao	Qual é o resto de 130 dividido por 4?	0	3	1	2	3
 6	divisao	Qual é o resto de 95 dividido por 7?	5	4	0	6	1
 6	divisao	Qual é o resto de 31 dividido por 8?	7	2	6	0	0
-6	divisao	Qual é o resto de 114 dividido por 3?	0	1	2	3	0
 6	divisao	Qual é o resto de 17 dividido por 10?	7	4	6	9	0
 6	divisao	Qual é o resto de 82 dividido por 6?	4	3	2	5	0
-6	divisao	Qual é o resto de 135 dividido por 9?	1	3	7	0	3
 6	divisao	Qual é o resto de 17 dividido por 9?	8	7	3	6	0
 6	divisao	Qual é o resto de 33 dividido por 11?	5	0	1	2	1
 6	divisao	Qual é o resto de 70 dividido por 6?	2	5	4	1	2
 6	divisao	Qual é o resto de 75 dividido por 8?	3	1	6	0	0
 6	divisao	Qual é o resto de 90 dividido por 5?	4	0	1	2	1
-6	divisao	Qual é o resto de 128 dividido por 6?	1	4	2	5	2
-6	divisao	Qual é o resto de 108 dividido por 9?	5	8	2	0	3
 6	divisao	Qual é o resto de 128 dividido por 5?	1	4	3	0	2
 6	divisao	Qual é o resto de 113 dividido por 5?	4	1	2	3	3
 6	divisao	Qual é o resto de 28 dividido por 9?	1	7	0	6	0
@@ -892,7 +815,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	divisao	Qual é o resto de 49 dividido por 4?	1	3	0	2	0
 6	divisao	Qual é o resto de 38 dividido por 6?	1	5	3	2	3
 6	divisao	Qual é o resto de 39 dividido por 10?	0	8	3	9	3
-6	divisao	Qual é o resto de 121 dividido por 8?	0	6	1	3	2
 6	divisao	Qual é o resto de 26 dividido por 9?	7	8	2	6	1
 6	logica	Um conjunto tem 4 elementos. Quantos subconjuntos ele tem, incluindo o conjunto vazio?	8	12	16	4	2
 6	logica	Todo A é B. Algum B é C. Algum C é D. O que é definitivamente verdadeiro?	Todo A é D	Algum A é D	Nenhum A é D	Nenhuma das anteriores é certa	3
@@ -905,13 +827,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	raciocinio	De quantas formas você pode escolher 3 itens de 6 quando a ordem não importa?	120	18	20	30	2
 6	raciocinio	Qual é um exemplo da Falácia do Jogador?	Apostar mais após estudar probabilidades	Acreditar que perdas passadas aumentam chances de ganho futuro	Calcular valor esperado	Usar tabelas de probabilidade	1
 6	raciocinio	Se log₂ de 8 = x, quanto é x?	2	4	3	8	2
-6	raciocinio	Quanto é o fatorial de zero (0!)?	0	1	Indefinido	Infinito	1
 6	raciocinio	O XOR de dois bits é igual a 1 quando os bits são ___	Ambos 0	Ambos 1	Diferentes	Ambos iguais	2
 6	raciocinio	Qual cresce mais rápido para n grande: n², 2ⁿ, n! ou n³?	n²	2ⁿ	n!	n³	2
 6	raciocinio	De quantas maneiras 4 pessoas podem ser arranjadas em fila?	16	24	12	32	1
 6	raciocinio	P implica Q é logicamente equivalente a qual destes?	Q implica P	NÃO P implica NÃO Q	NÃO Q implica NÃO P	P e Q são o mesmo	2
 6	raciocinio	Qual afirmação sobre números primos é verdadeira?	Todos os primos são ímpares	2 é o único primo par	Todos os primos são maiores que 2	Primos são sempre consecutivos	1
-6	raciocinio	Quantas arestas tem o grafo completo de 5 vértices (K5)?	8	10	12	15	1
 6	sequencias	Uma série geométrica infinita pode convergir para uma soma finita. Isso refuta qual paradoxo?	Paradoxo do Jogador	Paradoxo de Zenão	Paradoxo de Russell	Paradoxo Sorites	1
 6	sequencias	Qual vem a seguir? 5, 15, 25, 35, ___	55	45	35	46	1
 6	sequencias	Qual vem a seguir? 11, 16, 21, 26, ___	26	36	31	32	2
@@ -1068,12 +988,9 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 7	logica	O barbeiro barbeia todos os homens que não se barbeiam. Quem barbeia o barbeiro?	O barbeiro barbeia a si mesmo	Ninguém — tal barbeiro não pode existir	Outro barbeiro	Os aldeões decidem	1
 7	logica	O teorema da incompletude de Gödel afirma que em todo sistema formal consistente ___	Todas as verdades são prováveis	Algumas verdades não podem ser provadas dentro do sistema	A lógica é sempre consistente	Todos os axiomas são independentes	1
 7	logica	A cardinalidade do conjunto potência de um conjunto com n elementos é ___	n²	2n	2ⁿ	n!	2
-7	logica	Todo M é P. Todo S é M. Portanto todo S é P. Esta forma de silogismo é chamada ___	Modus Ponens	Modus Tollens	Barbara	Silogismo Hipotético	2
 7	logica	Qual afirmação sobre o conjunto vazio é FALSA?	É subconjunto de todo conjunto	Seu conjunto potência tem exatamente um elemento	Ele é igual ao número zero	Sua cardinalidade é 0	2
 7	probabilidade	Num grupo de 23 pessoas, a probabilidade de dois terem o mesmo aniversário supera ___	25%	75%	50%	10%	2
-7	probabilidade	Um teste de doença tem 99% de precisão e afeta 1% das pessoas. Dado um resultado positivo, a probabilidade de ter a doença é ___	99%	50%	1%	90%	1
 7	probabilidade	Teorema de Bayes: se P(A)=0,3, P(B|A)=0,8 e P(B)=0,4, quanto é P(A|B)?	0,24	0,60	0,48	0,75	1
-7	raciocinio	Qual é o número cromático do grafo K4 (mínimo de cores para que vértices adjacentes tenham cores diferentes)?	2	3	4	5	2
 7	raciocinio	O problema da parada é ___	Solúvel em tempo polinomial	Indecidível — nenhum algoritmo determina se todos os programas param	Resolvido por Turing	Um problema P vs NP	1
 7	raciocinio	Se P implica Q, o que DEVE ser verdadeiro?	Q implica P	NÃO P implica NÃO Q	NÃO Q implica NÃO P	P e Q são equivalentes	2
 7	raciocinio	Qual classe de complexidade contém problemas cujas soluções podem ser verificadas em tempo polinomial?	P	NP	PSPACE	EXP	1
@@ -1156,7 +1073,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	analogias	Leão está para ruge assim como galo está para ___	ruge	canta	grunhe	muge	1
 3	analogias	Área está para metro quadrado assim como volume está para ___	litro	quilograma	grau	quilômetro por hora	0
 3	analogias	Argentina está para Buenos Aires assim como Espanha está para ___	Pequim	Madri	Lima	Londres	1
-3	analogias	Dentista está para broca assim como fotógrafo está para ___	pincel	panela	câmera	estetoscópio	2
 3	analogias	Cachorro está para filhote assim como pato está para ___	gatinho	cordeiro	bezerro	patinho	3
 3	analogias	Coelho está para toca assim como formiga está para ___	toca	formigueiro	colmeia	água	1
 3	analogias	Agricultor está para fazenda assim como piloto está para ___	teatro	navio	escola	avião	3
@@ -1186,7 +1102,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 2	classificacao	Qual NÃO pertence ao grupo: Abelha, Libélula, Mosca, Abril?	Abril	Abelha	Libélula	Mosca	0
 2	classificacao	Qual NÃO pertence ao grupo: Trompete, 2, Bateria, Piano?	Bateria	2	Trompete	Piano	1
 2	classificacao	Qual NÃO pertence ao grupo: Enfermeiro, Caneta, Borracha, Apontador?	Apontador	Borracha	Enfermeiro	Caneta	2
-2	classificacao	Qual NÃO pertence ao grupo: Junho, Janeiro, Julho, Trapézio?	Julho	Janeiro	Trapézio	Junho	2
 2	classificacao	Qual NÃO pertence ao grupo: Segunda-feira, Alumínio, Chumbo, Prata?	Chumbo	Alumínio	Segunda-feira	Prata	2
 2	classificacao	Qual NÃO pertence ao grupo: Cadeira, Sofá, Ártico, Cômoda?	Ártico	Cômoda	Cadeira	Sofá	0
 2	classificacao	Qual NÃO pertence ao grupo: Água, 10, 8, 2?	10	2	Água	8	2
@@ -1213,7 +1128,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 2	classificacao	Qual NÃO pertence ao grupo: Apontador, Pentágono, Régua, Mochila?	Apontador	Régua	Mochila	Pentágono	3
 2	classificacao	Qual NÃO pertence ao grupo: Janeiro, Março, Agosto, Chumbo?	Março	Janeiro	Agosto	Chumbo	3
 2	classificacao	Qual NÃO pertence ao grupo: Ouro, Zinco, Ferro, Furadeira?	Furadeira	Ferro	Ouro	Zinco	0
-2	classificacao	Qual NÃO pertence ao grupo: Armário, Poltrona, Trapézio, Estante?	Trapézio	Armário	Poltrona	Estante	0
 2	classificacao	Qual NÃO pertence ao grupo: 16, 14, 12, Melancia?	14	16	Melancia	12	2
 2	classificacao	Qual NÃO pertence ao grupo: 11, 19, 7, Quarta-feira?	Quarta-feira	19	11	7	0
 2	classificacao	Qual NÃO pertence ao grupo: Atlântico, Índico, Abelha, Pacífico?	Índico	Pacífico	Atlântico	Abelha	3
@@ -1231,7 +1145,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 2	classificacao	Qual NÃO pertence ao grupo: Natação, Terça-feira, Segunda-feira, Domingo?	Segunda-feira	Domingo	Terça-feira	Natação	3
 2	classificacao	Qual NÃO pertence ao grupo: 14, Tênis, Natação, Atletismo?	Atletismo	Natação	Tênis	14	3
 2	classificacao	Qual NÃO pertence ao grupo: Martelo, Serra, Furadeira, Tucano?	Martelo	Tucano	Serra	Furadeira	1
-2	classificacao	Qual NÃO pertence ao grupo: Carro, Losango, Pentágono, Trapézio?	Losango	Carro	Trapézio	Pentágono	1
 2	classificacao	Qual NÃO pertence ao grupo: Pêra, Maçã, Banana, Vênus?	Pêra	Vênus	Maçã	Banana	1
 2	classificacao	Qual NÃO pertence ao grupo: Formiga, Libélula, Besouro, Coelho?	Formiga	Coelho	Libélula	Besouro	1
 2	classificacao	Qual NÃO pertence ao grupo: Vaca, Flauta, Saxofone, Piano?	Flauta	Piano	Vaca	Saxofone	2
@@ -1264,45 +1177,35 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 2	classificacao	Qual NÃO pertence ao grupo: Uva, Julho, Março, Maio?	Julho	Uva	Maio	Março	1
 2	classificacao	Qual NÃO pertence ao grupo: Chumbo, Ferro, Brasil, Zinco?	Ferro	Chumbo	Brasil	Zinco	2
 2	classificacao	Qual NÃO pertence ao grupo: Cadeira, Cômoda, Meia, Mesa?	Cadeira	Cômoda	Mesa	Meia	3
-2	classificacao	Qual NÃO pertence ao grupo: Trapézio, 16, 12, 6?	6	16	Trapézio	12	2
 2	classificacao	Qual NÃO pertence ao grupo: 3, Preto, 2, 11?	3	11	Preto	2	2
 2	classificacao	Qual NÃO pertence ao grupo: Pacífico, Índico, Ártico, Martelo?	Ártico	Pacífico	Índico	Martelo	3
-5	geometria	Quanto mede cada ângulo interno de um decágono regular?	1440°	36°	18°	144°	3
-7	geometria	Um círculo de raio 6 cm está dentro de um de raio 8 cm. Qual é a área entre eles? (pi = 3,14)	87,92 cm²	200,96 cm²	12,56 cm²	113,04 cm²	0
 4	geometria	Qual é a área de um círculo de raio 4 cm? (use pi = 3,14)	25,12 cm²	50,24 cm²	12,56 cm²	200,96 cm²	1
 5	geometria	Qual é a área total da superficie de um cubo de aresta 7 cm?	196 cm²	343 cm²	49 cm²	294 cm²	3
 5	geometria	Qual é a área de um paralelogramo de base 14 cm e altura 9 cm?	126 cm²	23 cm²	63 cm²	46 cm²	0
 2	geometria	Qual é a área de um quadrado de lado 5 cm?	50 cm²	10 cm²	25 cm²	20 cm²	2
 2	geometria	Qual é a área de um retângulo de 3 cm por 2 cm?	10 cm²	3 cm²	5 cm²	6 cm²	3
-6	geometria	Qual é a área de um trapézio de bases 14 cm e 10 cm e altura 3 cm?	27 cm²	210 cm²	72 cm²	36 cm²	3
 3	geometria	Qual é a área de um triângulo de base 14 cm e altura 13 cm?	91 cm²	182 cm²	27 cm²	60,67 cm²	0
 4	geometria	Qual é o comprimento de uma circunferência de raio 7 cm? (use pi = 3,14)	87,92 cm	43,96 cm	153,86 cm	21,98 cm	1
 3	geometria	Um ângulo mede 75 graus. Quanto mede o seu complemento?	75°	15°	105°	285°	1
-6	geometria	Quantas diagonais tem um decágono?	35	7	10	45	0
 1	geometria	Um círculo tem raio de 15 cm. Qual é o seu diâmetro?	225 cm	30 cm	60 cm	15 cm	1
-1	geometria	Quantos lados tem um decágono?	12	10	11	9	1
 1	geometria	Qual é o perímetro de um quadrado de lado 8 cm?	32 cm	24 cm	16 cm	64 cm	0
 2	geometria	Qual é o perímetro de um retângulo de 14 cm por 8 cm?	44 cm	112 cm	22 cm	56 cm	0
 5	geometria	Um triângulo retângulo tem catetos de 15 cm e 20 cm. Quanto medé a hipotenusa?	25 cm	300 cm	35 cm	26 cm	0
-6	geometria	Um triângulo retângulo tem hipotenusa de 10 cm e um cateto de 6 cm. Quanto mede o outro cateto?	8 cm	9 cm	4 cm	16 cm	0
 5	geometria	Que ângulo os ponteiros de um relogio formam as 2h em ponto?	60°	30°	90°	120°	0
 3	geometria	Quantas arestas tem um cubo?	8	6	14	12	3
 2	geometria	Quantas faces tem um cubo?	6	8	12	4	0
 3	geometria	Quantos vértices tem um paralelepípedo?	12	10	8	6	2
-4	geometria	Qual é a soma dos ângulos internos de um dodecágono?	900°	1800°	2160°	1980°	1
 3	geometria	Um ângulo mede 30 graus. Quanto mede o seu suplemento?	330°	60°	30°	150°	3
 3	geometria	Dois ângulos de um triângulo medem 25 graus e 95 graus. Quanto mede o terceiro?	120°	60°	240°	20°	1
 2	geometria	O que caracteriza um triângulo retângulo?	três lados diferentes	dois lados iguais	três lados iguais	um ângulo de 90 graus	3
 4	geometria	Qual é o volume de um cubo de aresta 10 cm?	600 cm³	1000 cm³	120 cm³	100 cm³	1
 4	geometria	Qual é o volume de um paralelepípedo de 4 cm por 4 cm por 9 cm?	16 cm³	176 cm³	144 cm³	17 cm³	2
 5	geometria	Quanto mede cada ângulo interno de um hexágono regular?	120°	60°	720°	30°	0
-7	geometria	Um círculo de raio 9 cm está dentro de um de raio 11 cm. Qual é a área entre eles? (pi = 3,14)	12,56 cm²	254,34 cm²	125,6 cm²	379,94 cm²	2
 4	geometria	Qual é a área de um círculo de raio 11 cm? (use pi = 3,14)	379,94 cm²	69,08 cm²	1519,76 cm²	34,54 cm²	0
 5	geometria	Qual é a área total da superficie de um cubo de aresta 4 cm?	48 cm²	16 cm²	64 cm²	96 cm²	3
 5	geometria	Qual é a área de um paralelogramo de base 8 cm e altura 8 cm?	128 cm²	32 cm²	16 cm²	64 cm²	3
 2	geometria	Qual é a área de um quadrado de lado 9 cm?	18 cm²	36 cm²	81 cm²	162 cm²	2
 3	geometria	Qual é a área de um retângulo de 7 cm por 11 cm?	77 cm²	18 cm²	36 cm²	38 cm²	0
-6	geometria	Qual é a área de um trapézio de bases 18 cm e 6 cm e altura 9 cm?	108 cm²	486 cm²	33 cm²	216 cm²	0
 3	geometria	Qual é a área de um triângulo de base 20 cm e altura 5 cm?	25 cm²	33,33 cm²	50 cm²	100 cm²	2
 4	geometria	Qual é o comprimento de uma circunferência de raio 5 cm? (use pi = 3,14)	62,8 cm	31,4 cm	78,5 cm	15,7 cm	1
 3	geometria	Um ângulo mede 70 graus. Quanto mede o seu complemento?	70°	110°	20°	290°	2
@@ -1312,25 +1215,21 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 1	geometria	Qual é o perímetro de um quadrado de lado 11 cm?	44 cm	33 cm	121 cm	22 cm	0
 2	geometria	Qual é o perímetro de um retângulo de 6 cm por 11 cm?	24 cm	66 cm	17 cm	34 cm	3
 5	geometria	Um triângulo retângulo tem catetos de 10 cm e 24 cm. Quanto medé a hipotenusa?	27 cm	26 cm	34 cm	240 cm	1
-6	geometria	Um triângulo retângulo tem hipotenusa de 25 cm e um cateto de 7 cm. Quanto mede o outro cateto?	24 cm	18 cm	25 cm	32 cm	0
 5	geometria	Que ângulo os ponteiros de um relogio formam as 1h em ponto?	0°	60°	30°	90°	2
 3	geometria	Quantas arestas tem um paralelepípedo?	6	8	12	14	2
 2	geometria	Quantas faces tem um paralelepípedo?	4	12	6	8	2
 3	geometria	Quantos vértices tem um octaedro?	6	12	4	8	0
-4	geometria	Qual é a soma dos ângulos internos de um eneágono?	1620°	1440°	630°	1260°	3
 3	geometria	Um ângulo mede 130 graus. Quanto mede o seu suplemento?	50°	130°	310°	230°	0
 3	geometria	Dois ângulos de um triângulo medem 110 graus e 30 graus. Quanto mede o terceiro?	140°	10°	40°	220°	2
 2	geometria	O que caracteriza um triângulo escaleno?	três lados diferentes	três lados iguais	dois lados iguais	um ângulo de 90 graus	0
 4	geometria	Qual é o volume de um cubo de aresta 5 cm?	125 cm³	60 cm³	150 cm³	25 cm³	0
 4	geometria	Qual é o volume de um paralelepípedo de 3 cm por 4 cm por 5 cm?	60 cm³	48 cm³	12 cm³	94 cm³	0
 5	geometria	Quanto mede cada ângulo interno de um octógono regular?	1080°	45°	135°	22,5°	2
-7	geometria	Um círculo de raio 3 cm está dentro de um de raio 5 cm. Qual é a área entre eles? (pi = 3,14)	28,26 cm²	78,5 cm²	12,56 cm²	50,24 cm²	3
 4	geometria	Qual é a área de um círculo de raio 8 cm? (use pi = 3,14)	200,96 cm²	50,24 cm²	25,12 cm²	803,84 cm²	0
 5	geometria	Qual é a área total da superficie de um cubo de aresta 11 cm?	1331 cm²	484 cm²	121 cm²	726 cm²	3
 5	geometria	Qual é a área de um paralelogramo de base 15 cm e altura 4 cm?	30 cm²	19 cm²	60 cm²	38 cm²	2
 2	geometria	Qual é a área de um quadrado de lado 6 cm?	72 cm²	36 cm²	12 cm²	24 cm²	1
 2	geometria	Qual é a área de um retângulo de 4 cm por 7 cm?	11 cm²	22 cm²	28 cm²	14 cm²	2
-6	geometria	Qual é a área de um trapézio de bases 9 cm e 5 cm e altura 6 cm?	84 cm²	20 cm²	135 cm²	42 cm²	3
 3	geometria	Qual é a área de um triângulo de base 10 cm e altura 15 cm?	25 cm²	50 cm²	150 cm²	75 cm²	3
 4	geometria	Qual é o comprimento de uma circunferência de raio 11 cm? (use pi = 3,14)	34,54 cm	138,16 cm	69,08 cm	379,94 cm	2
 3	geometria	Um ângulo mede 30 graus. Quanto mede o seu complemento?	150°	330°	60°	30°	2
@@ -1340,7 +1239,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 1	geometria	Qual é o perímetro de um quadrado de lado 16 cm?	32 cm	256 cm	48 cm	64 cm	3
 2	geometria	Qual é o perímetro de um retângulo de 5 cm por 4 cm?	20 cm	9 cm	18 cm	14 cm	2
 5	geometria	Um triângulo retângulo tem catetos de 20 cm e 21 cm. Quanto medé a hipotenusa?	41 cm	420 cm	30 cm	29 cm	3
-6	geometria	Um triângulo retângulo tem hipotenusa de 13 cm e um cateto de 5 cm. Quanto mede o outro cateto?	8 cm	13 cm	18 cm	12 cm	3
 5	geometria	Que ângulo os ponteiros de um relogio formam as 8h em ponto?	120°	150°	90°	240°	0
 3	geometria	Quantas arestas tem um prisma triangular?	11	6	5	9	3
 2	geometria	Quantas faces tem um octaedro?	6	12	8	10	2
@@ -1351,24 +1249,18 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 2	geometria	O que caracteriza um triângulo equilatero?	um ângulo de 90 graus	três lados diferentes	dois lados iguais	três lados iguais	3
 4	geometria	Qual é o volume de um cubo de aresta 7 cm?	343 cm³	49 cm³	294 cm³	84 cm³	0
 4	geometria	Qual é o volume de um paralelepípedo de 3 cm por 3 cm por 7 cm?	9 cm³	102 cm³	13 cm³	63 cm³	3
-5	geometria	Quanto mede cada ângulo interno de um eneágono regular?	1260°	140°	20°	40°	1
-7	geometria	Um círculo de raio 4 cm está dentro de um de raio 6 cm. Qual é a área entre eles? (pi = 3,14)	50,24 cm²	113,04 cm²	62,8 cm²	12,56 cm²	2
 4	geometria	Qual é a área de um círculo de raio 10 cm? (use pi = 3,14)	314 cm²	62,8 cm²	1256 cm²	31,4 cm²	0
 5	geometria	Qual é a área total da superficie de um cubo de aresta 12 cm?	1728 cm²	576 cm²	864 cm²	144 cm²	2
 5	geometria	Qual é a área de um paralelogramo de base 12 cm e altura 5 cm?	34 cm²	60 cm²	30 cm²	17 cm²	1
 2	geometria	Qual é a área de um quadrado de lado 18 cm?	36 cm²	648 cm²	72 cm²	324 cm²	3
 2	geometria	Qual é a área de um retângulo de 8 cm por 2 cm?	10 cm²	20 cm²	8 cm²	16 cm²	3
-6	geometria	Qual é a área de um trapézio de bases 20 cm e 12 cm e altura 7 cm?	840 cm²	39 cm²	224 cm²	112 cm²	3
 3	geometria	Qual é a área de um triângulo de base 20 cm e altura 7 cm?	70 cm²	27 cm²	140 cm²	46,67 cm²	0
 4	geometria	Qual é o comprimento de uma circunferência de raio 8 cm? (use pi = 3,14)	50,24 cm	200,96 cm	25,12 cm	100,48 cm	0
 3	geometria	Um ângulo mede 80 graus. Quanto mede o seu complemento?	80°	100°	10°	280°	2
-6	geometria	Quantas diagonais tem um eneágono?	9	36	6	27	3
 1	geometria	Um círculo tem raio de 9 cm. Qual é o seu diâmetro?	9 cm	81 cm	36 cm	18 cm	3
-1	geometria	Quantos lados tem um dodecágono?	13	12	14	11	1
 1	geometria	Qual é o perímetro de um quadrado de lado 17 cm?	51 cm	289 cm	34 cm	68 cm	3
 2	geometria	Qual é o perímetro de um retângulo de 15 cm por 12 cm?	180 cm	60 cm	54 cm	27 cm	2
 5	geometria	Um triângulo retângulo tem catetos de 5 cm e 12 cm. Quanto medé a hipotenusa?	13 cm	60 cm	17 cm	14 cm	0
-6	geometria	Um triângulo retângulo tem hipotenusa de 25 cm e um cateto de 15 cm. Quanto mede o outro cateto?	40 cm	21 cm	10 cm	20 cm	3
 5	geometria	Que ângulo os ponteiros de um relogio formam as 5h em ponto?	150°	210°	120°	180°	0
 3	geometria	Quantas arestas tem um tetraedro?	8	6	3	4	1
 2	geometria	Quantas faces tem um pirâmide de base quadrada?	8	5	7	3	1
@@ -1380,23 +1272,19 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 4	geometria	Qual é o volume de um cubo de aresta 4 cm?	16 cm³	48 cm³	64 cm³	96 cm³	2
 4	geometria	Qual é o volume de um paralelepípedo de 4 cm por 5 cm por 6 cm?	120 cm³	15 cm³	20 cm³	148 cm³	0
 5	geometria	Quanto mede cada ângulo interno de um heptágono regular?	51,43°	25,71°	900°	128,57°	3
-7	geometria	Um círculo de raio 2 cm está dentro de um de raio 4 cm. Qual é a área entre eles? (pi = 3,14)	18,84 cm²	50,24 cm²	37,68 cm²	12,56 cm²	2
 4	geometria	Qual é a área de um círculo de raio 15 cm? (use pi = 3,14)	2826 cm²	47,1 cm²	94,2 cm²	706,5 cm²	3
 5	geometria	Qual é a área total da superficie de um cubo de aresta 3 cm?	27 cm²	54 cm²	36 cm²	9 cm²	1
 5	geometria	Qual é a área de um paralelogramo de base 9 cm e altura 6 cm?	15 cm²	30 cm²	54 cm²	27 cm²	2
 2	geometria	Qual é a área de um quadrado de lado 15 cm?	450 cm²	60 cm²	30 cm²	225 cm²	3
 3	geometria	Qual é a área de um retângulo de 12 cm por 6 cm?	84 cm²	36 cm²	72 cm²	18 cm²	2
-6	geometria	Qual é a área de um trapézio de bases 12 cm e 8 cm e altura 5 cm?	100 cm²	240 cm²	25 cm²	50 cm²	3
 3	geometria	Qual é a área de um triângulo de base 10 cm e altura 11 cm?	21 cm²	110 cm²	36,67 cm²	55 cm²	3
 4	geometria	Qual é o comprimento de uma circunferência de raio 12 cm? (use pi = 3,14)	452,16 cm	150,72 cm	75,36 cm	37,68 cm	2
 3	geometria	Um ângulo mede 40 graus. Quanto mede o seu complemento?	50°	320°	140°	40°	0
 6	geometria	Quantas diagonais tem um heptágono?	7	4	21	14	3
 1	geometria	Um círculo tem raio de 14 cm. Qual é o seu diâmetro?	28 cm	56 cm	14 cm	196 cm	0
-1	geometria	Quantos lados tem um eneágono?	8	11	9	10	2
 1	geometria	Qual é o perímetro de um quadrado de lado 19 cm?	76 cm	361 cm	57 cm	38 cm	0
 2	geometria	Qual é o perímetro de um retângulo de 14 cm por 5 cm?	38 cm	19 cm	56 cm	70 cm	0
 5	geometria	Um triângulo retângulo tem catetos de 12 cm e 16 cm. Quanto medé a hipotenusa?	192 cm	20 cm	28 cm	21 cm	1
-6	geometria	Um triângulo retângulo tem hipotenusa de 5 cm e um cateto de 3 cm. Quanto mede o outro cateto?	8 cm	4 cm	2 cm	5 cm	1
 5	geometria	Que ângulo os ponteiros de um relogio formam as 10h em ponto?	30°	60°	300°	90°	1
 3	geometria	Quantas arestas tem um octaedro?	12	14	8	6	0
 2	geometria	Quantas faces tem um prisma triangular?	9	6	7	5	3
@@ -1406,14 +1294,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	geometria	Dois ângulos de um triângulo medem 30 graus e 60 graus. Quanto mede o terceiro?	270°	90°	150°	60°	1
 4	geometria	Qual é o volume de um cubo de aresta 6 cm?	72 cm³	216 cm³	18 cm³	36 cm³	1
 4	geometria	Qual é o volume de um paralelepípedo de 5 cm por 6 cm por 7 cm?	214 cm³	210 cm³	30 cm³	18 cm³	1
-5	geometria	Quanto mede cada ângulo interno de um dodecágono regular?	150°	15°	30°	1800°	0
-7	geometria	Um círculo de raio 7 cm está dentro de um de raio 9 cm. Qual é a área entre eles? (pi = 3,14)	153,86 cm²	12,56 cm²	100,48 cm²	254,34 cm²	2
 4	geometria	Qual é a área de um círculo de raio 3 cm? (use pi = 3,14)	9,42 cm²	18,84 cm²	113,04 cm²	28,26 cm²	3
 5	geometria	Qual é a área total da superficie de um cubo de aresta 2 cm?	24 cm²	8 cm²	16 cm²	4 cm²	0
 5	geometria	Qual é a área de um paralelogramo de base 7 cm e altura 3 cm?	10,5 cm²	20 cm²	21 cm²	10 cm²	2
 2	geometria	Qual é a área de um quadrado de lado 3 cm?	6 cm²	9 cm²	12 cm²	18 cm²	1
 3	geometria	Qual é a área de um retângulo de 12 cm por 7 cm?	38 cm²	42 cm²	84 cm²	19 cm²	2
-6	geometria	Qual é a área de um trapézio de bases 10 cm e 6 cm e altura 4 cm?	64 cm²	20 cm²	120 cm²	32 cm²	3
 6	logica	Em uma sala com 7 pessoas, cada uma cumprimenta todas as outras uma vez. Quantos cumprimentos acontecem?	6	49	42	21	3
 5	logica	Quantos cortes são precisos para dividir uma corda em 6 pedaços?	12	6	7	5	3
 4	logica	Você mora no 7º andar e sobe do térreo a pé. Quantos lances de escada sobe?	6	8	7	14	2
@@ -1477,18 +1362,14 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 4	logica	Alguns A são B. Todos os B são C. Alguns A são C?	Nenhum A é C	Todos os A são C	Sim	Não	2
 5	logica	João mente sempre. João disse "eu estou mentindo agora". Isso é possível?	Só às terças	Sim, sem problema	Sim, se ele estiver cansado	Não, é um paradoxo	3
 7	logica	Quantos subconjuntos tem um conjunto de 9 elementos?	18	511	512	81	2
-3	logica	Todo quadrado é um losango?	Sim	Só se estiver inclinado	Não	Só se for grande	0
 4	logica	Nenhum réptil tem penas. A cobra é um réptil. A cobra tem penas?	Não se sabe	Não	Sim	Às vezes	1
 5	logica	Um pai tem 3 filhos. Cada filho tem 1 irmã. Quantos filhos tem o pai ao todo?	5	3	6	4	1
 7	logica	Quantos subconjuntos tem um conjunto de 4 elementos?	32	15	8	16	3
 3	logica	Se A = B e B = C, então ___	não dá para saber	A = C	A > C	A < C	1
 4	logica	Se chove, a rua fica molhada. Não choveu. A rua pode estar molhada?	Sim, por outro motivo	Não, nunca	Só se ventar	Impossível saber o que é molhado	0
-5	logica	Todo número divisível por 6 é divisível por 3. O 9 é divisível por 3. É divisível por 6?	Não dá para saber	Sim	Sempre	Não	3
-3	logica	Todo losango é um quadrado?	Sim	Sempre	Não	Só se tiver 4 lados	2
 4	logica	Pedro chegou antes de Ana. Ana chegou antes de Luís. Quem chegou por último?	Chegaram juntos	Luís	Ana	Pedro	1
 5	logica	Se um animal é um cão, então é um mamífero. Um gato é um mamífero. É um cão?	Não	Talvez sim	Não dá para saber	Sim	0
 3	logica	Se um número é par, o seu dobro é par?	Às vezes	Só se for maior que 10	Não, nunca	Sim, sempre	3
-4	logica	Três amigos têm alturas diferentes. Se Ana não é a mais alta nem a mais baixa, ela é a ___	do meio	mais baixa	mais alta	não dá para saber	0
 5	logica	Se dois eventos não podem acontecer juntos, eles são ___	complementares sempre	mutuamente exclusivos	iguais	independentes	1
 3	logica	A soma de dois números ímpares é sempre ___	primo	ímpar	par	às vezes par, às vezes ímpar	2
 4	logica	Qual é a negação de "nenhum carro é vermelho"?	Nenhum carro é azul	Alguns carros não são vermelhos	Todos os carros são vermelhos	Pelo menos um carro é vermelho	3
@@ -1519,7 +1400,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 5	logica	Se o alarme toca, alguém entrou. O alarme não tocou. Alguém entrou?	Sim, com certeza	O alarme está quebrado	Não, com certeza	Não dá para afirmar	3
 4	logica	Se A é maior que B e B é maior que C, então A é ___ C	menor que	maior que	igual a	não comparável com	1
 5	logica	Se A implica B, e B é falso, o que se conclui sobre A?	A é falso	A e B são iguais	Nada se conclui	A é verdadeiro	0
-4	logica	A caixa azul é mais pesada que a verde. A verde é mais pesada que a vermelha. Qual é a mais pesada?	Têm o mesmo peso	A verde	A azul	A vermelha	2
 5	logica	Nenhum peixe voa. Alguns animais voam. Algum animal não é peixe?	Não dá para saber	Todos os animais são peixes	Não	Sim	3
 4	logica	Qual é a negação de "algum dia choveu"?	Algum dia não choveu	Choveu ontem	Sempre choveu	Nunca choveu	3
 5	logica	Todos os meus amigos gostam de pizza. Leo gosta de pizza. Leo é meu amigo?	Não necessariamente	Só se comer comigo	Não	Sim	0
@@ -1534,7 +1414,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	potencias	Quanto é 3 elevado a 0?	1	9	3	0	0
 2	potencias	Quanto é 7 elevado a 1?	0	7	1	49	1
 7	potencias	Quanto é 3 elevado a -1?	-3	3	1/3	1/9	2
-7	potencias	Como se escreve 200000000 em notação científica?	2 x 10^9	20 x 10^8	2 x 10^8	2 x 10^7	2
 3	potencias	Quanto é 10 elevado a 4?	10000	1000	40	100000	0
 4	potencias	Quanto é 2 elevado a 6?	128	12	32	64	3
 5	potencias	Quanto é 3 elevado a 7?	729	2187	21	6561	1
@@ -1542,25 +1421,20 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	potencias	Quanto é 4^4 x 4^2?	4^2	4^6	16^6	4^8	1
 6	potencias	Quanto é 7^6 dividido por 7^2?	7^4	7^2	1	7^8	0
 4	potencias	Qual é a raiz quadrada de 196?	15	14	98	28	1
-6	potencias	Qual é a raiz cúbica de 512?	24	9	8	64	2
 5	potencias	Quanto é 6 elevado ao cubo?	18	36	343	216	3
 3	potencias	Quanto é 5 elevado a 0?	0	5	1	25	2
 2	potencias	Quanto é 6 elevado a 1?	6	0	36	1	0
 7	potencias	Quanto é 6 elevado a -1?	6	1/36	1/6	-6	2
-7	potencias	Como se escreve 80000000000 em notação científica?	8 x 10^10	80 x 10^10	8 x 10^11	8 x 10^9	0
 3	potencias	Quanto é 10 elevado a 8?	100000000	10000000	80	1000000000	0
 4	potencias	Quanto é 2 elevado a 3?	16	4	6	8	3
 5	potencias	Quanto é 3 elevado a 5?	243	729	15	81	0
 7	potencias	Quanto é (3^2)^3?	3^5	3^9	3^8	3^6	3
 6	potencias	Quanto é 7^2 x 7^3?	7^1	7^6	7^5	49^5	2
 6	potencias	Quanto é 5^5 dividido por 5^2?	5^2	5^6	5^7	5^3	3
-4	potencias	Qual é a raiz quadrada de 441?	220	42	21	22	2
-6	potencias	Qual é a raiz cúbica de 729?	10	9	81	27	1
 5	potencias	Quanto é 12 elevado ao cubo?	1728	2197	36	144	0
 3	potencias	Quanto é 9 elevado a 0?	81	0	9	1	3
 2	potencias	Quanto é 2 elevado a 1?	1	4	0	2	3
 7	potencias	Quanto é 5 elevado a -1?	1/25	1/5	-5	5	1
-7	potencias	Como se escreve 60000000 em notação científica?	60 x 10^7	6 x 10^7	6 x 10^6	6 x 10^8	1
 3	potencias	Quanto é 10 elevado a 3?	10000	1000	100	30	1
 4	potencias	Quanto é 2 elevado a 12?	8192	4096	24	2048	1
 5	potencias	Quanto é 3 elevado a 2?	27	9	3	6	1
@@ -1568,12 +1442,10 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	potencias	Quanto é 7^3 x 7^2?	7^5	7^1	49^5	7^6	0
 6	potencias	Quanto é 4^5 dividido por 4^2?	4^2	4^3	4^7	4^6	1
 4	potencias	Qual é a raiz quadrada de 36?	6	7	18	12	0
-6	potencias	Qual é a raiz cúbica de 125?	15	6	5	25	2
 5	potencias	Quanto é 5 elevado ao cubo?	25	216	15	125	3
 3	potencias	Quanto é 7 elevado a 0?	49	1	0	7	1
 2	potencias	Quanto é 5 elevado a 1?	25	1	5	0	2
 7	potencias	Quanto é 8 elevado a -1?	1/64	8	-8	1/8	3
-7	potencias	Como se escreve 400000 em notação científica?	4 x 10^5	40 x 10^5	4 x 10^6	4 x 10^4	0
 3	potencias	Quanto é 10 elevado a 6?	60	1000000	10000000	100000	1
 4	potencias	Quanto é 2 elevado a 9?	1024	18	256	512	3
 5	potencias	Quanto é 3 elevado a 4?	12	81	243	27	1
@@ -1581,12 +1453,10 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 6	potencias	Quanto é 3^4 x 3^2?	3^8	9^6	3^2	3^6	3
 6	potencias	Quanto é 2^5 dividido por 2^2?	2^2	2^3	2^6	2^7	1
 4	potencias	Qual é a raiz quadrada de 289?	144	34	18	17	3
-6	potencias	Qual é a raiz cúbica de 216?	7	18	36	6	3
 5	potencias	Quanto é 11 elevado ao cubo?	1728	1331	121	33	1
 3	potencias	Quanto é 8 elevado a 0?	64	0	1	8	2
 2	potencias	Quanto é 8 elevado a 1?	1	8	0	64	1
 7	potencias	Quanto é 4 elevado a -1?	-4	1/16	1/4	4	2
-7	potencias	Como se escreve 30000 em notação científica?	3 x 10^4	3 x 10^5	30 x 10^4	3 x 10^3	0
 3	potencias	Quanto é 10 elevado a 7?	10000000	70	100000000	1000000	0
 5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar um as?	1/52	1/13	1/26	2/13	1
 1	probabilidade	Qual é a probabilidade de um evento impossível acontecer?	1/2	0	1	100%	1
@@ -1597,14 +1467,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Ao jogar um dado, qual é a probabilidade de NÃO sair o número 2?	5/6	1/2	2/3	1/6	0
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 6?	5/12	1/9	1/6	5/36	3
 6	probabilidade	Ao jogar dois dados, qual é a probabilidade de a soma ser par?	1	19/36	1/6	1/2	3
-7	probabilidade	Uma sacola tem 2 bolinhas vermelhas e 8 azuis. Tirando duas sem repor, qual é a probabilidade de as duas serem vermelhas?	1/9	1/45	1/5	1/25	1
-6	probabilidade	Voce jogou uma moeda justa 5 vezes e saiu cara todas. Qual é a probabilidade de cara na próxima?	1/2	menor que 1/2	1/64	1/32	0
 5	probabilidade	Jogando uma moeda 3 vezes, qual é a probabilidade de sair pelo menos uma cara?	3/8	7/8	1/2	1/8	1
 3	probabilidade	Uma roleta tem 8 setores iguais numerados. Qual é a probabilidade de parar num setor especifico?	1/8	1/9	1/7	1/4	0
 3	probabilidade	Uma sacola tem 7 bolinhas vermelhas e 3 azuis. Qual é a probabilidade de tirar uma vermelha?	7/3	3/10	7/11	7/10	3
 3	probabilidade	Uma sacola tem 2 bolinhas vermelhas e 8 azuis. Qual é a probabilidade de tirar uma azul?	4/5	8/11	4	1/5	0
 4	probabilidade	Numa rifa com 25 bilhetes você comprou 4. Qual é a probabilidade de ganhar?	4/29	1/25	4/21	4/25	3
-5	probabilidade	Uma caixa tem 6 bolas verdes, 2 amarelas e 2 pretas. Qual é a probabilidade de tirar uma verde?	1/5	3/5	1/3	3/2	1
 4	probabilidade	Numa turma de 24 alunos, 8 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	1/3	1/2	2/3	8/25	0
 5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar o as de espadas?	1/26	1/52	1/4	1/104	1
 1	probabilidade	Qual é a probabilidade de um evento certo acontecer?	50%	0	1	1/2	2
@@ -1615,14 +1482,12 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Ao jogar um dado, qual é a probabilidade de NÃO sair o número 3?	2/3	5/6	1/2	1/6	1
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 11?	1/6	1/36	1/18	1/12	2
 6	probabilidade	Ao jogar dois dados, qual é a probabilidade de a soma ser menor que 5?	7/36	5/6	1/6	1/3	2
-7	probabilidade	Uma sacola tem 7 bolinhas vermelhas e 3 azuis. Tirando duas sem repor, qual é a probabilidade de as duas serem vermelhas?	7/15	7/10	49/100	2/3	0
 6	probabilidade	Um dado saiu 6 três vezes seguidas. Qual é a probabilidade de sair 6 de novo?	1/216	1/6	menor que 1/6	1/18	1
 3	probabilidade	Jogando uma moeda 3 vez(es), qual é a probabilidade de sair três caras?	1/2	1/16	1/8	1/4	2
 3	probabilidade	Uma roleta tem 5 setores iguais numerados. Qual é a probabilidade de parar num setor especifico?	2/5	1/6	1/4	1/5	3
 3	probabilidade	Uma sacola tem 3 bolinhas vermelhas e 7 azuis. Qual é a probabilidade de tirar uma vermelha?	3/11	3/10	3/7	7/10	1
 3	probabilidade	Uma sacola tem 6 bolinhas vermelhas e 4 azuis. Qual é a probabilidade de tirar uma azul?	2/3	2/5	4/11	3/5	1
 4	probabilidade	Numa rifa com 100 bilhetes você comprou 25. Qual é a probabilidade de ganhar?	1/3	1/4	1/5	1/100	1
-5	probabilidade	Uma caixa tem 4 bolas verdes, 1 amarelas e 5 pretas. Qual é a probabilidade de tirar uma verde?	1/2	1/10	2/5	2/3	2
 4	probabilidade	Numa turma de 15 alunos, 6 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	3/5	3/8	2/3	2/5	3
 5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar uma carta de copas?	1/2	1/52	1/4	1/8	2
 2	probabilidade	A previsão diz que a probabilidade de chover e de 20%. Qual é a probabilidade de NÃO chover?	50%%	20%	80%	30%	2
@@ -1632,13 +1497,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Ao jogar um dado, qual é a probabilidade de NÃO sair o número 6?	2/3	1/6	1/2	5/6	3
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 8?	1/9	1/6	5/12	5/36	3
 6	probabilidade	Ao jogar dois dados, qual é a probabilidade de pelo menos um 6?	25/36	11/36	1/3	11/18	1
-7	probabilidade	Uma sacola tem 6 bolinhas vermelhas e 4 azuis. Tirando duas sem repor, qual é a probabilidade de as duas serem vermelhas?	1/3	5/9	9/25	3/5	0
 3	probabilidade	Jogando uma moeda 1 vez(es), qual é a probabilidade de sair cara?	1/4	1/2	1/16	1/8	1
 3	probabilidade	Uma roleta tem 10 setores iguais numerados. Qual é a probabilidade de parar num setor especifico?	1/5	1/9	1/10	1/11	2
 3	probabilidade	Uma sacola tem 10 bolinhas vermelhas e 5 azuis. Qual é a probabilidade de tirar uma vermelha?	2/3	5/8	1/3	2	0
 3	probabilidade	Uma sacola tem 10 bolinhas vermelhas e 5 azuis. Qual é a probabilidade de tirar uma azul?	1/3	1/2	2/3	5/16	0
 4	probabilidade	Numa rifa com 40 bilhetes você comprou 8. Qual é a probabilidade de ganhar?	1/4	1/40	1/5	1/6	2
-5	probabilidade	Uma caixa tem 2 bolas verdes, 2 amarelas e 6 pretas. Qual é a probabilidade de tirar uma verde?	1/3	3/5	1/4	1/5	3
 4	probabilidade	Numa turma de 21 alunos, 7 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	1/2	7/22	2/3	1/3	3
 5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar uma figura (valete, dama ou rei)?	3/26	6/13	1/52	3/13	3
 2	probabilidade	A previsão diz que a probabilidade de chover e de 75%. Qual é a probabilidade de NÃO chover?	25%	85%	75%	50%%	0
@@ -1647,13 +1510,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Ao jogar um dado, qual é a probabilidade de NÃO sair o número 4?	1/2	1/6	5/6	2/3	2
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 12?	1/6	1/36	1/12	1/18	1
 6	probabilidade	Ao jogar dois dados, qual é a probabilidade de nenhum 6?	25/36	25/18	11/36	13/18	0
-7	probabilidade	Uma sacola tem 4 bolinhas vermelhas e 6 azuis. Tirando duas sem repor, qual é a probabilidade de as duas serem vermelhas?	2/5	4/25	1/3	2/15	3
 3	probabilidade	Jogando uma moeda 4 vez(es), qual é a probabilidade de sair quatro caras?	1/8	1/16	1/2	1/4	1
 3	probabilidade	Uma roleta tem 12 setores iguais numerados. Qual é a probabilidade de parar num setor especifico?	1/12	1/11	1/6	1/13	0
 3	probabilidade	Uma sacola tem 1 bolinhas vermelhas e 9 azuis. Qual é a probabilidade de tirar uma vermelha?	1/9	1/10	1/11	9/10	1
 3	probabilidade	Uma sacola tem 8 bolinhas vermelhas e 2 azuis. Qual é a probabilidade de tirar uma azul?	1/4	4/5	1/5	2/11	2
 4	probabilidade	Numa rifa com 60 bilhetes você comprou 12. Qual é a probabilidade de ganhar?	1/6	1/4	1/5	1/60	2
-5	probabilidade	Uma caixa tem 1 bolas verdes, 4 amarelas e 5 pretas. Qual é a probabilidade de tirar uma verde?	1/9	1/2	1/10	2/5	2
 4	probabilidade	Numa turma de 30 alunos, 9 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	9/31	3/7	7/10	3/10	3
 5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar uma carta vermelha?	1/52	1	1/4	1/2	3
 2	probabilidade	A previsão diz que a probabilidade de chover e de 85%. Qual é a probabilidade de NÃO chover?	85%	15%	95%	50%%	1
@@ -1662,13 +1523,11 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Ao jogar um dado, qual é a probabilidade de NÃO sair o número 5?	2/3	1/6	1/2	5/6	3
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 2?	1/6	1/36	1/12	1/18	1
 6	probabilidade	Ao jogar dois dados, qual é a probabilidade de a soma ser maior que 9?	1/6	7/36	1/3	5/6	0
-7	probabilidade	Uma sacola tem 3 bolinhas vermelhas e 2 azuis. Tirando duas sem repor, qual é a probabilidade de as duas serem vermelhas?	3/5	3/10	9/25	1/2	1
 3	probabilidade	Jogando uma moeda 2 vez(es), qual é a probabilidade de sair duas caras?	1/16	1/2	1/8	1/4	3
 3	probabilidade	Uma roleta tem 4 setores iguais numerados. Qual é a probabilidade de parar num setor especifico?	1/2	1/3	1/4	1/5	2
 3	probabilidade	Uma sacola tem 12 bolinhas vermelhas e 8 azuis. Qual é a probabilidade de tirar uma vermelha?	3/5	3/2	4/7	2/5	0
 3	probabilidade	Uma sacola tem 4 bolinhas vermelhas e 12 azuis. Qual é a probabilidade de tirar uma azul?	12/17	1/4	3/4	3	2
 4	probabilidade	Numa rifa com 30 bilhetes você comprou 6. Qual é a probabilidade de ganhar?	1/6	1/30	1/5	1/4	2
-5	probabilidade	Uma caixa tem 5 bolas verdes, 2 amarelas e 3 pretas. Qual é a probabilidade de tirar uma verde?	3/10	1	1/2	1/5	2
 4	probabilidade	Numa turma de 12 alunos, 3 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	3/4	3/13	1/4	1/3	2
 5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar um rei ou uma dama?	4/13	1/52	2/13	1/13	2
 2	probabilidade	A previsão diz que a probabilidade de chover e de 90%. Qual é a probabilidade de NÃO chover?	90%	10%	50%%	100%	1
@@ -1677,22 +1536,18 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Ao jogar um dado, qual é a probabilidade de NÃO sair o número 1?	2/3	5/6	1/2	1/6	1
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 7?	1/2	7/36	1/6	5/36	2
 6	probabilidade	Ao jogar dois dados, qual é a probabilidade de ambos iguais?	7/36	5/6	1/6	1/3	2
-7	probabilidade	Uma sacola tem 5 bolinhas vermelhas e 5 azuis. Tirando duas sem repor, qual é a probabilidade de as duas serem vermelhas?	4/9	2/9	1/2	1/4	1
 5	probabilidade	Jogando uma moeda 2 vezes, qual é a probabilidade de sair exatamente uma cara?	1/3	1/4	1/2	3/4	2
 3	probabilidade	Uma roleta tem 20 setores iguais numerados. Qual é a probabilidade de parar num setor especifico?	1/19	1/21	1/10	1/20	3
 3	probabilidade	Uma sacola tem 4 bolinhas vermelhas e 12 azuis. Qual é a probabilidade de tirar uma vermelha?	3/4	1/3	1/4	4/17	2
 3	probabilidade	Uma sacola tem 5 bolinhas vermelhas e 15 azuis. Qual é a probabilidade de tirar uma azul?	1/4	3	3/4	5/7	2
 4	probabilidade	Numa rifa com 10 bilhetes você comprou 3. Qual é a probabilidade de ganhar?	3/13	1/10	3/7	3/10	3
-5	probabilidade	Uma caixa tem 2 bolas verdes, 3 amarelas e 5 pretas. Qual é a probabilidade de tirar uma verde?	1/2	1/5	3/10	1/4	1
 4	probabilidade	Numa turma de 20 alunos, 5 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	5/21	1/3	3/4	1/4	3
-5	probabilidade	De um baralho de 52 cartas, qual é a probabilidade de tirar uma carta de número par de 2 a 10?	10/13	5/13	5/26	1/52	1
 2	probabilidade	A previsão diz que a probabilidade de chover e de 55%. Qual é a probabilidade de NÃO chover?	50%%	65%	55%	45%	3
 4	probabilidade	Ao jogar um dado comum, qual é a probabilidade de sair um múltiplo de 3?	1/2	1/3	2/3	1/6	1
 5	probabilidade	Ao jogar dois dados, qual é a probabilidade da soma ser 10?	1/12	1/4	1/6	1/9	0
 3	probabilidade	Uma sacola tem 8 bolinhas vermelhas e 2 azuis. Qual é a probabilidade de tirar uma vermelha?	4	8/11	4/5	1/5	2
 3	probabilidade	Uma sacola tem 9 bolinhas vermelhas e 6 azuis. Qual é a probabilidade de tirar uma azul?	2/5	3/8	3/5	2/3	0
 4	probabilidade	Numa rifa com 20 bilhetes você comprou 5. Qual é a probabilidade de ganhar?	1/3	1/5	1/20	1/4	3
-5	probabilidade	Uma caixa tem 3 bolas verdes, 5 amarelas e 2 pretas. Qual é a probabilidade de tirar uma verde?	3/10	1/5	3/7	1/2	0
 4	probabilidade	Numa turma de 10 alunos, 2 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	1/5	1/4	2/11	4/5	0
 2	probabilidade	A previsão diz que a probabilidade de chover e de 80%. Qual é a probabilidade de NÃO chover?	90%	50%%	20%	80%	2
 4	probabilidade	Ao jogar um dado comum, qual é a probabilidade de sair um número par?	1/2	1/6	2/3	1/4	0
@@ -1700,7 +1555,6 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 3	probabilidade	Uma sacola tem 6 bolinhas vermelhas e 4 azuis. Qual é a probabilidade de tirar uma vermelha?	2/5	3/5	6/11	3/2	1
 3	probabilidade	Uma sacola tem 3 bolinhas vermelhas e 2 azuis. Qual é a probabilidade de tirar uma azul?	3/5	2/3	2/5	1/3	2
 4	probabilidade	Numa rifa com 50 bilhetes você comprou 10. Qual é a probabilidade de ganhar?	1/4	1/6	1/50	1/5	3
-5	probabilidade	Uma caixa tem 3 bolas verdes, 3 amarelas e 4 pretas. Qual é a probabilidade de tirar uma verde?	3/10	3/7	1/3	2/5	0
 4	probabilidade	Numa turma de 16 alunos, 4 usam óculos. Qual é a probabilidade de sortear um que usa óculos?	4/17	1/4	3/4	1/3	1
 2	probabilidade	A previsão diz que a probabilidade de chover e de 65%. Qual é a probabilidade de NÃO chover?	35%	65%	75%	50%%	0
 3	raciocinio	3 caixas têm 24 itens cada. Quantos itens existem ao todo?	75	72	27	36	1
@@ -1818,3 +1672,1614 @@ difficulty	topic	question	answerA	answerB	answerC	answerD	correctIndex
 5	sequencias	Qual vem a seguir? 8, 13, 21, 34, ___	68	89	55	56	2
 4	sequencias	Qual vem a seguir? 4, 16, 64, 256, ___	4096	260	512	1024	3
 3	sequencias	Qual letra vem a seguir? D, F, H, J, ___	K	L	N	M	1
+1	adicao	Quanto é 1 + 1?	1	12	3	2	3
+1	subtracao	Quanto é 1 - 1?	-1	10	1	0	3
+1	adicao	Quanto é 1 + 2?	3	2	13	4	0
+1	adicao	Quanto é 1 + 3?	14	4	3	5	1
+1	adicao	Quanto é 1 + 4?	5	6	4	15	0
+1	adicao	Quanto é 1 + 5?	7	16	6	5	2
+1	adicao	Quanto é 1 + 6?	8	6	17	7	3
+1	adicao	Quanto é 1 + 7?	7	9	18	8	3
+1	adicao	Quanto é 1 + 8?	10	9	19	8	1
+1	adicao	Quanto é 1 + 9?	11	10	9	20	1
+1	adicao	Quanto é 1 + 10?	21	11	10	12	1
+1	subtracao	Quanto é 2 - 1?	0	11	2	1	3
+1	subtracao	Quanto é 2 - 2?	1	0	-1	10	1
+1	adicao	Quanto é 2 + 9?	10	11	21	12	1
+1	subtracao	Quanto é 3 - 1?	3	12	1	2	3
+1	adicao	Quanto é 3 + 2?	15	4	5	6	2
+1	subtracao	Quanto é 3 - 2?	2	1	11	0	1
+1	subtracao	Quanto é 3 - 3?	-1	1	0	10	2
+1	adicao	Quanto é 3 + 8?	11	10	12	21	0
+1	adicao	Quanto é 3 + 9?	13	22	11	12	3
+1	adicao	Quanto é 3 + 10?	23	13	14	12	1
+1	subtracao	Quanto é 4 - 1?	4	3	2	13	1
+1	subtracao	Quanto é 4 - 2?	12	1	3	2	3
+1	subtracao	Quanto é 4 - 3?	11	1	0	2	1
+1	subtracao	Quanto é 4 - 4?	0	-1	1	10	0
+1	subtracao	Quanto é 5 - 1?	14	4	3	5	1
+1	subtracao	Quanto é 5 - 2?	13	2	4	3	3
+1	subtracao	Quanto é 5 - 3?	2	3	12	1	0
+1	adicao	Quanto é 5 + 4?	8	9	10	19	1
+1	subtracao	Quanto é 5 - 4?	0	2	11	1	3
+1	subtracao	Quanto é 5 - 5?	0	10	-1	1	0
+1	adicao	Quanto é 5 + 8?	13	14	12	23	0
+1	adicao	Quanto é 5 + 10?	14	15	16	25	1
+1	subtracao	Quanto é 6 - 1?	4	5	15	6	1
+1	subtracao	Quanto é 6 - 2?	14	3	5	4	3
+1	subtracao	Quanto é 6 - 3?	3	13	4	2	0
+1	subtracao	Quanto é 6 - 4?	12	2	3	1	1
+1	subtracao	Quanto é 6 - 5?	2	1	11	0	1
+1	subtracao	Quanto é 6 - 6?	1	-1	10	0	3
+1	adicao	Quanto é 6 + 8?	14	15	13	24	0
+1	adicao	Quanto é 6 + 9?	16	25	14	15	3
+1	subtracao	Quanto é 7 - 1?	16	5	6	7	2
+1	subtracao	Quanto é 7 - 2?	6	4	5	15	2
+1	subtracao	Quanto é 7 - 3?	5	14	3	4	3
+1	subtracao	Quanto é 7 - 4?	2	13	3	4	2
+1	subtracao	Quanto é 7 - 5?	3	2	1	12	1
+1	subtracao	Quanto é 7 - 6?	0	1	11	2	1
+1	subtracao	Quanto é 7 - 7?	0	10	-1	1	0
+1	adicao	Quanto é 7 + 8?	16	14	15	25	2
+1	adicao	Quanto é 7 + 9?	16	15	26	17	0
+1	adicao	Quanto é 7 + 10?	17	16	27	18	0
+1	subtracao	Quanto é 8 - 1?	6	17	8	7	3
+1	subtracao	Quanto é 8 - 2?	16	5	6	7	2
+1	subtracao	Quanto é 8 - 3?	5	15	6	4	0
+1	adicao	Quanto é 8 + 4?	12	22	11	13	0
+1	subtracao	Quanto é 8 - 4?	3	4	14	5	1
+1	subtracao	Quanto é 8 - 5?	3	2	4	13	0
+1	subtracao	Quanto é 8 - 6?	1	2	12	3	1
+1	subtracao	Quanto é 8 - 7?	2	0	11	1	3
+1	subtracao	Quanto é 8 - 8?	10	0	-1	1	1
+1	adicao	Quanto é 8 + 10?	19	18	17	28	1
+1	subtracao	Quanto é 9 - 1?	9	8	7	18	1
+1	subtracao	Quanto é 9 - 2?	8	6	7	17	2
+1	subtracao	Quanto é 9 - 3?	16	7	5	6	3
+1	adicao	Quanto é 9 + 4?	12	13	14	23	1
+1	subtracao	Quanto é 9 - 4?	6	15	5	4	2
+1	subtracao	Quanto é 9 - 5?	4	5	3	14	0
+1	subtracao	Quanto é 9 - 6?	3	13	2	4	0
+1	subtracao	Quanto é 9 - 7?	1	2	12	3	1
+1	subtracao	Quanto é 9 - 8?	1	2	0	11	0
+1	subtracao	Quanto é 9 - 9?	1	-1	0	10	2
+1	subtracao	Quanto é 10 - 1?	8	9	19	10	1
+1	subtracao	Quanto é 10 - 2?	8	9	7	18	0
+1	subtracao	Quanto é 10 - 3?	17	7	8	6	1
+1	subtracao	Quanto é 10 - 4?	6	7	5	16	0
+1	subtracao	Quanto é 10 - 5?	6	4	5	15	2
+1	adicao	Quanto é 10 + 6?	17	15	16	26	2
+1	subtracao	Quanto é 10 - 6?	5	3	4	14	2
+1	subtracao	Quanto é 10 - 7?	2	3	4	13	1
+1	adicao	Quanto é 10 + 8?	28	17	19	18	3
+1	subtracao	Quanto é 10 - 8?	3	1	12	2	3
+1	adicao	Quanto é 10 + 9?	29	19	20	18	1
+1	subtracao	Quanto é 10 - 9?	11	1	2	0	1
+1	subtracao	Quanto é 10 - 10?	1	-1	0	10	2
+1	sequencias	Qual vem depois: 1, 2, 3, ...?	3	4	5	14	1
+1	raciocinio	Qual é maior: 1 ou 4?	1	4	2	3	1
+1	sequencias	Qual vem depois: 2, 3, 4, ...?	4	15	6	5	3
+1	raciocinio	Qual é maior: 2 ou 5?	3	4	5	2	2
+1	sequencias	Qual vem depois: 3, 4, 5, ...?	5	7	6	16	2
+1	raciocinio	Qual é maior: 3 ou 6?	4	5	3	6	3
+1	sequencias	Qual vem depois: 4, 5, 6, ...?	17	8	7	6	2
+1	raciocinio	Qual é maior: 4 ou 7?	4	6	5	7	3
+1	sequencias	Qual vem depois: 5, 6, 7, ...?	7	8	9	18	1
+1	raciocinio	Qual é maior: 5 ou 8?	8	7	5	6	0
+1	sequencias	Qual vem depois: 6, 7, 8, ...?	10	8	9	19	2
+1	raciocinio	Qual é maior: 6 ou 9?	7	8	9	6	2
+1	sequencias	Qual vem depois: 7, 8, 9, ...?	20	11	10	9	2
+1	raciocinio	Qual é maior: 7 ou 10?	8	10	9	7	1
+1	sequencias	Qual vem depois: 8, 9, 10, ...?	11	12	21	10	0
+1	raciocinio	Qual é maior: 8 ou 11?	9	10	8	11	3
+1	sequencias	Qual vem depois: 9, 10, 11, ...?	22	11	13	12	3
+1	raciocinio	Qual é maior: 9 ou 12?	10	12	9	11	1
+1	sequencias	Qual vem depois: 10, 11, 12, ...?	13	23	14	12	0
+1	raciocinio	Qual é maior: 10 ou 13?	11	10	12	13	3
+1	geometria	Quantos lados tem um quadrado?	14	3	4	5	2
+1	geometria	Quantos lados tem um pentágono?	6	4	5	15	2
+1	geometria	Quantos lados tem um hexágono?	7	16	6	5	2
+1	classificacao	2 é par ou ímpar?	par	ímpar	os dois	nenhum	0
+1	classificacao	3 é par ou ímpar?	nenhum	ímpar	par	os dois	1
+1	classificacao	4 é par ou ímpar?	os dois	par	ímpar	nenhum	1
+1	classificacao	5 é par ou ímpar?	ímpar	os dois	par	nenhum	0
+1	classificacao	6 é par ou ímpar?	nenhum	os dois	ímpar	par	3
+1	classificacao	7 é par ou ímpar?	nenhum	os dois	ímpar	par	2
+1	classificacao	8 é par ou ímpar?	par	nenhum	ímpar	os dois	0
+1	classificacao	9 é par ou ímpar?	nenhum	ímpar	os dois	par	1
+1	classificacao	10 é par ou ímpar?	nenhum	par	os dois	ímpar	1
+1	classificacao	11 é par ou ímpar?	ímpar	par	nenhum	os dois	0
+1	classificacao	12 é par ou ímpar?	ímpar	os dois	nenhum	par	3
+1	classificacao	13 é par ou ímpar?	ímpar	os dois	par	nenhum	0
+1	classificacao	14 é par ou ímpar?	par	os dois	ímpar	nenhum	0
+1	classificacao	15 é par ou ímpar?	ímpar	nenhum	par	os dois	0
+1	classificacao	16 é par ou ímpar?	ímpar	par	nenhum	os dois	1
+1	classificacao	17 é par ou ímpar?	os dois	par	ímpar	nenhum	2
+1	classificacao	18 é par ou ímpar?	nenhum	os dois	ímpar	par	3
+1	classificacao	19 é par ou ímpar?	os dois	ímpar	nenhum	par	1
+1	classificacao	20 é par ou ímpar?	par	ímpar	nenhum	os dois	0
+1	classificacao	21 é par ou ímpar?	par	nenhum	ímpar	os dois	2
+2	adicao	Quanto é 11 + 2?	23	14	12	13	3
+2	subtracao	Quanto é 11 - 2?	8	19	10	9	3
+2	adicao	Quanto é 11 + 3?	13	15	24	14	3
+2	subtracao	Quanto é 11 - 3?	9	18	7	8	3
+2	adicao	Quanto é 11 + 4?	15	16	14	25	0
+2	adicao	Quanto é 11 + 5?	16	17	26	15	0
+2	subtracao	Quanto é 11 - 5?	16	7	5	6	3
+2	adicao	Quanto é 11 + 6?	17	18	16	27	0
+2	subtracao	Quanto é 11 - 6?	15	4	5	6	2
+2	adicao	Quanto é 11 + 7?	19	28	18	17	2
+2	subtracao	Quanto é 11 - 7?	3	4	14	5	1
+2	adicao	Quanto é 11 + 8?	20	18	19	29	2
+2	adicao	Quanto é 11 + 9?	20	21	30	19	0
+2	adicao	Quanto é 14 + 2?	15	17	16	26	2
+2	subtracao	Quanto é 14 - 2?	12	11	13	22	0
+2	adicao	Quanto é 14 + 3?	16	17	27	18	1
+2	adicao	Quanto é 14 + 4?	19	17	28	18	3
+2	adicao	Quanto é 14 + 5?	29	18	20	19	3
+2	adicao	Quanto é 14 + 6?	19	20	30	21	1
+2	adicao	Quanto é 14 + 7?	22	21	31	20	1
+2	adicao	Quanto é 14 + 8?	21	22	32	23	1
+2	adicao	Quanto é 14 + 9?	23	24	33	22	0
+2	subtracao	Quanto é 14 - 9?	4	6	15	5	3
+2	adicao	Quanto é 17 + 2?	20	29	18	19	3
+2	subtracao	Quanto é 17 - 2?	15	25	14	16	0
+2	adicao	Quanto é 17 + 3?	30	19	20	21	2
+2	adicao	Quanto é 17 + 4?	20	31	22	21	3
+2	subtracao	Quanto é 17 - 4?	13	23	12	14	0
+2	adicao	Quanto é 17 + 5?	23	22	21	32	1
+2	subtracao	Quanto é 17 - 5?	12	22	13	11	0
+2	adicao	Quanto é 17 + 6?	33	22	24	23	3
+2	adicao	Quanto é 17 + 7?	23	24	25	34	1
+2	subtracao	Quanto é 17 - 7?	9	20	10	11	2
+2	adicao	Quanto é 17 + 8?	25	26	24	35	0
+2	adicao	Quanto é 17 + 9?	25	26	36	27	1
+2	subtracao	Quanto é 17 - 9?	8	7	18	9	0
+2	adicao	Quanto é 20 + 2?	22	23	21	32	0
+2	subtracao	Quanto é 20 - 2?	28	18	17	19	1
+2	adicao	Quanto é 20 + 3?	23	33	22	24	0
+2	adicao	Quanto é 20 + 4?	34	25	24	23	2
+2	adicao	Quanto é 20 + 5?	24	26	35	25	3
+2	adicao	Quanto é 20 + 6?	36	26	25	27	1
+2	adicao	Quanto é 20 + 7?	28	37	27	26	2
+2	subtracao	Quanto é 20 - 7?	13	14	12	23	0
+2	adicao	Quanto é 20 + 8?	27	28	29	38	1
+2	adicao	Quanto é 20 + 9?	39	29	30	28	1
+2	adicao	Quanto é 23 + 2?	26	35	24	25	3
+2	subtracao	Quanto é 23 - 2?	20	31	22	21	3
+2	adicao	Quanto é 23 + 3?	36	25	26	27	2
+2	adicao	Quanto é 23 + 4?	28	37	27	26	2
+2	adicao	Quanto é 23 + 5?	38	28	27	29	1
+2	adicao	Quanto é 23 + 6?	39	30	29	28	2
+2	subtracao	Quanto é 23 - 6?	16	27	17	18	2
+2	adicao	Quanto é 23 + 7?	29	40	30	31	2
+2	adicao	Quanto é 23 + 8?	41	30	32	31	3
+2	subtracao	Quanto é 23 - 8?	15	14	16	25	0
+2	adicao	Quanto é 23 + 9?	42	33	31	32	3
+2	subtracao	Quanto é 23 - 9?	14	24	13	15	0
+2	adicao	Quanto é 26 + 2?	27	38	28	29	2
+2	adicao	Quanto é 26 + 3?	29	30	28	39	0
+2	subtracao	Quanto é 26 - 3?	24	23	22	33	1
+2	adicao	Quanto é 26 + 4?	29	31	30	40	2
+2	subtracao	Quanto é 26 - 4?	32	22	23	21	1
+2	adicao	Quanto é 26 + 5?	41	30	31	32	2
+2	subtracao	Quanto é 26 - 5?	21	31	20	22	0
+2	adicao	Quanto é 26 + 6?	31	32	33	42	1
+2	adicao	Quanto é 26 + 7?	33	32	34	43	0
+2	adicao	Quanto é 26 + 8?	34	44	33	35	0
+2	adicao	Quanto é 26 + 9?	34	45	35	36	2
+2	subtracao	Quanto é 26 - 9?	27	17	16	18	1
+2	adicao	Quanto é 29 + 2?	31	41	32	30	0
+2	adicao	Quanto é 29 + 3?	32	33	42	31	0
+2	subtracao	Quanto é 29 - 3?	27	36	26	25	2
+2	adicao	Quanto é 29 + 4?	34	33	32	43	1
+2	adicao	Quanto é 29 + 5?	44	35	33	34	3
+2	subtracao	Quanto é 29 - 5?	24	25	34	23	0
+2	adicao	Quanto é 29 + 6?	36	35	45	34	1
+2	subtracao	Quanto é 29 - 6?	22	33	23	24	2
+2	adicao	Quanto é 29 + 7?	37	35	36	46	2
+2	subtracao	Quanto é 29 - 7?	32	23	21	22	3
+2	adicao	Quanto é 29 + 8?	38	36	37	47	2
+2	subtracao	Quanto é 29 - 8?	31	20	22	21	3
+2	adicao	Quanto é 29 + 9?	39	48	38	37	2
+2	subtracao	Quanto é 29 - 9?	21	20	30	19	1
+2	adicao	Quanto é 32 + 2?	35	33	44	34	3
+2	subtracao	Quanto é 32 - 2?	31	29	40	30	3
+2	adicao	Quanto é 32 + 3?	34	36	45	35	3
+2	subtracao	Quanto é 32 - 3?	30	29	28	39	1
+2	adicao	Quanto é 32 + 4?	35	36	37	46	1
+2	subtracao	Quanto é 32 - 4?	29	27	28	38	2
+2	adicao	Quanto é 32 + 5?	38	36	37	47	2
+2	subtracao	Quanto é 32 - 5?	28	37	26	27	3
+2	adicao	Quanto é 32 + 6?	48	39	38	37	2
+2	subtracao	Quanto é 32 - 6?	36	27	26	25	2
+2	adicao	Quanto é 32 + 7?	40	49	38	39	3
+2	subtracao	Quanto é 32 - 7?	26	24	35	25	3
+2	adicao	Quanto é 32 + 8?	39	40	41	50	1
+2	subtracao	Quanto é 32 - 8?	25	23	24	34	2
+2	adicao	Quanto é 32 + 9?	40	42	41	51	2
+2	adicao	Quanto é 35 + 2?	47	38	37	36	2
+2	subtracao	Quanto é 35 - 2?	32	33	34	43	1
+2	adicao	Quanto é 35 + 3?	37	39	38	48	2
+2	subtracao	Quanto é 35 - 3?	42	32	33	31	1
+2	adicao	Quanto é 35 + 4?	38	40	49	39	3
+2	subtracao	Quanto é 35 - 4?	31	32	30	41	0
+2	adicao	Quanto é 35 + 5?	50	40	41	39	1
+2	subtracao	Quanto é 35 - 5?	40	30	29	31	1
+2	adicao	Quanto é 35 + 6?	42	40	41	51	2
+2	subtracao	Quanto é 35 - 6?	28	30	39	29	3
+2	adicao	Quanto é 35 + 7?	41	42	43	52	1
+2	subtracao	Quanto é 35 - 7?	29	28	38	27	1
+2	adicao	Quanto é 35 + 8?	43	42	44	53	0
+2	subtracao	Quanto é 35 - 8?	27	28	37	26	0
+2	adicao	Quanto é 35 + 9?	54	45	43	44	3
+2	subtracao	Quanto é 35 - 9?	36	27	26	25	2
+2	adicao	Quanto é 38 + 2?	50	39	40	41	2
+2	subtracao	Quanto é 38 - 2?	46	37	36	35	2
+2	adicao	Quanto é 38 + 3?	42	41	40	51	1
+2	subtracao	Quanto é 38 - 3?	35	36	34	45	0
+2	adicao	Quanto é 38 + 4?	52	41	42	43	2
+2	subtracao	Quanto é 38 - 4?	33	35	44	34	3
+2	adicao	Quanto é 38 + 5?	53	43	44	42	1
+2	subtracao	Quanto é 38 - 5?	43	33	32	34	1
+2	adicao	Quanto é 38 + 6?	44	43	54	45	0
+2	subtracao	Quanto é 38 - 6?	31	32	33	42	1
+2	adicao	Quanto é 38 + 7?	44	46	45	55	2
+2	subtracao	Quanto é 38 - 7?	41	30	32	31	3
+2	adicao	Quanto é 38 + 8?	45	56	46	47	2
+2	subtracao	Quanto é 38 - 8?	29	30	40	31	1
+2	adicao	Quanto é 38 + 9?	57	47	48	46	1
+2	subtracao	Quanto é 38 - 9?	29	39	28	30	0
+2	adicao	Quanto é 41 + 2?	44	42	43	53	2
+2	subtracao	Quanto é 41 - 2?	49	40	38	39	3
+2	adicao	Quanto é 41 + 3?	54	44	43	45	1
+2	subtracao	Quanto é 41 - 3?	38	48	39	37	0
+2	adicao	Quanto é 41 + 4?	45	55	44	46	0
+2	subtracao	Quanto é 41 - 4?	36	38	37	47	2
+2	adicao	Quanto é 41 + 5?	46	56	45	47	0
+2	subtracao	Quanto é 41 - 5?	46	36	37	35	1
+2	adicao	Quanto é 41 + 6?	47	46	57	48	0
+2	subtracao	Quanto é 41 - 6?	45	34	36	35	3
+2	adicao	Quanto é 41 + 7?	48	58	47	49	0
+2	subtracao	Quanto é 41 - 7?	33	44	34	35	2
+2	adicao	Quanto é 41 + 8?	48	49	50	59	1
+2	subtracao	Quanto é 41 - 8?	43	32	33	34	2
+2	adicao	Quanto é 41 + 9?	51	60	50	49	2
+2	subtracao	Quanto é 41 - 9?	33	31	42	32	3
+2	adicao	Quanto é 44 + 2?	45	46	56	47	1
+2	subtracao	Quanto é 44 - 2?	52	43	41	42	3
+2	adicao	Quanto é 44 + 3?	46	47	48	57	1
+2	subtracao	Quanto é 44 - 3?	42	41	51	40	1
+2	adicao	Quanto é 44 + 4?	58	49	47	48	3
+2	subtracao	Quanto é 44 - 4?	39	50	41	40	3
+2	adicao	Quanto é 44 + 5?	59	48	49	50	2
+2	subtracao	Quanto é 44 - 5?	49	39	40	38	1
+2	adicao	Quanto é 44 + 6?	51	49	50	60	2
+2	subtracao	Quanto é 44 - 6?	48	38	37	39	1
+2	adicao	Quanto é 44 + 7?	51	61	52	50	0
+2	subtracao	Quanto é 44 - 7?	37	38	47	36	0
+2	adicao	Quanto é 44 + 8?	62	53	51	52	3
+2	subtracao	Quanto é 44 - 8?	35	46	36	37	2
+2	adicao	Quanto é 44 + 9?	54	53	52	63	1
+2	subtracao	Quanto é 44 - 9?	34	35	45	36	1
+2	adicao	Quanto é 47 + 2?	49	48	50	59	0
+2	subtracao	Quanto é 47 - 2?	55	44	46	45	3
+2	adicao	Quanto é 47 + 3?	51	49	60	50	3
+2	subtracao	Quanto é 47 - 3?	45	54	44	43	2
+2	adicao	Quanto é 47 + 4?	61	52	51	50	2
+2	subtracao	Quanto é 47 - 4?	42	43	44	53	1
+2	adicao	Quanto é 47 + 5?	53	51	62	52	3
+2	subtracao	Quanto é 47 - 5?	52	41	42	43	2
+2	adicao	Quanto é 47 + 6?	52	54	53	63	2
+2	subtracao	Quanto é 47 - 6?	41	51	40	42	0
+2	adicao	Quanto é 47 + 7?	54	55	64	53	0
+2	subtracao	Quanto é 47 - 7?	39	40	50	41	1
+2	adicao	Quanto é 47 + 8?	55	56	54	65	0
+2	subtracao	Quanto é 47 - 8?	38	40	49	39	3
+2	adicao	Quanto é 47 + 9?	56	57	66	55	0
+2	subtracao	Quanto é 47 - 9?	39	38	37	48	1
+2	adicao	Quanto é 50 + 2?	51	62	52	53	2
+2	subtracao	Quanto é 50 - 2?	58	47	48	49	2
+2	adicao	Quanto é 50 + 3?	53	52	63	54	0
+2	subtracao	Quanto é 50 - 3?	47	48	46	57	0
+2	adicao	Quanto é 50 + 4?	55	54	64	53	1
+2	subtracao	Quanto é 50 - 4?	56	45	47	46	3
+2	adicao	Quanto é 50 + 5?	55	54	65	56	0
+2	subtracao	Quanto é 50 - 5?	44	46	45	55	2
+2	adicao	Quanto é 50 + 6?	66	56	55	57	1
+2	subtracao	Quanto é 50 - 6?	54	44	45	43	1
+2	adicao	Quanto é 50 + 7?	67	57	56	58	1
+2	subtracao	Quanto é 50 - 7?	53	42	44	43	3
+2	adicao	Quanto é 50 + 8?	57	58	68	59	1
+2	subtracao	Quanto é 50 - 8?	43	41	52	42	3
+2	adicao	Quanto é 50 + 9?	60	69	59	58	2
+2	subtracao	Quanto é 50 - 9?	41	51	40	42	0
+2	adicao	Quanto é 53 + 2?	55	56	65	54	0
+2	subtracao	Quanto é 53 - 2?	52	50	51	61	2
+2	adicao	Quanto é 53 + 3?	55	57	56	66	2
+2	subtracao	Quanto é 53 - 3?	49	50	51	60	1
+2	adicao	Quanto é 53 + 4?	67	58	56	57	3
+2	subtracao	Quanto é 53 - 4?	49	50	59	48	0
+2	adicao	Quanto é 53 + 5?	59	57	58	68	2
+2	subtracao	Quanto é 53 - 5?	49	58	47	48	3
+2	adicao	Quanto é 53 + 6?	69	58	60	59	3
+2	subtracao	Quanto é 53 - 6?	47	46	57	48	0
+2	adicao	Quanto é 53 + 7?	60	59	61	70	0
+2	subtracao	Quanto é 53 - 7?	46	47	45	56	0
+2	adicao	Quanto é 53 + 8?	71	60	62	61	3
+2	subtracao	Quanto é 53 - 8?	55	46	45	44	2
+2	adicao	Quanto é 53 + 9?	63	62	72	61	1
+2	subtracao	Quanto é 53 - 9?	43	44	45	54	1
+2	adicao	Quanto é 56 + 2?	57	59	58	68	2
+2	subtracao	Quanto é 56 - 2?	53	64	55	54	3
+2	adicao	Quanto é 56 + 3?	58	60	59	69	2
+2	subtracao	Quanto é 56 - 3?	54	63	52	53	3
+2	adicao	Quanto é 56 + 4?	60	70	61	59	0
+2	subtracao	Quanto é 56 - 4?	62	53	51	52	3
+2	adicao	Quanto é 56 + 5?	71	61	62	60	1
+2	subtracao	Quanto é 56 - 5?	51	50	61	52	0
+2	adicao	Quanto é 56 + 6?	61	63	62	72	2
+2	subtracao	Quanto é 56 - 6?	50	60	51	49	0
+2	adicao	Quanto é 56 + 7?	62	63	64	73	1
+2	subtracao	Quanto é 56 - 7?	48	49	59	50	1
+2	adicao	Quanto é 56 + 8?	64	63	74	65	0
+2	subtracao	Quanto é 56 - 8?	48	58	47	49	0
+2	adicao	Quanto é 56 + 9?	64	66	65	75	2
+2	subtracao	Quanto é 56 - 9?	48	47	57	46	1
+2	adicao	Quanto é 59 + 2?	71	60	62	61	3
+2	subtracao	Quanto é 59 - 2?	56	57	67	58	1
+2	adicao	Quanto é 59 + 3?	63	72	62	61	2
+2	subtracao	Quanto é 59 - 3?	55	57	66	56	3
+2	adicao	Quanto é 59 + 4?	63	73	64	62	0
+2	subtracao	Quanto é 59 - 4?	54	56	65	55	3
+2	adicao	Quanto é 59 + 5?	63	74	65	64	3
+2	subtracao	Quanto é 59 - 5?	54	53	55	64	0
+2	adicao	Quanto é 59 + 6?	75	64	65	66	2
+2	subtracao	Quanto é 59 - 6?	52	53	63	54	1
+2	adicao	Quanto é 59 + 7?	67	66	65	76	1
+2	subtracao	Quanto é 59 - 7?	52	51	62	53	0
+2	adicao	Quanto é 59 + 8?	66	68	67	77	2
+2	subtracao	Quanto é 59 - 8?	51	50	61	52	0
+2	adicao	Quanto é 59 + 9?	69	68	67	78	1
+2	subtracao	Quanto é 59 - 9?	60	49	51	50	3
+2	multiplicacao	Quanto é 2 × 2?	14	3	5	4	3
+2	multiplicacao	Quanto é 2 × 5?	10	11	20	9	0
+2	multiplicacao	Quanto é 2 × 10?	20	30	19	21	0
+2	divisao	Quanto é 4 ÷ 2?	3	1	2	12	2
+2	divisao	Quanto é 20 ÷ 10?	3	12	2	1	2
+2	raciocinio	Qual é a metade de 4?	12	1	3	2	3
+2	raciocinio	Qual é o dobro de 2?	3	14	5	4	3
+2	multiplicacao	Quanto é 3 × 2?	5	16	6	7	2
+2	multiplicacao	Quanto é 3 × 5?	16	25	15	14	2
+2	multiplicacao	Quanto é 3 × 10?	40	30	29	31	1
+2	divisao	Quanto é 6 ÷ 2?	4	13	2	3	3
+2	divisao	Quanto é 30 ÷ 10?	4	2	13	3	3
+2	raciocinio	Qual é a metade de 6?	13	2	3	4	2
+2	raciocinio	Qual é o dobro de 3?	5	7	16	6	3
+2	multiplicacao	Quanto é 4 × 2?	9	7	18	8	3
+2	multiplicacao	Quanto é 4 × 5?	30	21	19	20	3
+2	multiplicacao	Quanto é 4 × 10?	39	50	40	41	2
+2	divisao	Quanto é 8 ÷ 2?	14	3	4	5	2
+2	divisao	Quanto é 40 ÷ 10?	4	3	14	5	0
+2	raciocinio	Qual é a metade de 8?	5	14	3	4	3
+2	raciocinio	Qual é o dobro de 4?	8	18	9	7	0
+2	multiplicacao	Quanto é 5 × 2?	9	20	10	11	2
+2	multiplicacao	Quanto é 5 × 5?	26	25	35	24	1
+2	multiplicacao	Quanto é 5 × 10?	51	60	50	49	2
+2	divisao	Quanto é 10 ÷ 2?	5	15	6	4	0
+2	divisao	Quanto é 50 ÷ 10?	4	6	15	5	3
+2	raciocinio	Qual é a metade de 10?	6	5	15	4	1
+2	raciocinio	Qual é o dobro de 5?	11	9	10	20	2
+2	multiplicacao	Quanto é 6 × 2?	22	11	12	13	2
+2	multiplicacao	Quanto é 6 × 5?	40	31	30	29	2
+2	multiplicacao	Quanto é 6 × 10?	59	70	61	60	3
+2	divisao	Quanto é 12 ÷ 2?	6	7	16	5	0
+2	divisao	Quanto é 60 ÷ 10?	7	6	16	5	1
+2	raciocinio	Qual é a metade de 12?	16	5	6	7	2
+2	raciocinio	Qual é o dobro de 6?	12	22	13	11	0
+2	multiplicacao	Quanto é 7 × 2?	14	24	15	13	0
+2	multiplicacao	Quanto é 7 × 5?	35	45	34	36	0
+2	multiplicacao	Quanto é 7 × 10?	70	71	80	69	0
+2	divisao	Quanto é 14 ÷ 2?	6	17	8	7	3
+2	divisao	Quanto é 70 ÷ 10?	7	17	8	6	0
+2	raciocinio	Qual é a metade de 14?	17	8	7	6	2
+2	raciocinio	Qual é o dobro de 7?	15	14	13	24	1
+2	multiplicacao	Quanto é 8 × 2?	17	15	26	16	3
+2	multiplicacao	Quanto é 8 × 5?	41	40	50	39	1
+2	multiplicacao	Quanto é 8 × 10?	90	80	79	81	1
+2	divisao	Quanto é 16 ÷ 2?	9	7	8	18	2
+2	divisao	Quanto é 80 ÷ 10?	18	9	7	8	3
+2	raciocinio	Qual é a metade de 16?	7	18	8	9	2
+2	raciocinio	Qual é o dobro de 8?	26	16	17	15	1
+2	multiplicacao	Quanto é 9 × 2?	17	28	19	18	3
+2	multiplicacao	Quanto é 9 × 5?	45	46	55	44	0
+2	multiplicacao	Quanto é 9 × 10?	91	100	89	90	3
+2	divisao	Quanto é 18 ÷ 2?	8	10	19	9	3
+2	divisao	Quanto é 90 ÷ 10?	8	9	10	19	1
+2	raciocinio	Qual é a metade de 18?	9	8	10	19	0
+2	raciocinio	Qual é o dobro de 9?	17	19	28	18	3
+2	multiplicacao	Quanto é 10 × 2?	30	20	19	21	1
+2	multiplicacao	Quanto é 10 × 5?	51	49	50	60	2
+2	multiplicacao	Quanto é 10 × 10?	101	99	110	100	3
+2	divisao	Quanto é 20 ÷ 2?	11	20	9	10	3
+2	divisao	Quanto é 100 ÷ 10?	20	11	9	10	3
+2	raciocinio	Qual é a metade de 20?	20	10	11	9	1
+2	raciocinio	Qual é o dobro de 10?	21	19	20	30	2
+2	sequencias	Complete: 2, 4, 6, ...	7	8	18	9	1
+2	sequencias	Complete: 5, 10, 15, ...	30	20	19	21	1
+2	sequencias	Complete: 10, 20, 30, ...	41	39	50	40	3
+2	sequencias	Complete: 3, 6, 9, ...	22	13	11	12	3
+2	sequencias	Complete: 4, 8, 12, ...	16	17	15	26	0
+2	sequencias	Complete: 6, 12, 18, ...	23	24	34	25	1
+2	sequencias	Complete: 7, 14, 21, ...	29	38	28	27	2
+2	sequencias	Complete: 9, 18, 27, ...	37	36	35	46	1
+2	raciocinio	27 está mais perto de 20 ou de 30?	27	32	30	20	2
+2	raciocinio	34 está mais perto de 30 ou de 40?	40	39	30	34	2
+2	raciocinio	41 está mais perto de 40 ou de 50?	46	40	41	50	1
+2	raciocinio	48 está mais perto de 40 ou de 50?	53	50	40	48	1
+2	raciocinio	62 está mais perto de 60 ou de 70?	62	70	67	60	3
+2	raciocinio	69 está mais perto de 60 ou de 70?	60	74	70	69	2
+2	raciocinio	76 está mais perto de 70 ou de 80?	81	80	70	76	1
+2	raciocinio	83 está mais perto de 80 ou de 90?	80	88	83	90	0
+2	raciocinio	97 está mais perto de 90 ou de 100?	97	90	102	100	3
+3	divisao	Quanto é 4 ÷ 2?	12	2	1	3	1
+3	divisao	Quanto é 6 ÷ 3?	2	3	12	1	0
+3	divisao	Quanto é 8 ÷ 4?	1	3	2	12	2
+3	divisao	Quanto é 10 ÷ 5?	2	3	1	12	0
+3	divisao	Quanto é 12 ÷ 6?	2	3	12	1	0
+3	divisao	Quanto é 14 ÷ 7?	1	3	12	2	3
+3	divisao	Quanto é 16 ÷ 8?	1	2	3	12	1
+3	divisao	Quanto é 18 ÷ 9?	12	2	1	3	1
+3	divisao	Quanto é 20 ÷ 10?	2	1	3	12	0
+3	divisao	Quanto é 6 ÷ 2?	13	3	4	2	1
+3	divisao	Quanto é 9 ÷ 3?	4	2	13	3	3
+3	divisao	Quanto é 12 ÷ 4?	13	3	4	2	1
+3	divisao	Quanto é 15 ÷ 5?	3	2	4	13	0
+3	divisao	Quanto é 18 ÷ 6?	4	13	2	3	3
+3	divisao	Quanto é 21 ÷ 7?	13	4	3	2	2
+3	divisao	Quanto é 24 ÷ 8?	13	3	2	4	1
+3	divisao	Quanto é 27 ÷ 9?	3	2	13	4	0
+3	divisao	Quanto é 30 ÷ 10?	13	2	3	4	2
+3	divisao	Quanto é 8 ÷ 2?	14	3	5	4	3
+3	divisao	Quanto é 12 ÷ 3?	4	14	3	5	0
+3	divisao	Quanto é 16 ÷ 4?	4	3	14	5	0
+3	divisao	Quanto é 20 ÷ 5?	3	5	4	14	2
+3	divisao	Quanto é 24 ÷ 6?	3	4	5	14	1
+3	divisao	Quanto é 28 ÷ 7?	3	5	14	4	3
+3	divisao	Quanto é 32 ÷ 8?	4	5	14	3	0
+3	divisao	Quanto é 36 ÷ 9?	3	5	14	4	3
+3	divisao	Quanto é 40 ÷ 10?	4	14	3	5	0
+3	divisao	Quanto é 10 ÷ 2?	6	5	15	4	1
+3	divisao	Quanto é 15 ÷ 3?	6	4	15	5	3
+3	divisao	Quanto é 20 ÷ 4?	5	4	15	6	0
+3	divisao	Quanto é 25 ÷ 5?	4	15	6	5	3
+3	divisao	Quanto é 30 ÷ 6?	5	15	4	6	0
+3	divisao	Quanto é 35 ÷ 7?	15	5	4	6	1
+3	divisao	Quanto é 40 ÷ 8?	6	4	15	5	3
+3	divisao	Quanto é 45 ÷ 9?	4	15	5	6	2
+3	divisao	Quanto é 50 ÷ 10?	6	5	4	15	1
+3	divisao	Quanto é 12 ÷ 2?	5	7	16	6	3
+3	divisao	Quanto é 18 ÷ 3?	5	16	6	7	2
+3	divisao	Quanto é 24 ÷ 4?	5	6	7	16	1
+3	divisao	Quanto é 30 ÷ 5?	5	6	16	7	1
+3	divisao	Quanto é 36 ÷ 6?	16	5	7	6	3
+3	divisao	Quanto é 42 ÷ 7?	6	7	5	16	0
+3	divisao	Quanto é 48 ÷ 8?	5	16	6	7	2
+3	divisao	Quanto é 54 ÷ 9?	16	6	5	7	1
+3	divisao	Quanto é 60 ÷ 10?	6	7	16	5	0
+3	divisao	Quanto é 14 ÷ 2?	8	7	6	17	1
+3	divisao	Quanto é 21 ÷ 3?	7	17	6	8	0
+3	divisao	Quanto é 28 ÷ 4?	17	8	7	6	2
+3	divisao	Quanto é 35 ÷ 5?	6	17	7	8	2
+3	divisao	Quanto é 42 ÷ 6?	8	7	6	17	1
+3	divisao	Quanto é 49 ÷ 7?	17	7	8	6	1
+3	divisao	Quanto é 56 ÷ 8?	7	17	8	6	0
+3	divisao	Quanto é 63 ÷ 9?	7	6	8	17	0
+3	divisao	Quanto é 70 ÷ 10?	7	6	17	8	0
+3	divisao	Quanto é 16 ÷ 2?	8	18	7	9	0
+3	divisao	Quanto é 24 ÷ 3?	8	18	9	7	0
+3	divisao	Quanto é 32 ÷ 4?	7	8	18	9	1
+3	divisao	Quanto é 40 ÷ 5?	8	9	18	7	0
+3	divisao	Quanto é 48 ÷ 6?	7	18	8	9	2
+3	divisao	Quanto é 56 ÷ 7?	7	18	9	8	3
+3	divisao	Quanto é 64 ÷ 8?	18	7	8	9	2
+3	divisao	Quanto é 72 ÷ 9?	9	7	18	8	3
+3	divisao	Quanto é 80 ÷ 10?	18	7	8	9	2
+3	divisao	Quanto é 18 ÷ 2?	19	9	10	8	1
+3	divisao	Quanto é 27 ÷ 3?	8	19	9	10	2
+3	divisao	Quanto é 36 ÷ 4?	19	8	9	10	2
+3	divisao	Quanto é 45 ÷ 5?	10	8	9	19	2
+3	divisao	Quanto é 54 ÷ 6?	8	10	9	19	2
+3	divisao	Quanto é 63 ÷ 7?	19	8	10	9	3
+3	divisao	Quanto é 72 ÷ 8?	9	10	8	19	0
+3	divisao	Quanto é 81 ÷ 9?	19	9	8	10	1
+3	divisao	Quanto é 90 ÷ 10?	8	10	19	9	3
+3	divisao	Quanto é 20 ÷ 2?	20	10	11	9	1
+3	divisao	Quanto é 30 ÷ 3?	11	20	10	9	2
+3	divisao	Quanto é 40 ÷ 4?	11	9	10	20	2
+3	divisao	Quanto é 50 ÷ 5?	11	20	10	9	2
+3	divisao	Quanto é 60 ÷ 6?	10	20	11	9	0
+3	divisao	Quanto é 70 ÷ 7?	10	9	20	11	0
+3	divisao	Quanto é 80 ÷ 8?	11	10	9	20	1
+3	divisao	Quanto é 90 ÷ 9?	10	20	9	11	0
+3	divisao	Quanto é 100 ÷ 10?	10	9	20	11	0
+3	adicao	Quanto é 23 + 8?	30	31	41	32	1
+3	subtracao	Quanto é 23 - 8?	25	15	14	16	1
+3	adicao	Quanto é 23 + 9?	42	31	32	33	2
+3	subtracao	Quanto é 23 - 9?	14	15	24	13	0
+3	adicao	Quanto é 23 + 17?	40	41	39	50	0
+3	subtracao	Quanto é 23 - 17?	7	16	5	6	3
+3	adicao	Quanto é 23 + 26?	50	59	48	49	3
+3	adicao	Quanto é 29 + 8?	37	36	47	38	0
+3	subtracao	Quanto é 29 - 8?	21	31	20	22	0
+3	adicao	Quanto é 29 + 9?	39	37	48	38	3
+3	subtracao	Quanto é 29 - 9?	20	30	19	21	0
+3	adicao	Quanto é 29 + 17?	45	47	46	56	2
+3	subtracao	Quanto é 29 - 17?	22	12	13	11	1
+3	adicao	Quanto é 29 + 26?	54	56	65	55	3
+3	subtracao	Quanto é 29 - 26?	4	3	13	2	1
+3	adicao	Quanto é 35 + 8?	42	43	53	44	1
+3	subtracao	Quanto é 35 - 8?	28	26	37	27	3
+3	adicao	Quanto é 35 + 9?	44	45	54	43	0
+3	subtracao	Quanto é 35 - 9?	26	27	25	36	0
+3	adicao	Quanto é 35 + 17?	51	52	53	62	1
+3	subtracao	Quanto é 35 - 17?	19	17	28	18	3
+3	adicao	Quanto é 35 + 26?	71	61	62	60	1
+3	subtracao	Quanto é 35 - 26?	10	9	19	8	1
+3	adicao	Quanto é 41 + 8?	50	59	49	48	2
+3	subtracao	Quanto é 41 - 8?	33	43	34	32	0
+3	adicao	Quanto é 41 + 9?	60	51	49	50	3
+3	subtracao	Quanto é 41 - 9?	31	33	32	42	2
+3	adicao	Quanto é 41 + 17?	57	58	68	59	1
+3	subtracao	Quanto é 41 - 17?	23	34	25	24	3
+3	adicao	Quanto é 41 + 26?	77	66	68	67	3
+3	subtracao	Quanto é 41 - 26?	25	14	15	16	2
+3	adicao	Quanto é 47 + 8?	65	55	56	54	1
+3	subtracao	Quanto é 47 - 8?	40	39	49	38	1
+3	adicao	Quanto é 47 + 9?	55	57	56	66	2
+3	subtracao	Quanto é 47 - 9?	37	39	48	38	3
+3	adicao	Quanto é 47 + 17?	65	64	74	63	1
+3	subtracao	Quanto é 47 - 17?	31	30	29	40	1
+3	adicao	Quanto é 47 + 26?	72	74	73	83	2
+3	subtracao	Quanto é 47 - 26?	22	31	21	20	2
+3	adicao	Quanto é 53 + 8?	62	61	60	71	1
+3	subtracao	Quanto é 53 - 8?	46	45	55	44	1
+3	adicao	Quanto é 53 + 9?	72	61	62	63	2
+3	subtracao	Quanto é 53 - 9?	54	43	44	45	2
+3	adicao	Quanto é 53 + 17?	71	70	80	69	1
+3	subtracao	Quanto é 53 - 17?	46	37	36	35	2
+3	adicao	Quanto é 53 + 26?	78	79	89	80	1
+3	subtracao	Quanto é 53 - 26?	27	26	28	37	0
+3	adicao	Quanto é 59 + 8?	77	68	66	67	3
+3	subtracao	Quanto é 59 - 8?	50	61	51	52	2
+3	adicao	Quanto é 59 + 9?	68	67	69	78	0
+3	subtracao	Quanto é 59 - 9?	50	60	51	49	0
+3	adicao	Quanto é 59 + 17?	76	86	77	75	0
+3	subtracao	Quanto é 59 - 17?	41	42	43	52	1
+3	adicao	Quanto é 59 + 26?	86	84	95	85	3
+3	subtracao	Quanto é 59 - 26?	33	43	34	32	0
+3	adicao	Quanto é 65 + 8?	72	73	83	74	1
+3	subtracao	Quanto é 65 - 8?	58	56	67	57	3
+3	adicao	Quanto é 65 + 9?	84	75	74	73	2
+3	subtracao	Quanto é 65 - 9?	66	56	57	55	1
+3	adicao	Quanto é 65 + 17?	92	81	82	83	2
+3	subtracao	Quanto é 65 - 17?	47	48	49	58	1
+3	adicao	Quanto é 65 + 26?	101	92	91	90	2
+3	subtracao	Quanto é 65 - 26?	38	39	40	49	1
+3	adicao	Quanto é 71 + 8?	78	80	79	89	2
+3	subtracao	Quanto é 71 - 8?	73	64	63	62	2
+3	adicao	Quanto é 71 + 9?	81	79	80	90	2
+3	subtracao	Quanto é 71 - 9?	61	62	63	72	1
+3	adicao	Quanto é 71 + 17?	98	88	87	89	1
+3	subtracao	Quanto é 71 - 17?	53	64	55	54	3
+3	adicao	Quanto é 71 + 26?	97	96	98	107	0
+3	subtracao	Quanto é 71 - 26?	44	45	46	55	1
+3	adicao	Quanto é 77 + 8?	84	85	95	86	1
+3	subtracao	Quanto é 77 - 8?	70	79	69	68	2
+3	adicao	Quanto é 77 + 9?	86	96	85	87	0
+3	subtracao	Quanto é 77 - 9?	67	69	68	78	2
+3	adicao	Quanto é 77 + 17?	104	93	95	94	3
+3	subtracao	Quanto é 77 - 17?	70	60	59	61	1
+3	adicao	Quanto é 77 + 26?	104	113	102	103	3
+3	subtracao	Quanto é 77 - 26?	52	50	51	61	2
+3	adicao	Quanto é 83 + 8?	92	90	101	91	3
+3	subtracao	Quanto é 83 - 8?	76	75	74	85	1
+3	adicao	Quanto é 83 + 9?	102	93	91	92	3
+3	subtracao	Quanto é 83 - 9?	74	75	84	73	0
+3	adicao	Quanto é 83 + 17?	99	110	100	101	2
+3	subtracao	Quanto é 83 - 17?	66	76	67	65	0
+3	adicao	Quanto é 83 + 26?	110	119	108	109	3
+3	subtracao	Quanto é 83 - 26?	58	56	57	67	2
+3	adicao	Quanto é 89 + 8?	98	97	107	96	1
+3	subtracao	Quanto é 89 - 8?	82	81	80	91	1
+3	adicao	Quanto é 89 + 9?	108	97	99	98	3
+3	subtracao	Quanto é 89 - 9?	81	80	90	79	1
+3	adicao	Quanto é 89 + 17?	106	107	116	105	0
+3	subtracao	Quanto é 89 - 17?	71	72	73	82	1
+3	adicao	Quanto é 89 + 26?	125	115	116	114	1
+3	subtracao	Quanto é 89 - 26?	64	73	62	63	3
+3	raciocinio	Qual é a metade de 12?	16	5	6	7	2
+3	raciocinio	Quanto é um quarto de 12?	13	2	4	3	3
+3	raciocinio	Qual é a metade de 16?	7	18	8	9	2
+3	raciocinio	Quanto é um quarto de 16?	4	14	3	5	0
+3	raciocinio	Qual é a metade de 20?	11	20	9	10	3
+3	raciocinio	Quanto é um quarto de 20?	6	4	15	5	3
+3	raciocinio	Qual é a metade de 24?	11	13	22	12	3
+3	raciocinio	Quanto é um quarto de 24?	6	5	16	7	0
+3	raciocinio	Qual é a metade de 28?	14	15	24	13	0
+3	raciocinio	Quanto é um quarto de 28?	17	8	6	7	3
+3	raciocinio	Qual é a metade de 32?	15	16	17	26	1
+3	raciocinio	Quanto é um quarto de 32?	9	7	8	18	2
+3	raciocinio	Qual é a metade de 36?	19	28	17	18	3
+3	raciocinio	Quanto é um quarto de 36?	9	8	19	10	0
+3	raciocinio	Qual é a metade de 40?	20	21	19	30	0
+3	raciocinio	Quanto é um quarto de 40?	9	11	10	20	2
+3	raciocinio	Qual é a metade de 48?	24	25	23	34	0
+3	raciocinio	Quanto é um quarto de 48?	13	11	12	22	2
+3	raciocinio	Qual é a metade de 60?	31	29	30	40	2
+3	raciocinio	Quanto é um quarto de 60?	14	16	25	15	3
+3	raciocinio	Qual é a metade de 80?	39	40	41	50	1
+3	raciocinio	Quanto é um quarto de 80?	30	19	20	21	2
+3	raciocinio	Qual é a metade de 100?	49	50	60	51	1
+3	raciocinio	Quanto é um quarto de 100?	25	26	35	24	0
+3	raciocinio	Quanto é 10% de 10?	1	0	11	2	0
+3	raciocinio	Quanto é 10% de 20?	12	3	1	2	3
+3	raciocinio	Quanto é 10% de 30?	3	13	4	2	0
+3	raciocinio	Quanto é 10% de 40?	5	4	3	14	1
+3	raciocinio	Quanto é 10% de 50?	6	4	5	15	2
+3	raciocinio	Quanto é 10% de 60?	16	7	6	5	2
+3	raciocinio	Quanto é 10% de 70?	17	6	8	7	3
+3	raciocinio	Quanto é 10% de 80?	7	18	8	9	2
+3	raciocinio	Quanto é 10% de 90?	10	9	8	19	1
+3	raciocinio	Quanto é 10% de 100?	11	20	10	9	2
+3	raciocinio	3 caixas com 2 lápis. Quantos ao todo?	7	5	6	16	2
+3	raciocinio	3 caixas com 3 lápis. Quantos ao todo?	19	8	10	9	3
+3	raciocinio	3 caixas com 4 lápis. Quantos ao todo?	22	13	11	12	3
+3	raciocinio	3 caixas com 5 lápis. Quantos ao todo?	14	25	16	15	3
+3	raciocinio	4 caixas com 2 figurinhas. Quantos ao todo?	7	18	9	8	3
+3	raciocinio	4 caixas com 3 figurinhas. Quantos ao todo?	12	11	13	22	0
+3	raciocinio	4 caixas com 4 figurinhas. Quantos ao todo?	26	15	17	16	3
+3	raciocinio	4 caixas com 5 figurinhas. Quantos ao todo?	20	21	19	30	0
+3	raciocinio	5 caixas com 2 balas. Quantos ao todo?	9	10	20	11	1
+3	raciocinio	5 caixas com 3 balas. Quantos ao todo?	15	16	14	25	0
+3	raciocinio	5 caixas com 4 balas. Quantos ao todo?	19	30	21	20	3
+3	raciocinio	5 caixas com 5 balas. Quantos ao todo?	35	26	25	24	2
+3	raciocinio	6 caixas com 2 moedas. Quantos ao todo?	11	13	12	22	2
+3	raciocinio	6 caixas com 3 moedas. Quantos ao todo?	19	17	28	18	3
+3	raciocinio	6 caixas com 4 moedas. Quantos ao todo?	24	23	34	25	0
+3	raciocinio	6 caixas com 5 moedas. Quantos ao todo?	30	40	29	31	0
+4	multiplicacao	Quanto é 2 × 9?	28	17	19	18	3
+4	multiplicacao	Quanto é 2 × 11?	21	32	23	22	3
+4	multiplicacao	Quanto é 2 × 12?	23	24	34	25	1
+4	multiplicacao	Quanto é 3 × 9?	28	27	26	37	1
+4	multiplicacao	Quanto é 3 × 11?	33	34	43	32	0
+4	multiplicacao	Quanto é 3 × 12?	36	35	46	37	0
+4	multiplicacao	Quanto é 4 × 9?	36	46	37	35	0
+4	multiplicacao	Quanto é 4 × 11?	45	44	54	43	1
+4	multiplicacao	Quanto é 4 × 12?	47	49	58	48	3
+4	multiplicacao	Quanto é 5 × 9?	55	45	46	44	1
+4	multiplicacao	Quanto é 5 × 11?	65	55	54	56	1
+4	multiplicacao	Quanto é 5 × 12?	61	70	60	59	2
+4	multiplicacao	Quanto é 6 × 9?	53	54	55	64	1
+4	multiplicacao	Quanto é 6 × 11?	67	65	66	76	2
+4	multiplicacao	Quanto é 6 × 12?	82	71	73	72	3
+4	multiplicacao	Quanto é 7 × 9?	64	62	73	63	3
+4	multiplicacao	Quanto é 7 × 11?	76	87	78	77	3
+4	multiplicacao	Quanto é 7 × 12?	84	83	85	94	0
+4	multiplicacao	Quanto é 8 × 9?	72	73	71	82	0
+4	multiplicacao	Quanto é 8 × 11?	88	87	89	98	0
+4	multiplicacao	Quanto é 8 × 12?	97	106	96	95	2
+4	multiplicacao	Quanto é 9 × 9?	80	81	82	91	1
+4	multiplicacao	Quanto é 9 × 11?	99	109	100	98	0
+4	multiplicacao	Quanto é 9 × 12?	118	109	108	107	2
+4	multiplicacao	Quanto é 10 × 9?	90	89	91	100	0
+4	multiplicacao	Quanto é 10 × 11?	111	110	120	109	1
+4	multiplicacao	Quanto é 10 × 12?	119	130	120	121	2
+4	multiplicacao	Quanto é 11 × 9?	99	109	100	98	0
+4	multiplicacao	Quanto é 11 × 11?	121	120	122	131	0
+4	multiplicacao	Quanto é 11 × 12?	131	133	132	142	2
+4	multiplicacao	Quanto é 12 × 9?	118	108	107	109	1
+4	multiplicacao	Quanto é 12 × 11?	133	131	132	142	2
+4	multiplicacao	Quanto é 12 × 12?	143	144	154	145	1
+4	raciocinio	Quanto é 10% de 200?	30	19	21	20	3
+4	raciocinio	Quanto é 50% de 200?	110	100	101	99	1
+4	raciocinio	Quanto é 25% de 200?	49	51	50	60	2
+4	raciocinio	Quanto é 10% de 300?	30	40	31	29	0
+4	raciocinio	Quanto é 50% de 300?	151	150	149	160	1
+4	raciocinio	Quanto é 25% de 300?	76	75	74	85	1
+4	raciocinio	Quanto é 10% de 400?	39	41	40	50	2
+4	raciocinio	Quanto é 50% de 400?	201	199	200	210	2
+4	raciocinio	Quanto é 25% de 400?	101	99	110	100	3
+4	raciocinio	Quanto é 10% de 500?	50	60	51	49	0
+4	raciocinio	Quanto é 50% de 500?	250	260	249	251	0
+4	raciocinio	Quanto é 25% de 500?	135	125	126	124	1
+4	raciocinio	Quanto é 10% de 600?	59	60	61	70	1
+4	raciocinio	Quanto é 50% de 600?	310	300	299	301	1
+4	raciocinio	Quanto é 25% de 600?	150	160	149	151	0
+4	raciocinio	Quanto é 10% de 800?	79	90	80	81	2
+4	raciocinio	Quanto é 50% de 800?	399	410	400	401	2
+4	raciocinio	Quanto é 25% de 800?	210	200	201	199	1
+4	raciocinio	Quanto é 10% de 1000?	99	101	110	100	3
+4	raciocinio	Quanto é 50% de 1000?	500	510	501	499	0
+4	raciocinio	Quanto é 25% de 1000?	260	249	250	251	2
+4	divisao	Qual é o resto de 13 ÷ 5?	1	0	2	3	3
+4	divisao	Qual é o resto de 13 ÷ 2?	1	3	2	0	0
+4	divisao	Qual é o resto de 17 ÷ 5?	0	3	2	1	2
+4	divisao	Qual é o resto de 17 ÷ 2?	0	3	1	2	2
+4	divisao	Qual é o resto de 21 ÷ 5?	0	3	2	1	3
+4	divisao	Qual é o resto de 21 ÷ 2?	3	0	1	2	2
+4	divisao	Qual é o resto de 25 ÷ 5?	0	3	2	1	0
+4	divisao	Qual é o resto de 25 ÷ 2?	1	3	0	2	0
+4	divisao	Qual é o resto de 29 ÷ 5?	2	1	0	4	3
+4	divisao	Qual é o resto de 29 ÷ 2?	1	2	3	0	0
+4	divisao	Qual é o resto de 33 ÷ 5?	3	2	0	1	0
+4	divisao	Qual é o resto de 33 ÷ 2?	3	0	1	2	2
+4	divisao	Qual é o resto de 37 ÷ 5?	1	3	2	0	2
+4	divisao	Qual é o resto de 37 ÷ 2?	3	0	1	2	2
+4	divisao	Qual é o resto de 41 ÷ 5?	1	0	3	2	0
+4	divisao	Qual é o resto de 41 ÷ 2?	2	3	1	0	2
+4	divisao	Qual é o resto de 45 ÷ 5?	3	2	1	0	3
+4	divisao	Qual é o resto de 45 ÷ 2?	0	3	1	2	2
+4	divisao	Qual é o resto de 49 ÷ 5?	0	4	2	1	1
+4	divisao	Qual é o resto de 49 ÷ 2?	0	1	2	3	1
+4	divisao	Qual é o resto de 53 ÷ 5?	2	1	3	0	2
+4	divisao	Qual é o resto de 53 ÷ 2?	0	1	2	3	1
+4	divisao	Qual é o resto de 57 ÷ 5?	0	2	3	1	1
+4	divisao	Qual é o resto de 57 ÷ 2?	0	2	3	1	3
+4	divisao	Qual é o resto de 61 ÷ 5?	3	0	2	1	3
+4	divisao	Qual é o resto de 61 ÷ 2?	1	0	3	2	0
+4	divisao	Qual é o resto de 65 ÷ 5?	3	1	0	2	2
+4	divisao	Qual é o resto de 65 ÷ 2?	3	1	0	2	1
+4	divisao	Qual é o resto de 69 ÷ 5?	2	0	1	4	3
+4	divisao	Qual é o resto de 69 ÷ 2?	2	1	3	0	1
+4	divisao	Qual é o resto de 73 ÷ 5?	0	2	3	1	2
+4	divisao	Qual é o resto de 73 ÷ 2?	2	1	0	3	1
+4	divisao	Qual é o resto de 77 ÷ 5?	3	2	1	0	1
+4	divisao	Qual é o resto de 77 ÷ 2?	1	3	2	0	0
+4	divisao	Qual é o resto de 81 ÷ 5?	1	0	2	3	0
+4	divisao	Qual é o resto de 81 ÷ 2?	0	2	1	3	2
+4	divisao	Qual é o resto de 85 ÷ 5?	2	0	3	1	1
+4	divisao	Qual é o resto de 85 ÷ 2?	2	0	1	3	2
+4	divisao	Qual é o resto de 89 ÷ 5?	2	1	0	4	3
+4	divisao	Qual é o resto de 89 ÷ 2?	2	0	3	1	3
+4	divisao	Qual é o resto de 93 ÷ 5?	3	0	2	1	0
+4	divisao	Qual é o resto de 93 ÷ 2?	0	3	1	2	2
+4	divisao	Qual é o resto de 97 ÷ 5?	2	3	1	0	0
+4	divisao	Qual é o resto de 97 ÷ 2?	2	3	0	1	3
+4	geometria	Um retângulo mede 3 por 4. Qual é a área?	13	12	11	22	1
+4	geometria	Um retângulo mede 3 por 4. Qual é o perímetro?	15	24	13	14	3
+4	geometria	Um retângulo mede 5 por 6. Qual é a área?	31	29	40	30	3
+4	geometria	Um retângulo mede 5 por 6. Qual é o perímetro?	23	32	21	22	3
+4	geometria	Um retângulo mede 7 por 8. Qual é a área?	55	66	56	57	2
+4	geometria	Um retângulo mede 7 por 8. Qual é o perímetro?	29	31	30	40	2
+4	geometria	Um retângulo mede 9 por 10. Qual é a área?	100	90	89	91	1
+4	geometria	Um retângulo mede 9 por 10. Qual é o perímetro?	39	37	38	48	2
+4	geometria	Um retângulo mede 11 por 12. Qual é a área?	142	132	133	131	1
+4	geometria	Um retângulo mede 11 por 12. Qual é o perímetro?	46	45	47	56	0
+4	geometria	Um retângulo mede 6 por 9. Qual é a área?	64	54	53	55	1
+4	geometria	Um retângulo mede 6 por 9. Qual é o perímetro?	30	29	31	40	0
+4	geometria	Um retângulo mede 8 por 12. Qual é a área?	97	96	106	95	1
+4	geometria	Um retângulo mede 8 por 12. Qual é o perímetro?	40	50	39	41	0
+4	sequencias	Complete: 3, 7, 11, ...	14	15	16	25	1
+4	sequencias	Complete: 7, 12, 17, ...	23	32	22	21	2
+4	sequencias	Complete: 2, 8, 14, ...	30	19	20	21	2
+4	sequencias	Complete: 5, 12, 19, ...	25	27	36	26	3
+4	sequencias	Complete: 4, 12, 20, ...	29	28	38	27	1
+4	sequencias	Complete: 6, 15, 24, ...	33	34	32	43	0
+4	sequencias	Complete: 1, 2, 4, ...	8	9	7	18	0
+4	sequencias	Complete: 2, 4, 8, ...	16	15	26	17	0
+4	sequencias	Complete: 3, 6, 12, ...	23	24	25	34	1
+4	sequencias	Complete: 5, 10, 20, ...	41	50	40	39	2
+5	potencias	Quanto é 2 ao quadrado?	14	4	5	3	1
+5	potencias	Quanto é 3 ao quadrado?	8	19	9	10	2
+5	divisao	Quanto é 12 ÷ 4?	3	2	4	13	0
+5	raciocinio	Quanto é 12 ÷ 4 + 7?	20	10	11	9	1
+5	divisao	Quanto é 12 ÷ 6?	1	2	3	12	1
+5	raciocinio	Quanto é 12 ÷ 6 + 7?	10	9	8	19	1
+5	divisao	Quanto é 18 ÷ 6?	4	13	2	3	3
+5	raciocinio	Quanto é 18 ÷ 6 + 7?	9	10	11	20	1
+5	divisao	Quanto é 24 ÷ 4?	16	5	7	6	3
+5	raciocinio	Quanto é 24 ÷ 4 + 7?	12	13	23	14	1
+5	divisao	Quanto é 24 ÷ 6?	3	14	4	5	2
+5	raciocinio	Quanto é 24 ÷ 6 + 7?	21	10	11	12	2
+5	divisao	Quanto é 24 ÷ 8?	13	2	4	3	3
+5	raciocinio	Quanto é 24 ÷ 8 + 7?	10	11	9	20	0
+5	divisao	Quanto é 36 ÷ 4?	9	10	19	8	0
+5	raciocinio	Quanto é 36 ÷ 4 + 7?	26	16	17	15	1
+5	divisao	Quanto é 36 ÷ 6?	6	16	7	5	0
+5	raciocinio	Quanto é 36 ÷ 6 + 7?	23	14	13	12	2
+5	divisao	Quanto é 48 ÷ 4?	11	12	13	22	1
+5	raciocinio	Quanto é 48 ÷ 4 + 7?	29	20	19	18	2
+5	divisao	Quanto é 48 ÷ 6?	18	9	7	8	3
+5	raciocinio	Quanto é 48 ÷ 6 + 7?	14	15	25	16	1
+5	divisao	Quanto é 48 ÷ 8?	5	16	6	7	2
+5	raciocinio	Quanto é 48 ÷ 8 + 7?	13	23	12	14	0
+5	raciocinio	Quanto é 15% de 20?	2	3	4	13	1
+5	raciocinio	Quanto é 75% de 20?	25	14	16	15	3
+5	raciocinio	Quanto é 15% de 40?	7	16	6	5	2
+5	raciocinio	Quanto é 75% de 40?	29	31	40	30	3
+5	raciocinio	Quanto é 15% de 60?	19	8	10	9	3
+5	raciocinio	Quanto é 75% de 60?	44	45	46	55	1
+5	raciocinio	Quanto é 15% de 80?	11	12	22	13	1
+5	raciocinio	Quanto é 75% de 80?	61	59	60	70	2
+5	raciocinio	Quanto é 15% de 120?	19	18	28	17	1
+5	raciocinio	Quanto é 75% de 120?	91	90	89	100	1
+5	raciocinio	Quanto é 15% de 200?	30	31	29	40	0
+5	raciocinio	Quanto é 75% de 200?	151	150	149	160	1
+5	raciocinio	Qual é a média de 2, 4 e 6?	3	5	14	4	3
+5	raciocinio	Qual é a média de 3, 5 e 7?	15	6	4	5	3
+5	raciocinio	Qual é a média de 10, 20 e 30?	20	30	21	19	0
+5	raciocinio	Qual é a média de 4, 8 e 12?	8	18	9	7	0
+5	raciocinio	Qual é a média de 5, 10 e 15?	20	11	9	10	3
+5	raciocinio	Qual é a média de 6, 12 e 18?	12	22	11	13	0
+5	geometria	Dois ângulos de um triângulo medem 30° e 60°. Quanto mede o terceiro?	100	91	90	89	2
+5	geometria	Um ângulo mede 30°. Quanto falta para 180°?	151	160	149	150	3
+5	geometria	Dois ângulos de um triângulo medem 45° e 60°. Quanto mede o terceiro?	75	74	85	76	0
+5	geometria	Um ângulo mede 45°. Quanto falta para 180°?	134	135	145	136	1
+5	geometria	Dois ângulos de um triângulo medem 50° e 60°. Quanto mede o terceiro?	70	71	69	80	0
+5	geometria	Um ângulo mede 50°. Quanto falta para 180°?	129	130	140	131	1
+5	geometria	Dois ângulos de um triângulo medem 60° e 60°. Quanto mede o terceiro?	61	70	59	60	3
+5	geometria	Um ângulo mede 60°. Quanto falta para 180°?	119	130	121	120	3
+5	geometria	Dois ângulos de um triângulo medem 70° e 60°. Quanto mede o terceiro?	50	51	60	49	0
+5	geometria	Um ângulo mede 70°. Quanto falta para 180°?	111	120	110	109	2
+5	geometria	Dois ângulos de um triângulo medem 80° e 60°. Quanto mede o terceiro?	39	40	41	50	1
+5	geometria	Um ângulo mede 80°. Quanto falta para 180°?	101	99	110	100	3
+5	geometria	Dois ângulos de um triângulo medem 100° e 60°. Quanto mede o terceiro?	30	21	19	20	3
+5	geometria	Um ângulo mede 100°. Quanto falta para 180°?	79	80	90	81	1
+5	geometria	Dois ângulos de um triângulo medem 110° e 60°. Quanto mede o terceiro?	9	20	10	11	2
+5	geometria	Um ângulo mede 110°. Quanto falta para 180°?	70	80	71	69	0
+5	raciocinio	Qual é maior: 1/4 ou 1/2?	são iguais	1/4	não dá para saber	1/2	3
+5	raciocinio	Qual é maior: 3/4 ou 1/2?	1/2	não dá para saber	são iguais	3/4	3
+5	raciocinio	Qual é maior: 2/5 ou 1/2?	2/5	1/2	são iguais	não dá para saber	1
+5	raciocinio	Qual é maior: 3/5 ou 1/2?	1/2	são iguais	não dá para saber	3/5	3
+5	raciocinio	Qual é maior: 1/5 ou 1/2?	1/5	1/2	não dá para saber	são iguais	1
+5	raciocinio	Qual é maior: 2/3 ou 1/2?	não dá para saber	são iguais	1/2	2/3	3
+6	divisao	24 é divisível por 3?	não	sim	só se for par	só se for ímpar	1
+6	divisao	24 é divisível por 4?	não	só se for ímpar	só se for par	sim	3
+6	divisao	24 é divisível por 6?	só se for ímpar	não	sim	só se for par	2
+6	divisao	24 é divisível por 9?	só se for ímpar	não	só se for par	sim	1
+6	divisao	36 é divisível por 3?	não	sim	só se for ímpar	só se for par	1
+6	divisao	36 é divisível por 4?	só se for par	sim	não	só se for ímpar	1
+6	divisao	36 é divisível por 6?	só se for par	não	só se for ímpar	sim	3
+6	divisao	36 é divisível por 9?	sim	não	só se for par	só se for ímpar	0
+6	divisao	45 é divisível por 3?	só se for ímpar	só se for par	sim	não	2
+6	divisao	45 é divisível por 4?	só se for par	sim	só se for ímpar	não	3
+6	divisao	45 é divisível por 6?	não	sim	só se for ímpar	só se for par	0
+6	divisao	45 é divisível por 9?	só se for par	só se for ímpar	não	sim	3
+6	divisao	56 é divisível por 3?	só se for par	sim	não	só se for ímpar	2
+6	divisao	56 é divisível por 4?	não	só se for par	só se for ímpar	sim	3
+6	divisao	56 é divisível por 6?	só se for par	sim	não	só se for ímpar	2
+6	divisao	56 é divisível por 9?	só se for ímpar	só se for par	não	sim	2
+6	divisao	64 é divisível por 3?	só se for par	não	sim	só se for ímpar	1
+6	divisao	64 é divisível por 4?	só se for ímpar	sim	não	só se for par	1
+6	divisao	64 é divisível por 6?	não	só se for par	só se for ímpar	sim	0
+6	divisao	64 é divisível por 9?	sim	só se for par	só se for ímpar	não	3
+6	divisao	72 é divisível por 3?	só se for ímpar	não	sim	só se for par	2
+6	divisao	72 é divisível por 4?	sim	só se for ímpar	não	só se for par	0
+6	divisao	72 é divisível por 6?	sim	só se for par	só se for ímpar	não	0
+6	divisao	72 é divisível por 9?	não	só se for par	só se for ímpar	sim	3
+6	divisao	81 é divisível por 3?	sim	não	só se for par	só se for ímpar	0
+6	divisao	81 é divisível por 4?	sim	só se for par	só se for ímpar	não	3
+6	divisao	81 é divisível por 6?	só se for ímpar	sim	não	só se for par	2
+6	divisao	81 é divisível por 9?	só se for ímpar	não	sim	só se for par	2
+6	divisao	90 é divisível por 3?	não	sim	só se for ímpar	só se for par	1
+6	divisao	90 é divisível por 4?	não	sim	só se for par	só se for ímpar	0
+6	divisao	90 é divisível por 6?	não	só se for par	sim	só se for ímpar	2
+6	divisao	90 é divisível por 9?	só se for ímpar	não	sim	só se for par	2
+6	divisao	96 é divisível por 3?	não	sim	só se for par	só se for ímpar	1
+6	divisao	96 é divisível por 4?	só se for ímpar	não	sim	só se for par	2
+6	divisao	96 é divisível por 6?	só se for ímpar	não	sim	só se for par	2
+6	divisao	96 é divisível por 9?	só se for par	não	sim	só se for ímpar	1
+6	divisao	108 é divisível por 3?	não	só se for ímpar	só se for par	sim	3
+6	divisao	108 é divisível por 4?	não	só se for ímpar	sim	só se for par	2
+6	divisao	108 é divisível por 6?	só se for ímpar	só se for par	sim	não	2
+6	divisao	108 é divisível por 9?	só se for ímpar	sim	só se for par	não	1
+6	divisao	120 é divisível por 3?	não	sim	só se for ímpar	só se for par	1
+6	divisao	120 é divisível por 4?	não	só se for ímpar	só se for par	sim	3
+6	divisao	120 é divisível por 6?	sim	só se for ímpar	não	só se for par	0
+6	divisao	120 é divisível por 9?	só se for ímpar	não	sim	só se for par	1
+6	divisao	144 é divisível por 3?	só se for ímpar	não	sim	só se for par	2
+6	divisao	144 é divisível por 4?	só se for ímpar	não	sim	só se for par	2
+6	divisao	144 é divisível por 6?	só se for ímpar	só se for par	sim	não	2
+6	divisao	144 é divisível por 9?	só se for par	não	sim	só se for ímpar	2
+6	raciocinio	Arredonde 115 para a centena mais próxima.	101	100	99	110	1
+6	raciocinio	Arredonde 115 para a dezena mais próxima.	119	120	121	130	1
+6	raciocinio	Arredonde 152 para a centena mais próxima.	201	210	200	199	2
+6	raciocinio	Arredonde 152 para a dezena mais próxima.	151	150	149	160	1
+6	raciocinio	Arredonde 189 para a centena mais próxima.	210	201	200	199	2
+6	raciocinio	Arredonde 189 para a dezena mais próxima.	191	190	189	200	1
+6	raciocinio	Arredonde 226 para a centena mais próxima.	201	210	199	200	3
+6	raciocinio	Arredonde 226 para a dezena mais próxima.	231	229	230	240	2
+6	raciocinio	Arredonde 263 para a centena mais próxima.	300	301	310	299	0
+6	raciocinio	Arredonde 263 para a dezena mais próxima.	260	259	261	270	0
+6	raciocinio	Arredonde 300 para a centena mais próxima.	299	310	300	301	2
+6	raciocinio	Arredonde 300 para a dezena mais próxima.	300	310	301	299	0
+6	raciocinio	Arredonde 337 para a centena mais próxima.	299	300	310	301	1
+6	raciocinio	Arredonde 337 para a dezena mais próxima.	339	340	350	341	1
+6	raciocinio	Arredonde 374 para a centena mais próxima.	401	410	399	400	3
+6	raciocinio	Arredonde 374 para a dezena mais próxima.	370	371	369	380	0
+6	raciocinio	Arredonde 411 para a centena mais próxima.	400	401	410	399	0
+6	raciocinio	Arredonde 411 para a dezena mais próxima.	410	409	411	420	0
+6	raciocinio	Arredonde 448 para a centena mais próxima.	410	401	400	399	2
+6	raciocinio	Arredonde 448 para a dezena mais próxima.	460	449	451	450	3
+6	raciocinio	Arredonde 485 para a centena mais próxima.	510	500	501	499	1
+6	raciocinio	Arredonde 485 para a dezena mais próxima.	480	490	479	481	0
+6	raciocinio	Arredonde 522 para a centena mais próxima.	500	501	499	510	0
+6	raciocinio	Arredonde 522 para a dezena mais próxima.	530	520	521	519	1
+6	raciocinio	Arredonde 559 para a centena mais próxima.	610	599	600	601	2
+6	raciocinio	Arredonde 559 para a dezena mais próxima.	560	570	559	561	0
+6	raciocinio	Arredonde 596 para a centena mais próxima.	610	599	600	601	2
+6	raciocinio	Arredonde 596 para a dezena mais próxima.	610	600	599	601	1
+6	raciocinio	Arredonde 633 para a centena mais próxima.	599	610	600	601	2
+6	raciocinio	Arredonde 633 para a dezena mais próxima.	629	631	630	640	2
+6	raciocinio	Arredonde 670 para a centena mais próxima.	701	710	699	700	3
+6	raciocinio	Arredonde 670 para a dezena mais próxima.	671	680	669	670	3
+6	raciocinio	Arredonde 707 para a centena mais próxima.	700	701	710	699	0
+6	raciocinio	Arredonde 707 para a dezena mais próxima.	710	711	709	720	0
+6	raciocinio	Arredonde 744 para a centena mais próxima.	700	710	699	701	0
+6	raciocinio	Arredonde 744 para a dezena mais próxima.	739	741	740	750	2
+6	raciocinio	Arredonde 781 para a centena mais próxima.	810	800	801	799	1
+6	raciocinio	Arredonde 781 para a dezena mais próxima.	781	779	780	790	2
+6	raciocinio	Arredonde 818 para a centena mais próxima.	799	801	800	810	2
+6	raciocinio	Arredonde 818 para a dezena mais próxima.	819	821	820	830	2
+6	raciocinio	Arredonde 855 para a centena mais próxima.	910	901	900	899	2
+6	raciocinio	Arredonde 855 para a dezena mais próxima.	861	870	860	859	2
+6	raciocinio	Arredonde 892 para a centena mais próxima.	899	910	901	900	3
+6	raciocinio	Arredonde 892 para a dezena mais próxima.	900	890	889	891	1
+6	algebra	Resolva: 2x = 2.	1	0	2	11	0
+6	algebra	Resolva: x + 2 = 3.	11	0	1	2	2
+6	algebra	Resolva: x - 2 = 1.	3	4	13	2	0
+6	algebra	Resolva: 2x = 4.	12	3	1	2	3
+6	algebra	Resolva: x + 2 = 4.	12	3	2	1	2
+6	algebra	Resolva: x - 2 = 2.	4	14	5	3	0
+6	algebra	Resolva: 2x = 6.	13	4	2	3	3
+6	algebra	Resolva: x + 2 = 5.	2	13	3	4	2
+6	algebra	Resolva: x - 2 = 3.	6	5	4	15	1
+6	algebra	Resolva: 2x = 8.	14	3	4	5	2
+6	algebra	Resolva: x + 2 = 6.	3	4	5	14	1
+6	algebra	Resolva: x - 2 = 4.	5	7	16	6	3
+6	algebra	Resolva: 2x = 10.	6	5	4	15	1
+6	algebra	Resolva: x + 2 = 7.	5	6	15	4	0
+6	algebra	Resolva: x - 2 = 5.	17	8	6	7	3
+6	algebra	Resolva: 2x = 12.	7	5	16	6	3
+6	algebra	Resolva: x + 2 = 8.	6	5	16	7	0
+6	algebra	Resolva: x - 2 = 6.	18	9	8	7	2
+6	algebra	Resolva: 2x = 14.	6	8	17	7	3
+6	algebra	Resolva: x + 2 = 9.	6	8	17	7	3
+6	algebra	Resolva: x - 2 = 7.	19	8	10	9	3
+6	algebra	Resolva: 2x = 16.	9	7	8	18	2
+6	algebra	Resolva: x + 2 = 10.	8	18	9	7	0
+6	algebra	Resolva: x - 2 = 8.	20	10	11	9	1
+6	algebra	Resolva: 2x = 18.	9	19	10	8	0
+6	algebra	Resolva: x + 2 = 11.	19	9	10	8	1
+6	algebra	Resolva: x - 2 = 9.	12	11	21	10	1
+6	algebra	Resolva: 3x = 3.	1	2	11	0	0
+6	algebra	Resolva: x + 3 = 4.	0	11	1	2	2
+6	algebra	Resolva: x - 3 = 1.	5	4	3	14	1
+6	algebra	Resolva: 3x = 6.	2	12	1	3	0
+6	algebra	Resolva: x + 3 = 5.	1	12	2	3	2
+6	algebra	Resolva: x - 3 = 2.	6	15	4	5	3
+6	algebra	Resolva: 3x = 9.	3	13	2	4	0
+6	algebra	Resolva: x + 3 = 6.	4	3	13	2	1
+6	algebra	Resolva: x - 3 = 3.	16	5	7	6	3
+6	algebra	Resolva: 3x = 12.	5	3	14	4	3
+6	algebra	Resolva: x + 3 = 7.	5	14	4	3	2
+6	algebra	Resolva: x - 3 = 4.	8	17	6	7	3
+6	algebra	Resolva: 3x = 15.	5	4	15	6	0
+6	algebra	Resolva: x + 3 = 8.	6	5	4	15	1
+6	algebra	Resolva: x - 3 = 5.	8	18	9	7	0
+6	algebra	Resolva: 3x = 18.	7	6	16	5	1
+6	algebra	Resolva: x + 3 = 9.	16	7	6	5	2
+6	algebra	Resolva: x - 3 = 6.	9	8	10	19	0
+6	algebra	Resolva: 3x = 21.	17	8	6	7	3
+6	algebra	Resolva: x + 3 = 10.	7	6	17	8	0
+6	algebra	Resolva: x - 3 = 7.	20	9	11	10	3
+6	algebra	Resolva: 3x = 24.	7	9	8	18	2
+6	algebra	Resolva: x + 3 = 11.	18	9	8	7	2
+6	algebra	Resolva: x - 3 = 8.	21	10	12	11	3
+6	algebra	Resolva: 3x = 27.	10	19	9	8	2
+6	algebra	Resolva: x + 3 = 12.	10	8	19	9	3
+6	algebra	Resolva: x - 3 = 9.	22	12	13	11	1
+6	algebra	Resolva: 4x = 4.	0	2	11	1	3
+6	algebra	Resolva: x + 4 = 5.	1	0	2	11	0
+6	algebra	Resolva: x - 4 = 1.	4	15	5	6	2
+6	algebra	Resolva: 4x = 8.	12	3	1	2	3
+6	algebra	Resolva: x + 4 = 6.	1	2	3	12	1
+6	algebra	Resolva: x - 4 = 2.	6	5	7	16	0
+6	algebra	Resolva: 4x = 12.	13	4	3	2	2
+6	algebra	Resolva: x + 4 = 7.	13	3	2	4	1
+6	algebra	Resolva: x - 4 = 3.	17	8	6	7	3
+6	algebra	Resolva: 4x = 16.	4	3	14	5	0
+6	algebra	Resolva: x + 4 = 8.	5	14	4	3	2
+6	algebra	Resolva: x - 4 = 4.	8	18	9	7	0
+6	algebra	Resolva: 4x = 20.	4	5	15	6	1
+6	algebra	Resolva: x + 4 = 9.	15	5	4	6	1
+6	algebra	Resolva: x - 4 = 5.	10	9	8	19	1
+6	algebra	Resolva: 4x = 24.	6	7	5	16	0
+6	algebra	Resolva: x + 4 = 10.	16	7	5	6	3
+6	algebra	Resolva: x - 4 = 6.	11	10	20	9	1
+6	algebra	Resolva: 4x = 28.	17	8	7	6	2
+6	algebra	Resolva: x + 4 = 11.	8	17	7	6	2
+6	algebra	Resolva: x - 4 = 7.	10	12	21	11	3
+6	algebra	Resolva: 4x = 32.	18	9	7	8	3
+6	algebra	Resolva: x + 4 = 12.	9	18	8	7	2
+6	algebra	Resolva: x - 4 = 8.	22	13	12	11	2
+6	algebra	Resolva: 4x = 36.	10	8	9	19	2
+6	algebra	Resolva: x + 4 = 13.	8	9	10	19	1
+6	algebra	Resolva: x - 4 = 9.	23	12	13	14	2
+6	algebra	Resolva: 5x = 5.	11	0	2	1	3
+6	algebra	Resolva: x + 5 = 6.	1	0	2	11	0
+6	algebra	Resolva: x - 5 = 1.	16	7	5	6	3
+6	algebra	Resolva: 5x = 10.	1	2	3	12	1
+6	algebra	Resolva: x + 5 = 7.	3	1	2	12	2
+6	algebra	Resolva: x - 5 = 2.	17	7	6	8	1
+6	algebra	Resolva: 5x = 15.	2	4	3	13	2
+6	algebra	Resolva: x + 5 = 8.	4	2	3	13	2
+6	algebra	Resolva: x - 5 = 3.	7	9	18	8	3
+6	algebra	Resolva: 5x = 20.	3	4	5	14	1
+6	algebra	Resolva: x + 5 = 9.	5	3	14	4	3
+6	algebra	Resolva: x - 5 = 4.	8	10	19	9	3
+6	algebra	Resolva: 5x = 25.	5	15	4	6	0
+6	algebra	Resolva: x + 5 = 10.	4	6	5	15	2
+6	algebra	Resolva: x - 5 = 5.	9	20	11	10	3
+6	algebra	Resolva: 5x = 30.	16	5	7	6	3
+6	algebra	Resolva: x + 5 = 11.	6	16	7	5	0
+6	algebra	Resolva: x - 5 = 6.	12	11	10	21	1
+6	algebra	Resolva: 5x = 35.	17	6	8	7	3
+6	algebra	Resolva: x + 5 = 12.	6	17	8	7	3
+6	algebra	Resolva: x - 5 = 7.	13	11	12	22	2
+6	algebra	Resolva: 5x = 40.	9	7	18	8	3
+6	algebra	Resolva: x + 5 = 13.	18	7	8	9	2
+6	algebra	Resolva: x - 5 = 8.	14	12	23	13	3
+6	algebra	Resolva: 5x = 45.	8	19	9	10	2
+6	algebra	Resolva: x + 5 = 14.	9	10	8	19	0
+6	algebra	Resolva: x - 5 = 9.	13	24	14	15	2
+6	algebra	Resolva: 6x = 6.	2	1	11	0	1
+6	algebra	Resolva: x + 6 = 7.	11	1	2	0	1
+6	algebra	Resolva: x - 6 = 1.	17	6	7	8	2
+6	algebra	Resolva: 6x = 12.	12	3	1	2	3
+6	algebra	Resolva: x + 6 = 8.	2	12	1	3	0
+6	algebra	Resolva: x - 6 = 2.	18	7	9	8	3
+6	algebra	Resolva: 6x = 18.	2	3	13	4	1
+6	algebra	Resolva: x + 6 = 9.	13	3	4	2	1
+6	algebra	Resolva: x - 6 = 3.	19	8	9	10	2
+6	algebra	Resolva: 6x = 24.	4	14	3	5	0
+6	algebra	Resolva: x + 6 = 10.	14	4	3	5	1
+6	algebra	Resolva: x - 6 = 4.	11	20	9	10	3
+6	algebra	Resolva: 6x = 30.	5	6	4	15	0
+6	algebra	Resolva: x + 6 = 11.	15	5	6	4	1
+6	algebra	Resolva: x - 6 = 5.	12	10	11	21	2
+6	algebra	Resolva: 6x = 36.	5	16	6	7	2
+6	algebra	Resolva: x + 6 = 12.	16	5	7	6	3
+6	algebra	Resolva: x - 6 = 6.	12	22	13	11	0
+6	algebra	Resolva: 6x = 42.	8	17	7	6	2
+6	algebra	Resolva: x + 6 = 13.	8	6	17	7	3
+6	algebra	Resolva: x - 6 = 7.	12	14	13	23	2
+6	algebra	Resolva: 6x = 48.	9	18	8	7	2
+6	algebra	Resolva: x + 6 = 14.	18	8	7	9	1
+6	algebra	Resolva: x - 6 = 8.	24	13	14	15	2
+6	algebra	Resolva: 6x = 54.	19	9	8	10	1
+6	algebra	Resolva: x + 6 = 15.	10	19	8	9	3
+6	algebra	Resolva: x - 6 = 9.	14	25	16	15	3
+6	algebra	Resolva: 7x = 7.	2	11	0	1	3
+6	algebra	Resolva: x + 7 = 8.	0	11	1	2	2
+6	algebra	Resolva: x - 7 = 1.	18	8	9	7	1
+6	algebra	Resolva: 7x = 14.	12	2	3	1	1
+6	algebra	Resolva: x + 7 = 9.	1	3	12	2	3
+6	algebra	Resolva: x - 7 = 2.	9	19	10	8	0
+6	algebra	Resolva: 7x = 21.	3	13	2	4	0
+6	algebra	Resolva: x + 7 = 10.	4	2	13	3	3
+6	algebra	Resolva: x - 7 = 3.	9	11	20	10	3
+6	algebra	Resolva: 7x = 28.	14	5	3	4	3
+6	algebra	Resolva: x + 7 = 11.	3	4	14	5	1
+6	algebra	Resolva: x - 7 = 4.	21	10	11	12	2
+6	algebra	Resolva: 7x = 35.	4	6	15	5	3
+6	algebra	Resolva: x + 7 = 12.	4	5	15	6	1
+6	algebra	Resolva: x - 7 = 5.	11	22	13	12	3
+6	algebra	Resolva: 7x = 42.	16	5	7	6	3
+6	algebra	Resolva: x + 7 = 13.	6	5	7	16	0
+6	algebra	Resolva: x - 7 = 6.	14	12	23	13	3
+6	algebra	Resolva: 7x = 49.	8	7	17	6	1
+6	algebra	Resolva: x + 7 = 14.	8	7	17	6	1
+6	algebra	Resolva: x - 7 = 7.	24	13	14	15	2
+6	algebra	Resolva: 7x = 56.	8	7	9	18	0
+6	algebra	Resolva: x + 7 = 15.	9	7	8	18	2
+6	algebra	Resolva: x - 7 = 8.	16	15	25	14	1
+6	algebra	Resolva: 7x = 63.	8	19	9	10	2
+6	algebra	Resolva: x + 7 = 16.	8	19	9	10	2
+6	algebra	Resolva: x - 7 = 9.	16	26	15	17	0
+6	algebra	Resolva: 8x = 8.	11	2	0	1	3
+6	algebra	Resolva: x + 8 = 9.	1	0	11	2	0
+6	algebra	Resolva: x - 8 = 1.	8	10	19	9	3
+6	algebra	Resolva: 8x = 16.	12	2	1	3	1
+6	algebra	Resolva: x + 8 = 10.	3	12	1	2	3
+6	algebra	Resolva: x - 8 = 2.	10	11	9	20	0
+6	algebra	Resolva: 8x = 24.	4	13	2	3	3
+6	algebra	Resolva: x + 8 = 11.	4	13	2	3	3
+6	algebra	Resolva: x - 8 = 3.	21	12	11	10	2
+6	algebra	Resolva: 8x = 32.	4	5	14	3	0
+6	algebra	Resolva: x + 8 = 12.	3	4	5	14	1
+6	algebra	Resolva: x - 8 = 4.	11	22	13	12	3
+6	algebra	Resolva: 8x = 40.	6	4	5	15	2
+6	algebra	Resolva: x + 8 = 13.	5	4	15	6	0
+6	algebra	Resolva: x - 8 = 5.	12	13	14	23	1
+6	algebra	Resolva: 8x = 48.	5	6	7	16	1
+6	algebra	Resolva: x + 8 = 14.	16	7	5	6	3
+6	algebra	Resolva: x - 8 = 6.	24	14	15	13	1
+6	algebra	Resolva: 8x = 56.	7	8	17	6	0
+6	algebra	Resolva: x + 8 = 15.	7	8	6	17	0
+6	algebra	Resolva: x - 8 = 7.	16	15	14	25	1
+6	algebra	Resolva: 8x = 64.	8	9	7	18	0
+6	algebra	Resolva: x + 8 = 16.	18	9	7	8	3
+6	algebra	Resolva: x - 8 = 8.	15	16	26	17	1
+6	algebra	Resolva: 8x = 72.	10	8	9	19	2
+6	algebra	Resolva: x + 8 = 17.	9	19	8	10	0
+6	algebra	Resolva: x - 8 = 9.	27	18	16	17	3
+6	algebra	Resolva: 9x = 9.	2	11	0	1	3
+6	algebra	Resolva: x + 9 = 10.	1	2	11	0	0
+6	algebra	Resolva: x - 9 = 1.	20	11	9	10	3
+6	algebra	Resolva: 9x = 18.	3	1	2	12	2
+6	algebra	Resolva: x + 9 = 11.	1	12	3	2	3
+6	algebra	Resolva: x - 9 = 2.	10	21	11	12	2
+6	algebra	Resolva: 9x = 27.	4	3	2	13	1
+6	algebra	Resolva: x + 9 = 12.	4	3	13	2	1
+6	algebra	Resolva: x - 9 = 3.	11	13	12	22	2
+6	algebra	Resolva: 9x = 36.	14	3	5	4	3
+6	algebra	Resolva: x + 9 = 13.	14	4	5	3	1
+6	algebra	Resolva: x - 9 = 4.	14	12	23	13	3
+6	algebra	Resolva: 9x = 45.	4	6	5	15	2
+6	algebra	Resolva: x + 9 = 14.	15	6	4	5	3
+6	algebra	Resolva: x - 9 = 5.	14	15	13	24	0
+6	algebra	Resolva: 9x = 54.	16	7	5	6	3
+6	algebra	Resolva: x + 9 = 15.	6	16	7	5	0
+6	algebra	Resolva: x - 9 = 6.	14	25	15	16	2
+6	algebra	Resolva: 9x = 63.	6	17	7	8	2
+6	algebra	Resolva: x + 9 = 16.	17	7	6	8	1
+6	algebra	Resolva: x - 9 = 7.	17	16	15	26	1
+6	algebra	Resolva: 9x = 72.	18	7	9	8	3
+6	algebra	Resolva: x + 9 = 17.	18	9	8	7	2
+6	algebra	Resolva: x - 9 = 8.	27	17	16	18	1
+6	algebra	Resolva: 9x = 81.	19	8	9	10	2
+6	algebra	Resolva: x + 9 = 18.	19	9	10	8	1
+6	algebra	Resolva: x - 9 = 9.	18	19	28	17	0
+6	raciocinio	Um jogo de R$ 40 com 10% de desconto. Quanto fica?	37	36	46	35	1
+6	raciocinio	Um jogo de R$ 50 com 20% de desconto. Quanto fica?	41	39	40	50	2
+6	raciocinio	Um jogo de R$ 60 com 50% de desconto. Quanto fica?	30	29	31	40	0
+6	raciocinio	Um jogo de R$ 80 com 25% de desconto. Quanto fica?	60	61	59	70	0
+6	raciocinio	Um jogo de R$ 100 com 30% de desconto. Quanto fica?	69	70	71	80	1
+6	raciocinio	Um jogo de R$ 200 com 15% de desconto. Quanto fica?	170	171	180	169	0
+6	raciocinio	Um jogo de R$ 120 com 50% de desconto. Quanto fica?	61	70	59	60	3
+6	raciocinio	Um carro faz 60 km em 2 h. Qual é a velocidade média?	120 km/h	60 km/h	40 km/h	30 km/h	3
+6	raciocinio	Um carro faz 90 km em 3 h. Qual é a velocidade média?	40 km/h	270 km/h	30 km/h	90 km/h	2
+6	raciocinio	Um carro faz 120 km em 4 h. Qual é a velocidade média?	30 km/h	40 km/h	480 km/h	120 km/h	0
+6	raciocinio	Um carro faz 150 km em 5 h. Qual é a velocidade média?	40 km/h	750 km/h	30 km/h	150 km/h	2
+6	raciocinio	Um carro faz 100 km em 2 h. Qual é a velocidade média?	200 km/h	100 km/h	60 km/h	50 km/h	3
+6	raciocinio	Um carro faz 180 km em 3 h. Qual é a velocidade média?	540 km/h	70 km/h	180 km/h	60 km/h	3
+6	raciocinio	Quantas horas são 90 minutos?	1h	3h	2h30	1h30	3
+6	raciocinio	Quantas horas são 120 minutos?	4h	2h00	3h00	2h	1
+6	raciocinio	Quantas horas são 150 minutos?	5h	2h	3h30	2h30	3
+6	raciocinio	Quantas horas são 180 minutos?	4h00	3h	6h	3h00	3
+6	raciocinio	Quantas horas são 210 minutos?	3h30	3h	4h30	7h	0
+6	raciocinio	Quantas horas são 240 minutos?	5h00	8h	4h00	4h	2
+7	algebra	Resolva: 2x + 3 = 7.	1	2	3	12	1
+7	algebra	Resolva: 2x - 3 = 1.	1	12	3	2	3
+7	algebra	Resolva: 2x + 5 = 9.	12	3	1	2	3
+7	algebra	Resolva: 2x - 5 = -1.	1	3	12	2	3
+7	algebra	Resolva: 2x + 7 = 11.	1	2	3	12	1
+7	algebra	Resolva: 2x - 7 = -3.	12	3	1	2	3
+7	algebra	Resolva: 2x + 11 = 15.	1	2	12	3	1
+7	algebra	Resolva: 2x - 11 = -7.	12	3	2	1	2
+7	algebra	Resolva: 3x + 3 = 12.	13	4	2	3	3
+7	algebra	Resolva: 3x - 3 = 6.	13	4	2	3	3
+7	algebra	Resolva: 3x + 5 = 14.	2	13	3	4	2
+7	algebra	Resolva: 3x - 5 = 4.	2	13	4	3	3
+7	algebra	Resolva: 3x + 7 = 16.	3	4	2	13	0
+7	algebra	Resolva: 3x - 7 = 2.	13	3	4	2	1
+7	algebra	Resolva: 3x + 11 = 20.	2	3	4	13	1
+7	algebra	Resolva: 3x - 11 = -2.	4	13	3	2	2
+7	algebra	Resolva: 4x + 3 = 19.	5	4	3	14	1
+7	algebra	Resolva: 4x - 3 = 13.	4	14	5	3	0
+7	algebra	Resolva: 4x + 5 = 21.	5	3	4	14	2
+7	algebra	Resolva: 4x - 5 = 11.	14	4	3	5	1
+7	algebra	Resolva: 4x + 7 = 23.	5	14	3	4	3
+7	algebra	Resolva: 4x - 7 = 9.	5	14	4	3	2
+7	algebra	Resolva: 4x + 11 = 27.	5	3	14	4	3
+7	algebra	Resolva: 4x - 11 = 5.	4	14	5	3	0
+7	algebra	Resolva: 5x + 3 = 28.	6	15	5	4	2
+7	algebra	Resolva: 5x - 3 = 22.	15	5	4	6	1
+7	algebra	Resolva: 5x + 5 = 30.	5	4	15	6	0
+7	algebra	Resolva: 5x - 5 = 20.	6	5	15	4	1
+7	algebra	Resolva: 5x + 7 = 32.	4	6	5	15	2
+7	algebra	Resolva: 5x - 7 = 18.	5	6	4	15	0
+7	algebra	Resolva: 5x + 11 = 36.	5	4	15	6	0
+7	algebra	Resolva: 5x - 11 = 14.	15	4	6	5	3
+7	algebra	Resolva: 6x + 3 = 39.	16	5	6	7	2
+7	algebra	Resolva: 6x - 3 = 33.	7	16	5	6	3
+7	algebra	Resolva: 6x + 5 = 41.	5	16	6	7	2
+7	algebra	Resolva: 6x - 5 = 31.	5	7	16	6	3
+7	algebra	Resolva: 6x + 7 = 43.	6	16	7	5	0
+7	algebra	Resolva: 6x - 7 = 29.	16	7	6	5	2
+7	algebra	Resolva: 6x + 11 = 47.	7	5	6	16	2
+7	algebra	Resolva: 6x - 11 = 25.	16	5	6	7	2
+7	algebra	Resolva: 7x + 3 = 52.	7	8	17	6	0
+7	algebra	Resolva: 7x - 3 = 46.	8	6	7	17	2
+7	algebra	Resolva: 7x + 5 = 54.	17	7	8	6	1
+7	algebra	Resolva: 7x - 5 = 44.	7	8	6	17	0
+7	algebra	Resolva: 7x + 7 = 56.	8	17	7	6	2
+7	algebra	Resolva: 7x - 7 = 42.	7	6	17	8	0
+7	algebra	Resolva: 7x + 11 = 60.	8	6	17	7	3
+7	algebra	Resolva: 7x - 11 = 38.	8	6	17	7	3
+7	algebra	Resolva: 8x + 3 = 67.	8	9	18	7	0
+7	algebra	Resolva: 8x - 3 = 61.	8	18	9	7	0
+7	algebra	Resolva: 8x + 5 = 69.	7	18	8	9	2
+7	algebra	Resolva: 8x - 5 = 59.	7	18	8	9	2
+7	algebra	Resolva: 8x + 7 = 71.	9	18	8	7	2
+7	algebra	Resolva: 8x - 7 = 57.	7	9	8	18	2
+7	algebra	Resolva: 8x + 11 = 75.	9	18	8	7	2
+7	algebra	Resolva: 8x - 11 = 53.	7	18	8	9	2
+7	algebra	Resolva: 9x + 3 = 84.	10	9	19	8	1
+7	algebra	Resolva: 9x - 3 = 78.	9	19	10	8	0
+7	algebra	Resolva: 9x + 5 = 86.	19	10	8	9	3
+7	algebra	Resolva: 9x - 5 = 76.	19	9	10	8	1
+7	algebra	Resolva: 9x + 7 = 88.	8	10	19	9	3
+7	algebra	Resolva: 9x - 7 = 74.	8	19	10	9	3
+7	algebra	Resolva: 9x + 11 = 92.	19	10	9	8	2
+7	algebra	Resolva: 9x - 11 = 70.	9	10	19	8	0
+7	raciocinio	R$ 30 divididos na razão 1:2. Quanto fica a menor parte?	20	10	9	11	1
+7	raciocinio	R$ 50 divididos na razão 2:3. Quanto fica a menor parte?	20	30	21	19	0
+7	raciocinio	R$ 40 divididos na razão 1:3. Quanto fica a menor parte?	20	10	9	11	1
+7	raciocinio	R$ 70 divididos na razão 3:4. Quanto fica a menor parte?	31	40	29	30	3
+7	raciocinio	R$ 60 divididos na razão 1:4. Quanto fica a menor parte?	22	11	12	13	2
+7	probabilidade	Num dado de 6 faces, qual é a chance de sair um número par?	1/6	1/3	1/4	1/2	3
+7	probabilidade	Num dado de 6 faces, qual é a chance de sair um número maior que 4?	1/6	1/4	1/3	1/2	2
+7	probabilidade	Num dado de 6 faces, qual é a chance de sair o 6?	1/6	1/2	1/4	1/3	0
+7	probabilidade	Numa caixa com 10 bolas, 4 são vermelhas. Qual é a chance?	6/10	10/4	4/10	4/6	2
+7	probabilidade	Numa caixa com 12 bolas, 3 são vermelhas. Qual é a chance?	9/12	3/9	3/12	12/3	2
+7	probabilidade	Numa caixa com 20 bolas, 5 são vermelhas. Qual é a chance?	5/20	20/5	15/20	5/15	0
+7	probabilidade	Numa caixa com 8 bolas, 2 são vermelhas. Qual é a chance?	6/8	2/8	2/6	8/2	1
+7	probabilidade	Numa caixa com 15 bolas, 5 são vermelhas. Qual é a chance?	5/15	15/5	10/15	5/10	0
+7	classificacao	13 é primo?	é quadrado	não	só é divisível por 3	sim	3
+7	classificacao	17 é primo?	sim	é quadrado	não	só é divisível por 3	0
+7	classificacao	19 é primo?	sim	é quadrado	não	só é divisível por 3	0
+7	classificacao	23 é primo?	só é divisível por 3	sim	não	é quadrado	1
+7	classificacao	29 é primo?	não	só é divisível por 3	sim	é quadrado	2
+7	classificacao	31 é primo?	não	é quadrado	só é divisível por 3	sim	3
+7	classificacao	37 é primo?	não	é quadrado	só é divisível por 3	sim	3
+7	classificacao	41 é primo?	só é divisível por 3	não	sim	é quadrado	2
+7	classificacao	43 é primo?	sim	é quadrado	só é divisível por 3	não	0
+7	classificacao	47 é primo?	só é divisível por 3	é quadrado	sim	não	2
+7	classificacao	21 é primo?	não	sim	não dá para saber	é primo e par	0
+7	classificacao	27 é primo?	sim	não dá para saber	é primo e par	não	3
+7	classificacao	33 é primo?	é primo e par	não	não dá para saber	sim	1
+7	classificacao	39 é primo?	sim	é primo e par	não dá para saber	não	3
+7	classificacao	49 é primo?	sim	é primo e par	não	não dá para saber	2
+7	classificacao	51 é primo?	não dá para saber	sim	não	é primo e par	2
+7	classificacao	57 é primo?	não dá para saber	sim	é primo e par	não	3
+7	classificacao	63 é primo?	não	não dá para saber	sim	é primo e par	0
+7	classificacao	91 é primo?	sim	não dá para saber	é primo e par	não	3
+7	logica	3 pessoas se cumprimentam uma vez cada. Quantos cumprimentos?	4	2	3	13	2
+7	logica	4 pessoas se cumprimentam uma vez cada. Quantos cumprimentos?	5	7	16	6	3
+7	logica	5 pessoas se cumprimentam uma vez cada. Quantos cumprimentos?	10	9	20	11	0
+7	logica	6 pessoas se cumprimentam uma vez cada. Quantos cumprimentos?	14	15	16	25	1
+7	logica	Num mata-mata com 4 times, quantos jogos até o campeão?	2	4	3	13	2
+7	logica	Num mata-mata com 8 times, quantos jogos até o campeão?	17	7	8	6	1
+7	logica	Num mata-mata com 16 times, quantos jogos até o campeão?	16	14	25	15	3
+7	raciocinio	Se 2 cadernos custam R$ 12, quanto custam 4?	34	24	25	23	1
+7	raciocinio	Se 3 cadernos custam R$ 18, quanto custam 6?	37	35	36	46	2
+7	raciocinio	Se 4 cadernos custam R$ 24, quanto custam 8?	49	47	48	58	2
+7	raciocinio	Se 5 cadernos custam R$ 40, quanto custam 10?	79	81	90	80	3
+7	raciocinio	Se 6 cadernos custam R$ 36, quanto custam 12?	82	73	72	71	2
+4	adicao	Quanto é 24 + 18?	43	42	52	41	1
+4	subtracao	Quanto é 24 - 18?	7	6	5	16	1
+4	algebra	Quanto falta para 24 chegar a 42?	17	19	18	28	2
+4	adicao	Quanto é 24 + 27?	50	51	52	61	1
+4	algebra	Quanto falta para 24 chegar a 51?	26	27	37	28	1
+4	adicao	Quanto é 24 + 35?	60	69	59	58	2
+4	algebra	Quanto falta para 24 chegar a 59?	45	36	34	35	3
+4	adicao	Quanto é 24 + 46?	70	69	80	71	0
+4	algebra	Quanto falta para 24 chegar a 70?	46	56	47	45	0
+4	adicao	Quanto é 29 + 18?	46	48	47	57	2
+4	subtracao	Quanto é 29 - 18?	11	21	12	10	0
+4	algebra	Quanto falta para 29 chegar a 47?	28	19	17	18	3
+4	adicao	Quanto é 29 + 27?	57	66	56	55	2
+4	subtracao	Quanto é 29 - 27?	1	2	3	12	1
+4	algebra	Quanto falta para 29 chegar a 56?	37	26	27	28	2
+4	adicao	Quanto é 29 + 35?	74	65	63	64	3
+4	algebra	Quanto falta para 29 chegar a 64?	35	36	34	45	0
+4	adicao	Quanto é 29 + 46?	85	74	76	75	3
+4	algebra	Quanto falta para 29 chegar a 75?	56	46	45	47	1
+4	adicao	Quanto é 34 + 18?	62	51	52	53	2
+4	subtracao	Quanto é 34 - 18?	17	15	26	16	3
+4	algebra	Quanto falta para 34 chegar a 52?	28	17	19	18	3
+4	adicao	Quanto é 34 + 27?	62	60	61	71	2
+4	subtracao	Quanto é 34 - 27?	6	7	8	17	1
+4	algebra	Quanto falta para 34 chegar a 61?	28	26	27	37	2
+4	adicao	Quanto é 34 + 35?	69	70	68	79	0
+4	algebra	Quanto falta para 34 chegar a 69?	36	34	35	45	2
+4	adicao	Quanto é 34 + 46?	81	90	80	79	2
+4	algebra	Quanto falta para 34 chegar a 80?	45	47	56	46	3
+4	adicao	Quanto é 39 + 18?	58	56	67	57	3
+4	subtracao	Quanto é 39 - 18?	31	22	21	20	2
+4	algebra	Quanto falta para 39 chegar a 57?	18	19	17	28	0
+4	adicao	Quanto é 39 + 27?	76	67	65	66	3
+4	subtracao	Quanto é 39 - 27?	11	22	13	12	3
+4	algebra	Quanto falta para 39 chegar a 66?	37	27	28	26	1
+4	adicao	Quanto é 39 + 35?	73	84	75	74	3
+4	subtracao	Quanto é 39 - 35?	3	14	4	5	2
+4	algebra	Quanto falta para 39 chegar a 74?	45	34	35	36	2
+4	adicao	Quanto é 39 + 46?	84	85	86	95	1
+4	algebra	Quanto falta para 39 chegar a 85?	56	45	47	46	3
+4	adicao	Quanto é 44 + 18?	63	61	62	72	2
+4	subtracao	Quanto é 44 - 18?	26	36	25	27	0
+4	algebra	Quanto falta para 44 chegar a 62?	19	28	17	18	3
+4	adicao	Quanto é 44 + 27?	81	72	70	71	3
+4	subtracao	Quanto é 44 - 27?	17	27	16	18	0
+4	algebra	Quanto falta para 44 chegar a 71?	28	26	37	27	3
+4	adicao	Quanto é 44 + 35?	78	79	89	80	1
+4	subtracao	Quanto é 44 - 35?	8	19	10	9	3
+4	algebra	Quanto falta para 44 chegar a 79?	35	34	36	45	0
+4	adicao	Quanto é 44 + 46?	90	100	91	89	0
+4	algebra	Quanto falta para 44 chegar a 90?	56	46	47	45	1
+4	adicao	Quanto é 49 + 18?	66	77	67	68	2
+4	subtracao	Quanto é 49 - 18?	30	41	32	31	3
+4	algebra	Quanto falta para 49 chegar a 67?	19	28	18	17	2
+4	adicao	Quanto é 49 + 27?	75	76	86	77	1
+4	subtracao	Quanto é 49 - 27?	21	22	32	23	1
+4	algebra	Quanto falta para 49 chegar a 76?	26	37	28	27	3
+4	adicao	Quanto é 49 + 35?	94	84	85	83	1
+4	subtracao	Quanto é 49 - 35?	24	14	13	15	1
+4	algebra	Quanto falta para 49 chegar a 84?	34	36	45	35	3
+4	adicao	Quanto é 49 + 46?	94	105	96	95	3
+4	subtracao	Quanto é 49 - 46?	3	4	13	2	0
+4	algebra	Quanto falta para 49 chegar a 95?	46	56	47	45	0
+4	adicao	Quanto é 54 + 18?	82	71	72	73	2
+4	subtracao	Quanto é 54 - 18?	36	46	37	35	0
+4	algebra	Quanto falta para 54 chegar a 72?	18	17	19	28	0
+4	adicao	Quanto é 54 + 27?	82	91	80	81	3
+4	subtracao	Quanto é 54 - 27?	28	26	37	27	3
+4	algebra	Quanto falta para 54 chegar a 81?	26	28	37	27	3
+4	adicao	Quanto é 54 + 35?	88	89	99	90	1
+4	subtracao	Quanto é 54 - 35?	29	18	20	19	3
+4	algebra	Quanto falta para 54 chegar a 89?	36	35	45	34	1
+4	adicao	Quanto é 54 + 46?	99	101	100	110	2
+4	subtracao	Quanto é 54 - 46?	18	9	8	7	2
+4	algebra	Quanto falta para 54 chegar a 100?	56	45	47	46	3
+4	adicao	Quanto é 59 + 18?	78	87	77	76	2
+4	subtracao	Quanto é 59 - 18?	42	40	41	51	2
+4	algebra	Quanto falta para 59 chegar a 77?	18	28	17	19	0
+4	adicao	Quanto é 59 + 27?	96	86	85	87	1
+4	subtracao	Quanto é 59 - 27?	31	42	32	33	2
+4	algebra	Quanto falta para 59 chegar a 86?	27	26	28	37	0
+4	adicao	Quanto é 59 + 35?	95	104	94	93	2
+4	subtracao	Quanto é 59 - 35?	34	23	24	25	2
+4	algebra	Quanto falta para 59 chegar a 94?	34	36	45	35	3
+4	adicao	Quanto é 59 + 46?	115	106	105	104	2
+4	subtracao	Quanto é 59 - 46?	14	13	23	12	1
+4	algebra	Quanto falta para 59 chegar a 105?	46	45	56	47	0
+4	adicao	Quanto é 64 + 18?	92	82	83	81	1
+4	subtracao	Quanto é 64 - 18?	56	47	46	45	2
+4	algebra	Quanto falta para 64 chegar a 82?	28	18	19	17	1
+4	adicao	Quanto é 64 + 27?	92	101	91	90	2
+4	subtracao	Quanto é 64 - 27?	47	38	36	37	3
+4	algebra	Quanto falta para 64 chegar a 91?	37	26	28	27	3
+4	adicao	Quanto é 64 + 35?	100	99	109	98	1
+4	subtracao	Quanto é 64 - 35?	39	30	29	28	2
+4	algebra	Quanto falta para 64 chegar a 99?	45	36	34	35	3
+4	adicao	Quanto é 64 + 46?	109	120	110	111	2
+4	subtracao	Quanto é 64 - 46?	19	18	28	17	1
+4	algebra	Quanto falta para 64 chegar a 110?	45	47	46	56	2
+4	adicao	Quanto é 69 + 18?	87	88	97	86	0
+4	subtracao	Quanto é 69 - 18?	50	51	52	61	1
+4	algebra	Quanto falta para 69 chegar a 87?	28	19	18	17	2
+4	adicao	Quanto é 69 + 27?	97	96	95	106	1
+4	subtracao	Quanto é 69 - 27?	42	41	43	52	0
+4	algebra	Quanto falta para 69 chegar a 96?	28	26	37	27	3
+4	adicao	Quanto é 69 + 35?	104	114	103	105	0
+4	subtracao	Quanto é 69 - 35?	34	33	35	44	0
+4	algebra	Quanto falta para 69 chegar a 104?	35	34	45	36	0
+4	adicao	Quanto é 69 + 46?	125	115	114	116	1
+4	subtracao	Quanto é 69 - 46?	23	24	22	33	0
+4	algebra	Quanto falta para 69 chegar a 115?	56	45	46	47	2
+4	adicao	Quanto é 74 + 18?	92	102	91	93	0
+4	subtracao	Quanto é 74 - 18?	57	55	66	56	3
+4	algebra	Quanto falta para 74 chegar a 92?	18	28	17	19	0
+4	adicao	Quanto é 74 + 27?	101	111	102	100	0
+4	subtracao	Quanto é 74 - 27?	47	57	48	46	0
+4	algebra	Quanto falta para 74 chegar a 101?	26	28	37	27	3
+4	adicao	Quanto é 74 + 35?	110	108	119	109	3
+4	subtracao	Quanto é 74 - 35?	39	38	40	49	0
+4	algebra	Quanto falta para 74 chegar a 109?	45	35	36	34	1
+4	adicao	Quanto é 74 + 46?	119	120	130	121	1
+4	subtracao	Quanto é 74 - 46?	29	28	27	38	1
+4	algebra	Quanto falta para 74 chegar a 120?	47	56	45	46	3
+4	adicao	Quanto é 79 + 18?	97	96	107	98	0
+4	subtracao	Quanto é 79 - 18?	61	62	71	60	0
+4	algebra	Quanto falta para 79 chegar a 97?	17	18	28	19	1
+4	adicao	Quanto é 79 + 27?	105	107	116	106	3
+4	subtracao	Quanto é 79 - 27?	51	52	62	53	1
+4	algebra	Quanto falta para 79 chegar a 106?	26	28	27	37	2
+4	adicao	Quanto é 79 + 35?	113	114	124	115	1
+4	subtracao	Quanto é 79 - 35?	43	54	44	45	2
+4	algebra	Quanto falta para 79 chegar a 114?	35	36	45	34	0
+4	adicao	Quanto é 79 + 46?	135	126	124	125	3
+4	subtracao	Quanto é 79 - 46?	43	32	33	34	2
+4	algebra	Quanto falta para 79 chegar a 125?	56	47	46	45	2
+4	adicao	Quanto é 84 + 18?	102	112	103	101	0
+4	subtracao	Quanto é 84 - 18?	66	65	67	76	0
+4	algebra	Quanto falta para 84 chegar a 102?	28	19	18	17	2
+4	adicao	Quanto é 84 + 27?	121	110	112	111	3
+4	subtracao	Quanto é 84 - 27?	67	57	56	58	1
+4	algebra	Quanto falta para 84 chegar a 111?	37	26	27	28	2
+4	adicao	Quanto é 84 + 35?	129	118	120	119	3
+4	subtracao	Quanto é 84 - 35?	48	49	59	50	1
+4	algebra	Quanto falta para 84 chegar a 119?	45	36	34	35	3
+4	adicao	Quanto é 84 + 46?	131	129	130	140	2
+4	subtracao	Quanto é 84 - 46?	38	39	48	37	0
+4	algebra	Quanto falta para 84 chegar a 130?	47	45	46	56	2
+4	adicao	Quanto é 89 + 18?	106	107	108	117	1
+4	subtracao	Quanto é 89 - 18?	72	70	81	71	3
+4	algebra	Quanto falta para 89 chegar a 107?	17	19	18	28	2
+4	adicao	Quanto é 89 + 27?	116	117	126	115	0
+4	subtracao	Quanto é 89 - 27?	61	72	63	62	3
+4	algebra	Quanto falta para 89 chegar a 116?	27	37	28	26	0
+4	adicao	Quanto é 89 + 35?	124	123	125	134	0
+4	subtracao	Quanto é 89 - 35?	54	55	53	64	0
+4	algebra	Quanto falta para 89 chegar a 124?	36	35	34	45	1
+4	adicao	Quanto é 89 + 46?	134	135	136	145	1
+4	subtracao	Quanto é 89 - 46?	44	42	43	53	2
+4	algebra	Quanto falta para 89 chegar a 135?	56	47	45	46	3
+4	adicao	Quanto é 94 + 18?	113	111	122	112	3
+4	subtracao	Quanto é 94 - 18?	86	77	76	75	2
+4	algebra	Quanto falta para 94 chegar a 112?	28	17	19	18	3
+4	adicao	Quanto é 94 + 27?	122	121	120	131	1
+4	subtracao	Quanto é 94 - 27?	66	77	67	68	2
+4	algebra	Quanto falta para 94 chegar a 121?	26	27	37	28	1
+4	adicao	Quanto é 94 + 35?	128	139	129	130	2
+4	subtracao	Quanto é 94 - 35?	69	58	60	59	3
+4	algebra	Quanto falta para 94 chegar a 129?	35	34	45	36	0
+4	adicao	Quanto é 94 + 46?	141	139	140	150	2
+4	subtracao	Quanto é 94 - 46?	48	47	49	58	0
+4	algebra	Quanto falta para 94 chegar a 140?	56	46	45	47	1
+4	raciocinio	Qual é o dobro de 15?	40	29	30	31	2
+4	raciocinio	Qual é o dobro de 21?	41	43	52	42	3
+4	raciocinio	Qual é o dobro de 27?	55	53	64	54	3
+4	raciocinio	Qual é o dobro de 33?	66	67	76	65	0
+4	raciocinio	Qual é o dobro de 39?	78	77	79	88	0
+4	raciocinio	Qual é o dobro de 45?	89	90	91	100	1
+4	raciocinio	Qual é o dobro de 51?	102	103	112	101	0
+4	raciocinio	Qual é o dobro de 57?	115	114	113	124	1
+4	raciocinio	Qual é o dobro de 63?	136	127	125	126	3
+4	raciocinio	Qual é o dobro de 69?	137	139	138	148	2
+4	raciocinio	Qual é o dobro de 75?	149	160	151	150	3
+4	raciocinio	Qual é o dobro de 81?	163	162	161	172	1
+4	raciocinio	Qual é o dobro de 87?	173	184	175	174	3
+4	raciocinio	Qual é o dobro de 93?	186	187	185	196	0
+4	raciocinio	Qual é maior: 6 × 7 ou 7 × 6?	não dá para saber	6 × 7	são iguais	7 × 6	3
+4	raciocinio	Qual é maior: 7 × 8 ou 8 × 7?	são iguais	não dá para saber	7 × 8	8 × 7	3
+4	raciocinio	Qual é maior: 8 × 9 ou 9 × 8?	8 × 9	9 × 8	são iguais	não dá para saber	1
+4	raciocinio	Qual é maior: 6 × 8 ou 7 × 7?	6 × 8	são iguais	não dá para saber	7 × 7	3
+4	raciocinio	Qual é maior: 7 × 9 ou 8 × 8?	8 × 8	não dá para saber	são iguais	7 × 9	0
+4	raciocinio	Qual é maior: 4 × 12 ou 5 × 11?	5 × 11	são iguais	4 × 12	não dá para saber	0
+4	raciocinio	Qual é maior: 5 × 11 ou 6 × 10?	5 × 11	6 × 10	são iguais	não dá para saber	1
+4	geometria	Um quadrado tem lado 3. Qual é o perímetro?	22	11	12	13	2
+4	geometria	Um quadrado tem lado 3. Qual é a área?	19	9	10	8	1
+4	geometria	Um quadrado tem lado 4. Qual é o perímetro?	15	26	17	16	3
+4	geometria	Um quadrado tem lado 4. Qual é a área?	16	17	26	15	0
+4	geometria	Um quadrado tem lado 5. Qual é o perímetro?	20	21	30	19	0
+4	geometria	Um quadrado tem lado 5. Qual é a área?	24	35	25	26	2
+4	geometria	Um quadrado tem lado 6. Qual é o perímetro?	24	23	34	25	0
+4	geometria	Um quadrado tem lado 6. Qual é a área?	36	46	35	37	0
+4	geometria	Um quadrado tem lado 7. Qual é o perímetro?	27	29	38	28	3
+4	geometria	Um quadrado tem lado 7. Qual é a área?	48	49	50	59	1
+4	geometria	Um quadrado tem lado 8. Qual é o perímetro?	33	42	32	31	2
+4	geometria	Um quadrado tem lado 8. Qual é a área?	74	63	65	64	3
+4	geometria	Um quadrado tem lado 9. Qual é o perímetro?	36	46	37	35	0
+4	geometria	Um quadrado tem lado 9. Qual é a área?	82	91	80	81	3
+4	geometria	Um quadrado tem lado 10. Qual é o perímetro?	41	39	40	50	2
+4	geometria	Um quadrado tem lado 10. Qual é a área?	110	100	101	99	1
+4	geometria	Um quadrado tem lado 12. Qual é o perímetro?	48	58	47	49	0
+4	geometria	Um quadrado tem lado 12. Qual é a área?	154	144	145	143	1
+5	multiplicacao	Quanto é 25 × 4?	99	100	101	110	1
+5	multiplicacao	Quanto é 50 × 6?	299	310	300	301	2
+5	multiplicacao	Quanto é 20 × 15?	300	310	299	301	0
+5	multiplicacao	Quanto é 12 × 25?	301	310	299	300	3
+5	multiplicacao	Quanto é 40 × 5?	201	199	200	210	2
+5	multiplicacao	Quanto é 15 × 6?	100	91	89	90	3
+5	multiplicacao	Quanto é 24 × 5?	119	121	130	120	3
+5	multiplicacao	Quanto é 18 × 5?	91	100	90	89	2
+5	raciocinio	Quanto é 2/3 de 30?	20	21	19	30	0
+5	raciocinio	Quanto é 3/4 de 40?	40	30	31	29	1
+5	raciocinio	Quanto é 2/5 de 45?	28	19	17	18	3
+5	raciocinio	Quanto é 5/6 de 60?	49	60	50	51	2
+5	raciocinio	Quanto é 3/8 de 24?	9	19	10	8	0
+5	raciocinio	Quanto é 2/9 de 36?	7	9	18	8	3
+5	raciocinio	Quanto é 4/5 de 50?	39	40	41	50	1
+5	raciocinio	Quanto é 3/7 de 28?	13	11	12	22	2
+5	potencias	Qual é a raiz quadrada de 16?	4	14	3	5	0
+5	geometria	Um quadrado tem área 16. Quanto mede o lado?	3	4	14	5	1
+5	potencias	Qual é a raiz quadrada de 25?	6	4	15	5	3
+5	geometria	Um quadrado tem área 25. Quanto mede o lado?	5	15	4	6	0
+5	potencias	Qual é a raiz quadrada de 36?	6	16	5	7	0
+5	geometria	Um quadrado tem área 36. Quanto mede o lado?	5	6	16	7	1
+5	potencias	Qual é a raiz quadrada de 49?	17	8	7	6	2
+5	geometria	Um quadrado tem área 49. Quanto mede o lado?	6	7	17	8	1
+5	potencias	Qual é a raiz quadrada de 64?	9	8	7	18	1
+5	geometria	Um quadrado tem área 64. Quanto mede o lado?	18	7	8	9	2
+5	potencias	Qual é a raiz quadrada de 81?	19	9	10	8	1
+5	geometria	Um quadrado tem área 81. Quanto mede o lado?	19	10	9	8	2
+5	potencias	Qual é a raiz quadrada de 100?	10	11	9	20	0
+5	geometria	Um quadrado tem área 100. Quanto mede o lado?	9	10	11	20	1
+5	potencias	Qual é a raiz quadrada de 121?	11	12	10	21	0
+5	geometria	Um quadrado tem área 121. Quanto mede o lado?	11	12	10	21	0
+5	potencias	Qual é a raiz quadrada de 144?	13	11	22	12	3
+5	geometria	Um quadrado tem área 144. Quanto mede o lado?	11	13	12	22	2
+5	raciocinio	Quanto é 20% de 20?	4	14	5	3	0
+5	raciocinio	Quanto é 30% de 20?	16	5	6	7	2
+5	raciocinio	Quanto é 20% de 30?	5	7	6	16	2
+5	raciocinio	Quanto é 30% de 30?	8	10	19	9	3
+5	raciocinio	Quanto é 20% de 40?	9	8	7	18	1
+5	raciocinio	Quanto é 30% de 40?	11	12	13	22	1
+5	raciocinio	Quanto é 20% de 50?	11	20	10	9	2
+5	raciocinio	Quanto é 30% de 50?	14	25	15	16	2
+5	raciocinio	Quanto é 20% de 60?	13	11	22	12	3
+5	raciocinio	Quanto é 30% de 60?	18	28	17	19	0
+5	raciocinio	Quanto é 20% de 70?	15	13	24	14	3
+5	raciocinio	Quanto é 30% de 70?	22	21	31	20	1
+5	raciocinio	Quanto é 20% de 90?	28	17	19	18	3
+5	raciocinio	Quanto é 30% de 90?	28	37	27	26	2
+5	raciocinio	Quantos centímetros são 2 metros?	201	199	210	200	3
+5	raciocinio	Quantos centímetros são 3 metros?	299	301	300	310	2
+5	raciocinio	Quantos centímetros são 5 metros?	499	500	501	510	1
+5	raciocinio	Quantos centímetros são 7 metros?	710	699	701	700	3
+5	raciocinio	Quantos centímetros são 10 metros?	1001	999	1010	1000	3
+5	raciocinio	Quantos centímetros são 12 metros?	1201	1199	1200	1210	2
+5	sequencias	Qual é o próximo: 2, 5, 8, 11, ...?	24	13	14	15	2
+5	sequencias	Qual é o próximo: 3, 8, 13, 18, ...?	23	24	33	22	0
+5	sequencias	Qual é o próximo: 10, 17, 24, 31, ...?	37	48	39	38	3
+5	sequencias	Qual é o próximo: 4, 10, 16, 22, ...?	27	28	29	38	1
+5	sequencias	Qual é o próximo: 1, 10, 19, 28, ...?	47	38	37	36	2
+7	raciocinio	Se 2 kg custam R$ 10, quanto custam 8 kg?	50	39	40	41	2
+7	raciocinio	Se 3 kg custam R$ 12, quanto custam 12 kg?	49	48	58	47	1
+7	raciocinio	Se 5 kg custam R$ 10, quanto custam 20 kg?	40	50	41	39	0
+7	raciocinio	Se 4 kg custam R$ 28, quanto custam 16 kg?	113	122	111	112	3
+7	raciocinio	Se 6 kg custam R$ 30, quanto custam 18 kg?	89	91	100	90	3
+7	raciocinio	Um preço de R$ 50 sobe 20%. Quanto fica?	61	59	70	60	3
+7	raciocinio	Um preço de R$ 80 sobe 25%. Quanto fica?	99	110	100	101	2
+7	raciocinio	Um preço de R$ 200 sobe 10%. Quanto fica?	221	220	219	230	1
+7	raciocinio	Um preço de R$ 60 sobe 50%. Quanto fica?	100	91	89	90	3
+7	raciocinio	Um preço de R$ 150 sobe 20%. Quanto fica?	180	179	181	190	0
+7	algebra	A média de 4, 8 e x é 6. Quanto é x?	16	7	5	6	3
+7	algebra	A média de 10, 20 e x é 15. Quanto é x?	25	15	14	16	1
+7	algebra	A média de 5, 15 e x é 10. Quanto é x?	10	9	11	20	0
+7	algebra	A média de 12, 18 e x é 15. Quanto é x?	16	25	15	14	2
+7	algebra	A média de 3, 9 e x é 6. Quanto é x?	5	16	6	7	2
+7	logica	A soma de 7 números ímpares é par ou ímpar?	ímpar	par	depende	zero	0
+7	logica	A soma de 9 números ímpares é par ou ímpar?	par	ímpar	zero	depende	1
+7	logica	A soma de 11 números ímpares é par ou ímpar?	zero	ímpar	par	depende	1
+7	logica	A soma de 13 números ímpares é par ou ímpar?	ímpar	depende	zero	par	0
+7	logica	A soma de 15 números ímpares é par ou ímpar?	zero	ímpar	depende	par	1
+7	raciocinio	4 canetas custam R$ 12. Quanto custa uma?	2	13	3	4	2
+7	raciocinio	5 canetas custam R$ 20. Quanto custa uma?	4	3	5	14	0
+7	raciocinio	6 canetas custam R$ 18. Quanto custa uma?	13	2	4	3	3
+7	raciocinio	8 canetas custam R$ 24. Quanto custa uma?	4	2	13	3	3
+7	raciocinio	9 canetas custam R$ 27. Quanto custa uma?	13	3	2	4	1
+7	classificacao	Qual é o MDC de 12 e 8?	4	14	3	5	0
+7	classificacao	Qual é o MDC de 12 e 9?	2	13	4	3	3
+7	classificacao	Qual é o MDC de 12 e 15?	13	3	4	2	1
+7	classificacao	Qual é o MDC de 18 e 8?	12	3	1	2	3
+7	classificacao	Qual é o MDC de 18 e 9?	8	10	19	9	3
+7	classificacao	Qual é o MDC de 18 e 15?	3	13	2	4	0
+7	classificacao	Qual é o MDC de 24 e 8?	9	8	7	18	1
+7	classificacao	Qual é o MDC de 24 e 9?	4	3	13	2	1
+7	classificacao	Qual é o MDC de 24 e 15?	13	3	4	2	1
+7	classificacao	Qual é o MDC de 30 e 8?	1	2	3	12	1
+7	classificacao	Qual é o MDC de 30 e 9?	3	13	2	4	0
+7	classificacao	Qual é o MDC de 30 e 15?	14	15	16	25	1
+7	classificacao	Qual é o MDC de 36 e 8?	4	14	3	5	0
+7	classificacao	Qual é o MDC de 36 e 9?	9	10	8	19	0
+7	classificacao	Qual é o MDC de 36 e 15?	2	3	4	13	1
+7	sequencias	Qual é o próximo: 2, 6, 18, ...?	64	53	55	54	3
+7	sequencias	Qual é o próximo: 3, 6, 12, ...?	25	24	23	34	1
+7	sequencias	Qual é o próximo: 1, 5, 25, ...?	126	125	135	124	1
+7	sequencias	Qual é o próximo: 5, 10, 20, ...?	41	39	40	50	2
+7	sequencias	Qual é o próximo: 2, 8, 32, ...?	128	129	138	127	0

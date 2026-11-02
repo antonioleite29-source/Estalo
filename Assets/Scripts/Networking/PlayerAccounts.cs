@@ -45,6 +45,10 @@ public static class PlayerAccounts
         public string unityPlayerId;
         public string username;
 
+        // The questions this player has seen lately, newest last, as level * 10000 + index. Kept so
+        // the next match does not open with the question the last one closed on.
+        public List<int> recentQuestions = new List<int>();
+
         // A reminder the player wrote for themselves. Unity's username-and-password login has no
         // email, so there is no reset link anywhere: a forgotten password is a lost account, and this
         // is the only thing standing between the two.
@@ -295,6 +299,42 @@ public static class PlayerAccounts
         return owner;
     }
 
+    // --- what they have seen lately ---------------------------------------
+
+    // How many questions back an account remembers. Long enough that a player does not meet the
+    // same question twice in an evening, short enough that a small pool does not run dry.
+    public const int QuestionsRemembered = 80;
+
+    private static int QuestionKey(int difficultyLevel, int questionIndex) =>
+        difficultyLevel * 10000 + questionIndex;
+
+    public static void RememberQuestion(ulong clientId, int difficultyLevel, int questionIndex)
+    {
+        Account account = For(clientId);
+
+        if (account == null)
+            return;
+
+        if (account.recentQuestions == null)
+            account.recentQuestions = new List<int>();
+
+        int key = QuestionKey(difficultyLevel, questionIndex);
+        account.recentQuestions.Remove(key);
+        account.recentQuestions.Add(key);
+
+        while (account.recentQuestions.Count > QuestionsRemembered)
+            account.recentQuestions.RemoveAt(0);
+    }
+
+    // True when this player has had this question recently enough to remember it.
+    public static bool HasSeenQuestion(ulong clientId, int difficultyLevel, int questionIndex)
+    {
+        Account account = For(clientId);
+
+        return account != null && account.recentQuestions != null &&
+               account.recentQuestions.Contains(QuestionKey(difficultyLevel, questionIndex));
+    }
+
     // --- the password hint ----------------------------------------------
 
     // The most a hint may be. Long enough for a sentence, short enough not to be a second password
@@ -386,6 +426,9 @@ public static class PlayerAccounts
 
             if (account.otherKeyHashes == null)
                 account.otherKeyHashes = new List<string>();
+
+            if (account.recentQuestions == null)
+                account.recentQuestions = new List<int>();
 
             if (!string.IsNullOrEmpty(account.keyHash))
                 byKeyHash[account.keyHash] = account;

@@ -2941,16 +2941,10 @@ public class TriviaDuelManager : MonoBehaviour, IQuestionSource
             return pool[0];
         }
 
-        int next;
-        int attempts = 0;
-        do
-        {
-            next = Random.Range(0, pool.Count);
-            attempts++;
-        }
-        while (next == currentQuestionIndex && attempts < 10);
-
-        currentQuestionIndex = next;
+        // Not one this phone has had lately. RecentQuestions is the local twin of what the server
+        // remembers per account, so a solo match does not open with the question the last one
+        // closed on either.
+        currentQuestionIndex = RecentQuestions.Pick(currentDifficultyLevel, pool.Count, currentQuestionIndex);
         return pool[currentQuestionIndex];
     }
 

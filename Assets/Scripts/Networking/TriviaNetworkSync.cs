@@ -704,6 +704,56 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         return string.Join(" e ", winners) + " ganharam!";
     }
 
+    // A question nobody in this match has had lately, if there is one.
+    //
+    // Tried at random rather than by walking the pool: with a few hundred questions at a level and
+    // eighty remembered per player, a handful of draws almost always lands on an unseen one, and
+    // the fallback -- the first question nobody has seen, then simply a different one from last
+    // round -- costs a single pass in the rare case it is needed.
+    public int PickQuestion(MatchSession match, int difficultyLevel, int poolSize, int avoidIndex)
+    {
+        if (poolSize <= 1)
+            return 0;
+
+        for (int attempt = 0; attempt < 24; attempt++)
+        {
+            int candidate = UnityEngine.Random.Range(0, poolSize);
+
+            if (candidate != avoidIndex && NobodyHasSeen(match, difficultyLevel, candidate))
+                return RememberForEveryone(match, difficultyLevel, candidate);
+        }
+
+        for (int candidate = 0; candidate < poolSize; candidate++)
+            if (candidate != avoidIndex && NobodyHasSeen(match, difficultyLevel, candidate))
+                return RememberForEveryone(match, difficultyLevel, candidate);
+
+        // Everything at this level has been seen by somebody recently. The pool has run its course,
+        // so the only rule left is not twice in a row.
+        int anything = UnityEngine.Random.Range(0, poolSize);
+
+        if (anything == avoidIndex)
+            anything = (anything + 1) % poolSize;
+
+        return RememberForEveryone(match, difficultyLevel, anything);
+    }
+
+    private static bool NobodyHasSeen(MatchSession match, int difficultyLevel, int questionIndex)
+    {
+        foreach (ulong clientId in match.Participants)
+            if (PlayerAccounts.HasSeenQuestion(clientId, difficultyLevel, questionIndex))
+                return false;
+
+        return true;
+    }
+
+    private static int RememberForEveryone(MatchSession match, int difficultyLevel, int questionIndex)
+    {
+        foreach (ulong clientId in match.Participants)
+            PlayerAccounts.RememberQuestion(clientId, difficultyLevel, questionIndex);
+
+        return questionIndex;
+    }
+
     public void MatchHeld(MatchSession match, bool held, int secondsLeft)
     {
         if (CanSendRpc)

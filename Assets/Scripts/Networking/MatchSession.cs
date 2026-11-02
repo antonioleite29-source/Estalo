@@ -131,17 +131,9 @@ public class MatchSession
             return;
         }
 
-        // Avoid repeating the question we just asked, when there is anything else to pick.
-        int next = Random.Range(0, poolSize);
-
-        if (poolSize > 1)
-        {
-            int guard = 0;
-            while (next == currentQuestionIndex && guard++ < 8)
-                next = Random.Range(0, poolSize);
-        }
-
-        currentQuestionIndex = next;
+        // Not the one just asked, and not one anybody here has had lately: the router knows what
+        // each player has seen, across matches and across evenings, and picks accordingly.
+        currentQuestionIndex = router.PickQuestion(this, DifficultyLevel, poolSize, currentQuestionIndex);
         correctAnswerIndex = questions.GetCorrectAnswerIndex(DifficultyLevel, currentQuestionIndex);
 
         if (Mode == MatchMode.TeamFour)
@@ -497,6 +489,10 @@ public interface IMatchRouter
     // The match is paused because somebody's phone dropped, and how many seconds it will go on
     // waiting for them. held false means they are back and play is about to carry on.
     void MatchHeld(MatchSession match, bool held, int secondsLeft);
+
+    // Which question to ask next, out of a pool of poolSize, avoiding avoidIndex and whatever the
+    // players in this match have seen recently. The router owns that memory; the match only asks.
+    int PickQuestion(MatchSession match, int difficultyLevel, int poolSize, int avoidIndex);
 }
 
 // The question bank, kept behind an interface so MatchSession never touches a MonoBehaviour.
