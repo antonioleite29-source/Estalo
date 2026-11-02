@@ -32,10 +32,11 @@ public class PlayerProfileManager : MonoBehaviour
         return PlayerPrefs.GetString(PREFS_KEY_NAME + KeySuffix, DefaultName);
     }
 
+    // Everything that saves a name comes through here, so the length cap and the word list are
+    // applied in one place (DisplayNames). A name that is not allowed is saved as the default.
     public void SetLocalName(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            name = DefaultName;
+        name = DisplayNames.Clean(name);
 
         PlayerPrefs.SetString(PREFS_KEY_NAME + KeySuffix, name);
         PlayerPrefs.Save();

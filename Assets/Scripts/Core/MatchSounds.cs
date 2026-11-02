@@ -64,7 +64,7 @@ public static class MatchSounds
 
         // PlayOneShot rather than Play: a point landing while the previous one is still ringing
         // should overlap, not cut it off.
-        source.PlayOneShot(clip, Volume);
+        source.PlayOneShot(clip, Volume * GameSound.EffectsVolume);
     }
 
     private static bool Prepare()

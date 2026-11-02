@@ -3,20 +3,20 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Lays the More page's five buttons out in one column again.
+// Brings the More page up to date: adds the buttons that arrived after it was built -- Música,
+// Política de privacidade -- takes Deletar conta off it (it lives on the account panel now), and puts
+// the column in the order it should read in:
 //
-// Tutorial 2x2 arrived after the other four and was placed at the top of the column, exactly on top of
-// Som -- two buttons in one spot, so the sound switch looked like it had gone. This puts the five back
-// in order, evenly spaced, using the same step the page was built with.
+//   Efeitos, Música, Rever tutorial, Rever tutorial 2x2, Política de privacidade, Conta, Créditos
 //
-// Runs once on its own; save the scene after. Undo puts the old positions back.
+// Runs once on its own; save the scene after. Undo puts the old page back.
 [InitializeOnLoad]
-public static class SettingsLayoutFix
+public static class MorePageOrderFix
 {
-    private const string DoneKey = "EstaloSettingsRelaidOut";
-    private const string UndoName = "Lay out the settings buttons";
+    private const string DoneKey = "EstaloMorePageOrdered";
+    private const string UndoName = "Bring the More page up to date";
 
-    static SettingsLayoutFix()
+    static MorePageOrderFix()
     {
         if (EditorPrefs.GetBool(DoneKey, false))
             return;
@@ -28,7 +28,7 @@ public static class SettingsLayoutFix
         };
     }
 
-    [MenuItem("Trivia Duel/Setup/Lay Out Settings Buttons")]
+    [MenuItem("Trivia Duel/Setup/Bring The More Page Up To Date")]
     private static bool Fix()
     {
         SettingsPage page = Object.FindAnyObjectByType<SettingsPage>(FindObjectsInactive.Include);
@@ -36,40 +36,46 @@ public static class SettingsLayoutFix
         if (page == null)
             return false;
 
-        Button[] column = { page.soundButton, page.accountButton, page.tutorialButton,
-                            page.teamTutorialButton, page.creditsButton };
+        Undo.RecordObject(page, UndoName);
 
-        float top = 640f;
-        bool moved = false;
+        foreach (GameObject made in page.Build(null))
+            Undo.RegisterCreatedObjectUndo(made, UndoName);
 
-        foreach (Button button in column)
+        // Deleting the account is asked for on the account panel, where the player went to look at
+        // their account. One place is enough, and the More page is a worse one for it.
+        Transform stale = page.transform.Find("DeleteAccountButton");
+
+        if (stale != null)
+            Undo.DestroyObjectImmediate(stale.gameObject);
+
+        // "Tutorial 2x2" reads as a mode rather than a tutorial next to "Rever tutorial".
+        TMPro.TMP_Text teamLabel = page.teamTutorialButton != null
+            ? page.teamTutorialButton.GetComponentInChildren<TMPro.TMP_Text>(true)
+            : null;
+
+        if (teamLabel != null && teamLabel.text != "Rever tutorial 2x2")
         {
-            if (button == null)
-                continue;
-
-            RectTransform rect = (RectTransform)button.transform;
-            float height = rect.sizeDelta.y > 1f ? rect.sizeDelta.y : 188f;
-            Vector2 wanted = new Vector2(0f, top - height * 0.5f);
-
-            if ((rect.anchoredPosition - wanted).sqrMagnitude > 1f)
-            {
-                Undo.RecordObject(rect, UndoName);
-                rect.anchoredPosition = wanted;
-                EditorUtility.SetDirty(rect);
-                moved = true;
-            }
-
-            top -= height + 45f;
+            Undo.RecordObject(teamLabel, UndoName);
+            teamLabel.text = "Rever tutorial 2x2";
+            EditorUtility.SetDirty(teamLabel);
         }
 
-        if (moved)
-        {
-            EditorSceneManager.MarkSceneDirty(page.gameObject.scene);
-            Debug.Log("SettingsLayoutFix: Som, Conta, Rever tutorial, Tutorial 2x2 and Créditos are in one " +
-                      "column again. Save the scene.", page);
-        }
+        foreach (Button button in new[] { page.soundButton, page.musicButton, page.tutorialButton,
+                                          page.teamTutorialButton, page.privacyButton, page.accountButton,
+                                          page.creditsButton })
+            if (button != null)
+                Undo.RecordObject(button.transform, UndoName);
 
-        return moved;
+        page.LayOutColumn();
+        page.MakeLabelsWhite();
+
+        EditorUtility.SetDirty(page);
+        EditorSceneManager.MarkSceneDirty(page.gameObject.scene);
+
+        Debug.Log("MorePageOrderFix: Efeitos, Música, Rever tutorial, Rever tutorial 2x2, Política de " +
+                  "privacidade, Conta, Créditos, in that order. PrivacyPanel starts switched off -- tick " +
+                  "it to edit it. Save the scene.", page);
+        return true;
     }
 }
 

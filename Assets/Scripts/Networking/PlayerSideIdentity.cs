@@ -9,15 +9,18 @@ public class PlayerSideIdentity : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
 
+    // Server-written, although it is the player's own name: the name is drawn on other people's
+    // screens, so the length cap and the word list have to be applied somewhere a changed app cannot
+    // reach. The owner asks through SetProfileServerRpc and the server writes what DisplayNames allows.
     public NetworkVariable<FixedString64Bytes> PlayerName = new NetworkVariable<FixedString64Bytes>(
         default,
         NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Owner);
+        NetworkVariableWritePermission.Server);
 
     public NetworkVariable<int> AvatarIndex = new NetworkVariable<int>(
         0,
         NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Owner);
+        NetworkVariableWritePermission.Server);
 
     // This device's own difficulty level (1-7, from PlayerIQManager). Owner-written so the server
     // can group players of similar skill — previously the server used its OWN local IQ for
@@ -91,11 +94,20 @@ public class PlayerSideIdentity : NetworkBehaviour
         if (!IsOwner || PlayerProfileManager.Instance == null)
             return;
 
-        PlayerName.Value = PlayerProfileManager.Instance.GetLocalName();
-        AvatarIndex.Value = PlayerProfileManager.Instance.GetLocalAvatarIndex();
+        SetProfileServerRpc(new FixedString64Bytes(PlayerProfileManager.Instance.GetLocalName()),
+            PlayerProfileManager.Instance.GetLocalAvatarIndex());
 
         if (PlayerIQManager.Instance != null)
             DifficultyLevel.Value = PlayerIQManager.Instance.GetLocalDifficultyLevel();
+    }
+
+    // The name and face the player asks for. What the server writes is what DisplayNames allows:
+    // too long, blank or on the word list and it becomes the default name instead.
+    [Rpc(SendTo.Server)]
+    private void SetProfileServerRpc(FixedString64Bytes wantedName, int wantedAvatar, RpcParams _ = default)
+    {
+        PlayerName.Value = new FixedString64Bytes(DisplayNames.Clean(wantedName.ToString()));
+        AvatarIndex.Value = Mathf.Max(0, wantedAvatar);
     }
 
     private static void RefreshAllIdentities()

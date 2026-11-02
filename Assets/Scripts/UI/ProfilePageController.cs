@@ -76,6 +76,12 @@ public class ProfilePageController : MonoBehaviour
     private void Start()
     {
         MobileInputField.MakeSafeForPhones(nameInputField);
+
+        // The cap is also enforced here, so the field stops taking letters rather than cutting the
+        // name short after the player has finished typing it.
+        if (nameInputField != null)
+            nameInputField.characterLimit = DisplayNames.MaxLength;
+
         BindAvatarButtons();
         BindPreviewButton();
         SetHighlightOpacity(HighlightOpacity);
@@ -283,13 +289,87 @@ public class ProfilePageController : MonoBehaviour
         }
     }
 
+    // The name goes on other people's screens, so it has to pass DisplayNames first. A name that is
+    // not allowed is not silently changed into something else: the field goes back to the name the
+    // player had, and a line under it says why.
     public void OnNameEndEdit(string value)
     {
         if (PlayerProfileManager.Instance == null)
             return;
 
+        if (!DisplayNames.IsAllowed(value, out string reason))
+        {
+            ShowNameNotice(reason);
+
+            if (nameInputField != null)
+                nameInputField.text = PlayerProfileManager.Instance.GetLocalName();
+
+            return;
+        }
+
         PlayerProfileManager.Instance.SetLocalName(value);
+
+        if (nameInputField != null)
+            nameInputField.text = PlayerProfileManager.Instance.GetLocalName();
+
+        ShowNameNotice(DisplayNames.WasShortened(value)
+            ? $"O nome cabe em {DisplayNames.MaxLength} letras."
+            : string.Empty);
+
         PushProfileToNetwork();
+    }
+
+    // --- the line under the name field ----------------------------------
+
+    private TMP_Text nameNotice;
+
+    private void ShowNameNotice(string message)
+    {
+        EnsureNameNotice();
+
+        if (nameNotice == null)
+            return;
+
+        nameNotice.text = message;
+        CancelInvoke(nameof(ClearNameNotice));
+
+        if (!string.IsNullOrEmpty(message))
+            Invoke(nameof(ClearNameNotice), 4f);
+    }
+
+    private void ClearNameNotice()
+    {
+        if (nameNotice != null)
+            nameNotice.text = string.Empty;
+    }
+
+    // Built in code, like the stats, so nobody has to edit the scene for it: just under the name
+    // field, the same width, empty until there is something to say.
+    private void EnsureNameNotice()
+    {
+        if (nameNotice != null || nameInputField == null)
+            return;
+
+        RectTransform field = (RectTransform)nameInputField.transform;
+
+        GameObject go = new GameObject("NameNotice", typeof(RectTransform));
+        RectTransform rect = (RectTransform)go.transform;
+        rect.SetParent(field.parent, false);
+        rect.anchorMin = field.anchorMin;
+        rect.anchorMax = field.anchorMax;
+        rect.pivot = field.pivot;
+        rect.sizeDelta = new Vector2(field.sizeDelta.x, 90f);
+        rect.anchoredPosition = field.anchoredPosition - new Vector2(0f, field.rect.height * 0.5f + 50f);
+        rect.localScale = field.localScale;
+
+        nameNotice = go.AddComponent<TextMeshProUGUI>();
+        nameNotice.font = nameInputField.fontAsset;
+        nameNotice.fontSize = 38f;
+        nameNotice.alignment = TextAlignmentOptions.Center;
+        nameNotice.textWrappingMode = TextWrappingModes.Normal;
+        nameNotice.color = new Color(1f, 0.70f, 0.70f);
+        nameNotice.raycastTarget = false;
+        nameNotice.text = string.Empty;
     }
 
     private void OnAvatarButtonClicked(int index)

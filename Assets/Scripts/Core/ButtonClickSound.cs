@@ -53,7 +53,7 @@ public class ButtonClickSound : MonoBehaviour, IPointerDownHandler
         AudioClip clip = NextClip(which);
 
         if (clip != null)
-            source.PlayOneShot(clip, Volume);
+            source.PlayOneShot(clip, Volume * GameSound.EffectsVolume);
     }
 
     [Range(0f, 1f)]

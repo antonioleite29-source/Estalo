@@ -1,25 +1,31 @@
 using UnityEngine;
 
-// Sound on or off for the whole game, remembered between launches.
+// The sound effects -- button clicks and match sounds -- on or off, remembered between launches.
 //
-// AudioListener.volume silences every AudioSource at once -- button clicks and match sounds alike --
-// without either of them having to know the setting exists.
+// Effects and music are two separate switches now, so a player can keep the clicks and drop the
+// music, or the other way round (GameMusic holds the other one). That rules out AudioListener.volume,
+// which silences everything at once: the two places that play an effect multiply their own volume by
+// EffectsVolume instead.
 public static class GameSound
 {
     private const string Key = "EstaloSoundOn";
 
     public static bool IsOn => PlayerPrefs.GetInt(Key, 1) == 1;
 
+    // What an effect should be multiplied by before it is played: 1 when effects are on, 0 when off.
+    public static float EffectsVolume => IsOn ? 1f : 0f;
+
     public static void SetOn(bool on)
     {
         PlayerPrefs.SetInt(Key, on ? 1 : 0);
         PlayerPrefs.Save();
-        Apply();
     }
 
+    // An older build silenced everything through the listener. A phone that was switched off then
+    // and has just updated would otherwise stay silent for good, because nothing turns it back up.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Apply()
+    private static void UndoTheOldGlobalMute()
     {
-        AudioListener.volume = IsOn ? 1f : 0f;
+        AudioListener.volume = 1f;
     }
 }

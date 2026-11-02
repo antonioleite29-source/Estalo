@@ -220,7 +220,7 @@ public static class PlayerAccounts
             account.lost++;
 
         if (!string.IsNullOrWhiteSpace(playerName))
-            account.name = playerName;
+            account.name = DisplayNames.Clean(playerName);
     }
 
     // The one time the server takes numbers from the phone: an account that has never played a match
