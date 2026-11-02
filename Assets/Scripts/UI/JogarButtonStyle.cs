@@ -77,6 +77,10 @@ public static class JogarButtonStyle
     }
 
     // Found by its label, including while the lobby page is switched off.
+    // The real "Jogar" button, for anything that needs to sit next to it rather than just look
+    // like it. Null when the scene has none.
+    public static Button Template => FindTemplate();
+
     private static Button FindTemplate()
     {
         if (template != null)
