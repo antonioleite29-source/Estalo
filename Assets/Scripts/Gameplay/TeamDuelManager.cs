@@ -745,6 +745,18 @@ public class TeamDuelManager : MonoBehaviour
         }
     }
 
+    // The match is paused because somebody's phone dropped. The board stays exactly as it is --
+    // scores, faces, names -- and the question line says what is being waited for, so nobody thinks
+    // the game has frozen. When they come back the server sends a fresh question over this.
+    public void ApplyNetworkedMatchHeld(bool held, string message)
+    {
+        if (questionText != null)
+            questionText.text = message;
+
+        if (held)
+            LockAllButtons();
+    }
+
     internal void LockAllButtons()
     {
         if (answerButtonVisuals == null)

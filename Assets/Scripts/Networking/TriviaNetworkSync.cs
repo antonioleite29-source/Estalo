@@ -261,6 +261,43 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
             SendAway(other);
 
         SendAccount(clientId);
+
+        // A match may be sitting paused waiting for exactly this account to come back.
+        if (account != null && IsAnyMatchWaitingFor(account.id))
+            StartCoroutine(SeatBackIntoHeldMatch(clientId, account.id));
+    }
+
+    private bool IsAnyMatchWaitingFor(string accountId)
+    {
+        for (int i = 0; i < liveMatches.Count; i++)
+            if (liveMatches[i].IsWaitingForAPlayer)
+                return true;
+
+        return false;
+    }
+
+    // Waits for this client's player object to spawn before giving the seat back: the seat is held
+    // on PlayerSideIdentity, and on a reconnect the identity lands a moment after the connection.
+    private System.Collections.IEnumerator SeatBackIntoHeldMatch(ulong clientId, string accountId)
+    {
+        for (int attempt = 0; attempt < 40 && FindIdentity(clientId) == null; attempt++)
+            yield return new WaitForSecondsRealtime(0.1f);
+
+        if (!IsServer || FindIdentity(clientId) == null)
+            yield break;
+
+        for (int i = 0; i < liveMatches.Count; i++)
+        {
+            MatchSession match = liveMatches[i];
+
+            if (!match.TryReturn(accountId, clientId))
+                continue;
+
+            AssignSeatsForMatch(match);
+            match.ResumeAfterReturn();
+            Debug.Log($"TriviaNetworkSync: client {clientId} came back and sat down again in match {match.MatchId}.");
+            yield break;
+        }
     }
 
     // Tells a device its account has been opened somewhere else, then drops it. The message goes
@@ -624,6 +661,25 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
         return string.Join(" e ", winners) + " ganharam!";
     }
 
+    public void MatchHeld(MatchSession match, bool held, int secondsLeft)
+    {
+        if (CanSendRpc)
+            MatchHeldTargetedClientRpc((int)match.Mode, held, secondsLeft, OnlyFor(match));
+    }
+
+    [ClientRpc]
+    private void MatchHeldTargetedClientRpc(int mode, bool held, int secondsLeft, ClientRpcParams _ = default)
+    {
+        string message = held
+            ? $"Um jogador caiu. Esperando {secondsLeft}s..."
+            : "Voltou! Continuando...";
+
+        if ((MatchMode)mode == MatchMode.TeamFour)
+            TeamDuelManager.Instance?.ApplyNetworkedMatchHeld(held, message);
+        else
+            TriviaDuelManager.Instance?.ApplyNetworkedMatchHeld(held, message);
+    }
+
     // Targeted at the single client who answered, not the whole match: each device logs only its
     // own mistakes.
     public void RecordOwnAnswer(MatchSession match, ulong clientId, int questionIndex, bool wasCorrect)
@@ -774,9 +830,18 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
         if (match != null)
         {
-            ClearMatchTags(match);
-            match.AbortForDisconnect(clientId);
-            liveMatches.Remove(match);
+            // A phone that drops mid-match gets its seat kept for MatchSession.WaitForReturnSeconds,
+            // because losing signal for a moment is the most ordinary thing that happens on a phone
+            // and it used to end the match for everybody. Only when the seat cannot be kept, or
+            // nobody comes back in time, does the match end.
+            PlayerAccounts.Account account = PlayerAccounts.For(clientId);
+
+            if (!match.HoldForMissing(clientId, account != null ? account.id : null))
+            {
+                ClearMatchTags(match);
+                match.AbortForDisconnect(clientId);
+                liveMatches.Remove(match);
+            }
         }
 
         PlayerAccounts.Detach(clientId);

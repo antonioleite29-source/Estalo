@@ -45,6 +45,12 @@ public class MatchSession
     private int pendingSoloSide;
     private ResolveThen resolveThen = ResolveThen.Nothing;
 
+    // Seats kept empty for players whose phone dropped, by account id, and how long the match will
+    // go on waiting for them.
+    private readonly Dictionary<string, int> awaySeatByAccount = new Dictionary<string, int>();
+    private float waitTimer;
+    private int lastWaitSecondSent = -1;
+
     // 2v2 only: which slot on each team is currently allowed to answer.
     private int activeSlotA = 1;
     private int activeSlotB = 3;
@@ -229,6 +235,28 @@ public class MatchSession
     // Driven once per frame by TriviaNetworkSync so every live match advances together.
     public void Tick(float deltaTime)
     {
+        if (IsWaitingForAPlayer)
+        {
+            waitTimer -= deltaTime;
+
+            if (waitTimer <= 0f)
+            {
+                awaySeatByAccount.Clear();
+                EndMatch(Mode == MatchMode.TeamFour ? "Um jogador saiu da partida." : "Seu adversário saiu da partida.",
+                         false, 0);
+                return;
+            }
+
+            // Once a second, so whoever is left can see it is still counting rather than stuck.
+            if (WaitSecondsLeft != lastWaitSecondSent)
+            {
+                lastWaitSecondSent = WaitSecondsLeft;
+                router.MatchHeld(this, true, lastWaitSecondSent);
+            }
+
+            return;
+        }
+
         if (IsFinished)
             return;
 
@@ -323,15 +351,77 @@ public class MatchSession
         router.MatchEnded(this, message, hasWinner, winningTeam);
     }
 
-    // Called when someone drops: the match cannot continue, since the missing seat can never
-    // answer its solo turn and the round would wait forever.
+    // Called when someone drops and is not coming back: the match cannot continue, since the
+    // missing seat can never answer its solo turn and the round would wait forever.
     public void AbortForDisconnect(ulong departedClientId)
     {
         seatByClient.Remove(departedClientId);
         participants.Remove(departedClientId);
+        awaySeatByAccount.Clear();
 
         EndMatch(Mode == MatchMode.TeamFour ? "Um jogador saiu da partida." : "Seu adversário saiu da partida.",
                  false, 0);
+    }
+
+    // --- somebody dropped, and may be back ------------------------------
+
+    // How long the match waits for a phone that dropped. Long enough to walk through a tunnel or
+    // for Wi-Fi to hand over to mobile data, short enough that whoever is left does not give up
+    // first and close the game.
+    public const float WaitForReturnSeconds = 45f;
+
+    public bool IsWaitingForAPlayer => awaySeatByAccount.Count > 0;
+
+    public int WaitSecondsLeft => Mathf.Max(0, Mathf.CeilToInt(waitTimer));
+
+    // Keeps this player's seat, pauses the round, and tells everyone still here what is happening.
+    // False when the seat cannot be kept -- an account the server never knew, or a match already
+    // over -- and then the caller ends the match as before.
+    public bool HoldForMissing(ulong clientId, string accountId)
+    {
+        if (IsFinished || string.IsNullOrEmpty(accountId) || !seatByClient.TryGetValue(clientId, out int seat))
+            return false;
+
+        seatByClient.Remove(clientId);
+        participants.Remove(clientId);
+        awaySeatByAccount[accountId] = seat;
+
+        inputEnabled = false;
+        isTransitioning = false;
+        waitTimer = WaitForReturnSeconds;
+        lastWaitSecondSent = -1;
+
+        router.LockAllButtons(this);
+        router.MatchHeld(this, true, WaitSecondsLeft);
+        return true;
+    }
+
+    // The same player, on a new connection: the account is what identifies them, since a reconnect
+    // brings a brand-new client id. The seat they left is the seat they get back.
+    public bool TryReturn(string accountId, ulong clientId)
+    {
+        if (IsFinished || string.IsNullOrEmpty(accountId) || !awaySeatByAccount.TryGetValue(accountId, out int seat))
+            return false;
+
+        awaySeatByAccount.Remove(accountId);
+        seatByClient[clientId] = seat;
+        participants.Add(clientId);
+        return true;
+    }
+
+    // Called once the router has given the returning player their seat back on the network. The
+    // score stands and the match picks up at a fresh question rather than halfway through the one
+    // that was on screen when the line died -- that question was half answered, and only one side
+    // saw how far.
+    public void ResumeAfterReturn()
+    {
+        if (IsFinished || IsWaitingForAPlayer)
+            return;
+
+        waitTimer = 0f;
+        router.MatchHeld(this, false, 0);
+        router.MatchStarted(this);
+        StartNextRound();
     }
 
     // --- accessors the router needs to build its messages ---
@@ -359,6 +449,10 @@ public interface IMatchRouter
     // and a practice set built from someone else's mistakes is not personal at all.
     void RecordOwnAnswer(MatchSession match, ulong clientId, int questionIndex, bool wasCorrect);
     void MatchEnded(MatchSession match, string message, bool hasWinner, int winningTeam);
+
+    // The match is paused because somebody's phone dropped, and how many seconds it will go on
+    // waiting for them. held false means they are back and play is about to carry on.
+    void MatchHeld(MatchSession match, bool held, int secondsLeft);
 }
 
 // The question bank, kept behind an interface so MatchSession never touches a MonoBehaviour.
