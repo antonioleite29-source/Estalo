@@ -3,23 +3,39 @@ import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
 
-// Draws the button sprite the game already uses -- a chamfered slab with a lighter top and a darker
-// lip along the bottom -- at a size meant to be nine-sliced rather than stretched.
+// Draws the button the game already uses, at a size meant to be nine-sliced rather than stretched.
+//
+// Measured off Assets/Art/Backgrounds/Startbutton2.png (2399 x 500): a flat slab of #7379A1 with the
+// corners cut at 118 of its 500 pixels, and a band along the top edge -- 35 pixels of #3A3D51 at half
+// alpha -- which is what gives the slab its lip. Nothing else: no gradient, no outline.
+//
+// The white one carries the band as mid-grey at half alpha, which is the same thing in ratio: tint it
+// #7379A1 with the Image's own Color and the band comes out at #3A3D51, exactly as in the original.
 
-let size = 160            // square, so the same borders work on every side
-let chamfer: CGFloat = 34 // the corner cut, well inside the border
-let topBand: CGFloat = 14
-let bottomLip: CGFloat = 22
+let size = 128              // square, so one set of borders works on all four sides
+let chamfer: CGFloat = 35   // what 118 of the original 500 comes to on a 150-tall button
+let band: CGFloat = 10      // what 35 of the original 500 comes to on a 150-tall button
+let border = 44             // written into the .meta: wider than the chamfer, under half of 100
 
-struct Variant { let name: String; let r: CGFloat; let g: CGFloat; let b: CGFloat }
+struct Variant {
+    let name: String
+    let body: (CGFloat, CGFloat, CGFloat, CGFloat)
+    let band: (CGFloat, CGFloat, CGFloat, CGFloat)
+}
+
+let half: CGFloat = 128.0 / 255.0
 
 let variants = [
-    // White, for an Image that carries its own colour: tinting this one gives any button.
-    Variant(name: "ButtonNineSlice", r: 1, g: 1, b: 1),
-    // The slate the Jogar button is painted in today.
-    Variant(name: "ButtonSlateNineSlice", r: 0x73/255, g: 0x79/255, b: 0xA1/255),
-    // The cyan a chosen mode -- 1x1 or 2x2 -- is painted in.
-    Variant(name: "ButtonCyanNineSlice", r: 34/255, g: 184/255, b: 207/255),
+    // To be tinted by the Image's Color. White body, mid-grey band, both at the original's ratio.
+    Variant(name: "ButtonNineSlice", body: (1, 1, 1, 1), band: (half, half, half, half)),
+    // The slate of the Jogar button, baked.
+    Variant(name: "ButtonSlateNineSlice",
+            body: (0x73/255, 0x79/255, 0xA1/255, 1),
+            band: (0x3A/255, 0x3D/255, 0x51/255, half)),
+    // The cyan of a chosen mode -- 1x1, 2x2 -- baked, darkened the same way for the band.
+    Variant(name: "ButtonCyanNineSlice",
+            body: (34/255, 184/255, 207/255, 1),
+            band: (17/255, 92/255, 104/255, half)),
 ]
 
 func octagon(_ rect: CGRect, _ cut: CGFloat) -> CGPath {
@@ -42,40 +58,29 @@ for variant in variants {
                         space: CGColorSpaceCreateDeviceRGB(),
                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
     ctx.setAllowsAntialiasing(true)
-    ctx.interpolationQuality = .high
 
-    let full = CGRect(x: 0.5, y: 0.5, width: CGFloat(size) - 1, height: CGFloat(size) - 1)
+    let full = CGRect(x: 0, y: 0, width: CGFloat(size), height: CGFloat(size))
     let shape = octagon(full, chamfer)
 
-    // The body, a little under full strength so the top band reads as a highlight on top of it.
-    ctx.addPath(shape)
-    ctx.setFillColor(red: variant.r * 0.90, green: variant.g * 0.90, blue: variant.b * 0.90, alpha: 1)
-    ctx.fillPath()
-
+    // The slab, with the top band left out of it: the band is not drawn over the body, it replaces
+    // it, so it stays half-transparent against whatever is behind the button.
     ctx.saveGState()
     ctx.addPath(shape)
     ctx.clip()
 
-    // Lighter along the top, darker along the bottom: the slab reads as a solid with a lip under it,
-    // and nine-slicing keeps both bands their own height at any button size.
-    ctx.setFillColor(red: variant.r, green: variant.g, blue: variant.b, alpha: 1)
-    ctx.fill(CGRect(x: 0, y: CGFloat(size) - topBand, width: CGFloat(size), height: topBand))
+    ctx.setFillColor(red: variant.body.0, green: variant.body.1, blue: variant.body.2, alpha: variant.body.3)
+    ctx.fill(CGRect(x: 0, y: 0, width: CGFloat(size), height: CGFloat(size) - band))
 
-    ctx.setFillColor(red: variant.r * 0.62, green: variant.g * 0.62, blue: variant.b * 0.62, alpha: 1)
-    ctx.fill(CGRect(x: 0, y: 0, width: CGFloat(size), height: bottomLip))
+    ctx.setFillColor(red: variant.band.0, green: variant.band.1, blue: variant.band.2, alpha: variant.band.3)
+    ctx.fill(CGRect(x: 0, y: CGFloat(size) - band, width: CGFloat(size), height: band))
 
     ctx.restoreGState()
 
-    // A thin dark edge all the way round, so the shape still reads on a pale background.
-    ctx.addPath(shape)
-    ctx.setStrokeColor(red: 0, green: 0, blue: 0, alpha: 0.22)
-    ctx.setLineWidth(3)
-    ctx.strokePath()
-
     let image = ctx.makeImage()!
     let path = CommandLine.arguments[1] + "/" + variant.name + ".png"
-    let out = CGImageDestinationCreateWithURL(URL(fileURLWithPath: path) as CFURL, UTType.png.identifier as CFString, 1, nil)!
+    let out = CGImageDestinationCreateWithURL(URL(fileURLWithPath: path) as CFURL,
+                                              UTType.png.identifier as CFString, 1, nil)!
     CGImageDestinationAddImage(out, image, nil)
     CGImageDestinationFinalize(out)
-    print("wrote \(path)")
+    print("wrote \(path)  \(size)x\(size), border \(border)")
 }

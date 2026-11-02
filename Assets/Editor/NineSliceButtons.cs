@@ -16,9 +16,9 @@ public static class NineSliceButtons
 {
     private const string Folder = "Assets/Art/UI/NineSlice/";
 
-    // Borders are 56 of the sprite's 160 pixels. Doubling the pixels-per-unit halves what they
-    // measure on screen, so the corners stay crisp on a 100-unit-tall button as well as a 150.
-    private const float PixelsPerUnitMultiplier = 2f;
+    // One sprite pixel per canvas unit, which is what makes the corners come out at 35 units and the
+    // top band at 10 -- what the original art comes to on a 150-tall button.
+    private const float PixelsPerUnitMultiplier = 1f;
 
     [MenuItem("Trivia Duel/UI/Nine Slice Selected Buttons")]
     private static void ApplyWhite() => Apply("ButtonNineSlice", keepColour: true);
@@ -42,7 +42,7 @@ public static class NineSliceButtons
         if (sprite.border == Vector4.zero)
         {
             Debug.LogWarning($"NineSliceButtons: {spriteName} has no border, so it would stretch rather " +
-                             "than slice. Set its Border in the Sprite Editor to 56 on all four sides.");
+                             "than slice. Set its Border in the Sprite Editor to 44 on all four sides.");
             return;
         }
 
