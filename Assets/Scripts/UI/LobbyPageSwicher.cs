@@ -384,16 +384,11 @@ public class LobbyPageSwitcher : MonoBehaviour
     }
 
     // The same blue the chosen mode wears on the 1x1 and 2x2 buttons, so one highlight means one
-    // thing everywhere on the lobby.
+    // thing everywhere on the lobby. The box only: the label keeps whatever colour it had.
     private void PaintAsRuleSet(TMP_Text label, Image art, bool isChosen)
     {
-        Color tint = isChosen ? selectedModeColor : unselectedModeColor;
-
-        if (label != null)
-            label.color = tint;
-
         if (art != null)
-            art.color = tint;
+            art.color = isChosen ? selectedModeColor : unselectedModeColor;
     }
 
     private void ChooseRuleSet(GameRuleSet set)
@@ -566,23 +561,14 @@ public class LobbyPageSwitcher : MonoBehaviour
         ApplyModeTint(teamFourButtonImage, !isOneVsOne);
     }
 
-    // The label moves with the button, not just the button art. Tinting only the background left
-    // "1x1" and "2x2" reading identically whichever was chosen, so the one piece of the control a
-    // player actually looks at carried none of the state.
+    // Only the box carries the highlight. The label used to be tinted with it, which left the text
+    // the same colour as the thing it sits on.
     private void ApplyModeTint(Image buttonImage, bool isSelected)
     {
         if (buttonImage == null)
             return;
 
-        Color tint = isSelected ? selectedModeColor : unselectedModeColor;
-        buttonImage.color = tint;
-
-        // Searched from the button rather than wired in the Inspector: the label is always a child
-        // of the button it belongs to, and one less slot is one less thing to leave empty.
-        TMP_Text label = buttonImage.GetComponentInChildren<TMP_Text>(true);
-
-        if (label != null)
-            label.color = tint;
+        buttonImage.color = isSelected ? selectedModeColor : unselectedModeColor;
     }
 
     // ---------------------------------------------------------------
