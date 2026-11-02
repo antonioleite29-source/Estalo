@@ -176,7 +176,7 @@ public class TriviaNetworkSync : NetworkBehaviour, IMatchRouter
 
             MatchSession match = new MatchSession(
                 matchmaker.TakeNextMatchId(), mode, group, difficulty,
-                this, ResolveQuestionSource(), GameRuleSets.Apply(ruleSet, CurrentRules(mode)));
+                this, ResolveQuestionSource(), GameRuleSets.Apply(ruleSet, CurrentRules(mode), mode));
 
             AssignSeatsForMatch(match);
             liveMatches.Add(match);

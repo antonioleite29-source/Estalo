@@ -37,9 +37,9 @@ public static class GameRuleSets
             case GameRuleSet.NoMercy:
                 return "Errou, o ponto é do adversário. Sem tempo sozinho.";
             case GameRuleSet.Lightning:
-                return "Partida curta: 5 pontos e metade do tempo sozinho.";
+                return "Partida curta: 5 pontos (7 no 2x2) e metade do tempo sozinho.";
             case GameRuleSet.Streak:
-                return "Acertos seguidos valem mais: 1, depois 2, depois 3.";
+                return "Acertos seguidos valem 1, 2 e 3. Vai até 11 (15 no 2x2).";
             default:
                 return "Errou, o adversário responde sozinho. O de sempre.";
         }
@@ -51,8 +51,13 @@ public static class GameRuleSets
     // Takes the mode's own tunables and bends them to the chosen rules. Everything a rule set
     // changes is in MatchRules, so MatchSession plays by the numbers it is handed and knows nothing
     // about which set they came from.
-    public static MatchRules Apply(GameRuleSet set, MatchRules rules)
+    //
+    // The mode matters to the target: four players score roughly twice as fast as two, so a target
+    // that makes a good match in 1v1 is over in half the rounds in 2v2.
+    public static MatchRules Apply(GameRuleSet set, MatchRules rules, MatchMode mode)
     {
+        bool isTeam = mode == MatchMode.TeamFour;
+
         switch (set)
         {
             case GameRuleSet.NoMercy:
@@ -60,11 +65,14 @@ public static class GameRuleSets
                 break;
 
             case GameRuleSet.Lightning:
-                rules.pointsToWin = 5;
+                rules.pointsToWin = isTeam ? 7 : 5;
                 rules.soloTimeSeconds *= 0.5f;
                 break;
 
             case GameRuleSet.Streak:
+                // Higher than any other set, because points come in twos and threes once a run is
+                // going: 11 is about the same number of rounds as a 7-point Classico.
+                rules.pointsToWin = isTeam ? 15 : 11;
                 rules.streakScoring = true;
                 break;
         }
