@@ -16,6 +16,10 @@ public static class BuildSetup
     // change afterwards; this is not.
     private const string BundleId = "com.tomdeleite.estalo";
 
+    // The version these builds carry. Raise both together.
+    private const string Version = "1.18";
+    private const int VersionCode = 18;
+
     [MenuItem("Trivia Duel/Setup/Apply Android Build Settings")]
     public static void ApplyAndroidBuildSettings()
     {
@@ -55,14 +59,15 @@ public static class BuildSetup
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
         // Testers will be on several builds over several sessions; a visible version is the only
-        // way a bug report can say which one it came from.
-        PlayerSettings.bundleVersion = "0.1";
-        PlayerSettings.Android.bundleVersionCode = 1;
+        // way a bug report can say which one it came from. Bump Version below for a new one; the
+        // code has to rise with it or Play refuses the upload.
+        PlayerSettings.bundleVersion = Version;
+        PlayerSettings.Android.bundleVersionCode = VersionCode;
 
         AssetDatabase.SaveAssets();
 
         Debug.Log($"Android build settings applied: id={BundleId}, " +
-                  $"target SDK 34, min SDK 25, portrait-locked, ARM64, version 0.1. " +
+                  $"target SDK 34, min SDK 25, portrait-locked, ARM64, version {Version}. " +
                   "Now do File > Save Project.");
     }
 
@@ -92,10 +97,11 @@ public static class BuildSetup
             return;
         }
 
-        // Version-stamped filename: testers end up holding several builds over several sessions,
-        // and "which APK were you on?" is unanswerable if they are all called the same thing.
-        string fileName = $"Estalo-{PlayerSettings.bundleVersion}-" +
-                          $"{System.DateTime.Now:yyyyMMdd-HHmm}.apk";
+        // Named after the version and nothing else, which is how the builds in Builds/ are already
+        // named: a tester saying "I am on 1.15" then means something. Rebuilding the same version
+        // overwrites it on purpose -- two files for one version is how the question becomes
+        // unanswerable again.
+        string fileName = $"Estalo{PlayerSettings.bundleVersion}.apk";
         string outputDir = System.IO.Path.Combine(
             System.IO.Directory.GetParent(Application.dataPath).FullName, "Builds");
         System.IO.Directory.CreateDirectory(outputDir);
